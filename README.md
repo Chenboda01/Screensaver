@@ -46,7 +46,7 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - **V11:** Added a **Yes/No** notification before the screensaver starts when a terminal AI agent is detected. Yes starts the saver and leaves the agent running; No cancels that launch.
 - **V12:** Fixed idle-agent false prompts. Agent UI CPU polling no longer counts as work; the notification appears when a recognized terminal agent has an active or recently started child process.
 
-## Requirements
+## Requirements (Important!)
 
 - KDE Plasma 6 on Wayland
 - Python with PyQt6
