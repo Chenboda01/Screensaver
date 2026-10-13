@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ScreenBot screensaver V10: new worlds and gradient countdown and head-only Bob.
+"""ScreenBot screensaver V11: new worlds and gradient countdown and head-only Bob.
 
 Theme is controlled ONLY by KDE System Settings. This version keeps the
 existing settings integration and replaces the previous full-body design with a
