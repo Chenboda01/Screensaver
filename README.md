@@ -48,7 +48,7 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - **V12:** Fixed idle-agent false prompts. Agent UI CPU polling no longer counts as work; the notification appears when a recognized terminal agent has an active or recently started child process.
 - **V13:** Added three shaded planets, including a ringed planet, to the Space theme.
 
-## Requirements
+## Requirements (Important!)
 
 - KDE Plasma 6 on Wayland
 - Python with PyQt6
