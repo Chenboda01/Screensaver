@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ScreenBot screensaver V14: active-agent prompting and planetary space theme.
+"""ScreenBot screensaver V15: session-aware prompting and planetary space theme.
 
 Theme is controlled ONLY by KDE System Settings. This version keeps the
 existing settings integration and replaces the previous full-body design with a

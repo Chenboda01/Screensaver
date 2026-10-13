@@ -1,6 +1,6 @@
 # ScreenBot Screensaver
 
-ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob with a clock and themed animated backgrounds. V10 through V14 are available downloads; V1 through V9 are currently unavailable.
+ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob with a clock and themed animated backgrounds. V10 through V15 are available downloads; V1 through V9 are currently unavailable.
 
 ## Downloads
 
@@ -20,8 +20,9 @@ ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob wi
 | V12 | [Download ScreenBot Screensaver V12 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V12.zip) |
 | V13 | [Download ScreenBot Screensaver V13 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V13.zip) |
 | V14 | [Download ScreenBot Screensaver V14 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V14.zip) |
+| V15 | [Download ScreenBot Screensaver V15 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V15.zip) |
 
-## Install V10, V11, V12, V13, or V14
+## Install V10, V11, V12, V13, V14, or V15
 
 1. Download the version ZIP and extract it into `~/Downloads`.
 2. Open a terminal in the extracted version folder, such as `ScreenBot-Screensaver-V12`.
@@ -49,6 +50,7 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - **V12:** Fixed idle-agent false prompts. Agent UI CPU polling no longer counts as work; the notification appears when a recognized terminal agent has an active or recently started child process.
 - **V13:** Added three shaded planets, including a ringed planet, to the Space theme.
 - **V14:** Restored prompts during agent response processing while filtering idle terminal UI polling. Active child commands continue to trigger the prompt.
+- **V15:** Checks recent Codex and OpenCode turn status so the prompt appears during an active response, even between child commands.
 
 ## Requirements
 

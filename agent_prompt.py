@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Ask before the screensaver covers a terminal running an AI agent."""
+import json
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
@@ -15,6 +17,7 @@ AGENT_NAMES: Final[frozenset[str]] = frozenset(
 )
 INTERPRETER_NAMES: Final[frozenset[str]] = frozenset({"bun", "deno", "node", "python", "python3", "uv"})
 MIN_AGENT_CPU_TICKS: Final[int] = max(1, int(os.sysconf("SC_CLK_TCK") * 0.25))
+SESSION_ACTIVITY_WINDOW_SECONDS: Final[int] = 5 * 60
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,6 +114,75 @@ def _is_idle_agent_service(process: Process) -> bool:
     )
 
 
+def _codex_turn_is_active() -> bool:
+    """Read Codex turn status events without loading session message contents."""
+    session_root = Path.home() / ".codex" / "sessions"
+    now = time.time()
+    try:
+        recent_logs = [
+            path
+            for path in session_root.rglob("*.jsonl")
+            if now - path.stat().st_mtime <= SESSION_ACTIVITY_WINDOW_SECONDS
+        ]
+    except OSError:
+        return False
+
+    for path in recent_logs:
+        try:
+            latest_turn: str | None = None
+            with path.open("rb") as log_file:
+                for line in log_file:
+                    # Ignore message and tool payloads; only decode turn-status events.
+                    if b'"type":"event_msg"' not in line:
+                        continue
+                    try:
+                        record = json.loads(line)
+                    except ValueError:
+                        continue
+                    payload = record.get("payload") or {}
+                    turn_id = payload.get("turn_id")
+                    if not turn_id:
+                        continue
+                    if payload.get("type") == "task_started":
+                        latest_turn = turn_id
+                    elif payload.get("type") in {
+                        "task_complete",
+                        "task_failed",
+                        "turn_aborted",
+                        "turn_failed",
+                    } and turn_id == latest_turn:
+                        latest_turn = None
+        except OSError:
+            continue
+        if latest_turn is not None:
+            return True
+    return False
+
+
+def _opencode_turn_is_active() -> bool:
+    """Check for a recently updated, incomplete OpenCode assistant message."""
+    database = Path.home() / ".local" / "share" / "opencode" / "opencode.db"
+    if not database.is_file():
+        return False
+    try:
+        with sqlite3.connect(f"file:{database}?mode=ro", uri=True, timeout=0.25) as connection:
+            message = connection.execute(
+                "SELECT time_updated, json_type(data, '$.time.completed') "
+                "FROM message WHERE json_extract(data, '$.role') = 'assistant' "
+                "ORDER BY time_updated DESC LIMIT 1"
+            ).fetchone()
+            if message is None:
+                return False
+            updated_ms, completed_type = message
+            return (
+                time.time() - updated_ms / 1000 <= SESSION_ACTIVITY_WINDOW_SECONDS
+                and completed_type is None
+            )
+    except (OSError, sqlite3.Error):
+        return False
+    return False
+
+
 def terminal_agent_is_active() -> bool:
     """Return whether a recognized terminal agent is currently doing work."""
     processes = _read_processes()
@@ -123,6 +195,10 @@ def terminal_agent_is_active() -> bool:
     ]
     if not agents:
         return False
+    if any(agent.name.lower() == "codex" for agent in agents) and _codex_turn_is_active():
+        return True
+    if any(agent.name.lower() == "opencode" for agent in agents) and _opencode_turn_is_active():
+        return True
 
     children: dict[int, list[Process]] = {}
     for process in processes:
