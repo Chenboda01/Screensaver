@@ -14,6 +14,9 @@ AGENT_NAMES: Final[frozenset[str]] = frozenset(
     {"codex", "claude", "claude-code", "opencode", "gemini", "aider", "goose", "amp", "cline", "cursor-agent"}
 )
 INTERPRETER_NAMES: Final[frozenset[str]] = frozenset({"bun", "deno", "node", "python", "python3", "uv"})
+MIN_AGENT_CPU_TICKS: Final[int] = max(1, int(os.sysconf("SC_CLK_TCK") * 0.25))
+
+
 @dataclass(frozen=True, slots=True)
 class Process:
     pid: int
@@ -138,11 +141,22 @@ def terminal_agent_is_active() -> bool:
             if not _is_idle_agent_service(process):
                 work_processes.append(process)
 
-    # The agent's own terminal UI redraws and polls continuously while idle.
-    # CPU usage from that long-lived process is not evidence of active work.
+    # Include sustained CPU activity from the terminal UI itself: an agent can
+    # be working on a response between child commands. The threshold filters
+    # the lower CPU use measured from idle terminal redraws and polling.
     process_ids = {process.pid for process in work_processes}
+    process_ids.update(agent.pid for agent in agents)
     before = {pid: _cpu_ticks(pid) for pid in process_ids}
     time.sleep(1)
+    for agent in agents:
+        initial_ticks = before[agent.pid]
+        current_ticks = _cpu_ticks(agent.pid)
+        if (
+            initial_ticks is not None
+            and current_ticks is not None
+            and current_ticks - initial_ticks >= MIN_AGENT_CPU_TICKS
+        ):
+            return True
     for process in work_processes:
         if process.state.startswith("R") or process.elapsed_seconds <= 2:
             return True
