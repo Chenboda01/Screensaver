@@ -1,43 +1,154 @@
 #!/usr/bin/env python3
 """Ask before the screensaver covers a terminal running an AI agent."""
 import os
-import re
 import shutil
 import subprocess
 import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 
-AGENT_COMMAND: Final[re.Pattern[str]] = re.compile(
-    r"(?:^|[\s/])(?:codex|claude(?:-code)?|opencode|gemini|aider|goose|amp|cline|cursor-agent)(?=$|[\s.:/-])",
-    re.IGNORECASE,
+AGENT_NAMES: Final[frozenset[str]] = frozenset(
+    {"codex", "claude", "claude-code", "opencode", "gemini", "aider", "goose", "amp", "cline", "cursor-agent"}
 )
+INTERPRETER_NAMES: Final[frozenset[str]] = frozenset({"bun", "deno", "node", "python", "python3", "uv"})
+@dataclass(frozen=True, slots=True)
+class Process:
+    pid: int
+    parent_pid: int
+    terminal: str
+    state: str
+    elapsed_seconds: int
+    name: str
+    command: str
 
 
-def terminal_agent_is_running() -> bool:
-    """Return whether a recognized AI agent is attached to a terminal."""
+def _is_agent_process(pid: int, process_name: str) -> bool:
+    """Match the executable or launcher entry point, not arbitrary arguments."""
+    normalized_name = process_name.lower()
+    if normalized_name in AGENT_NAMES:
+        return True
+    normalized_name = normalized_name.split("-", maxsplit=1)[0]
+    if normalized_name not in INTERPRETER_NAMES:
+        return False
+
+    try:
+        arguments = Path(f"/proc/{pid}/cmdline").read_bytes().decode(errors="replace").split("\0")
+    except OSError:
+        return False
+
+    for argument in arguments[1:]:
+        name = Path(argument).name.lower()
+        if name.removesuffix(".js").removesuffix(".mjs").removesuffix(".cjs") in AGENT_NAMES:
+            return True
+        if "/claude-code/" in argument.lower() or "/gemini-cli/" in argument.lower():
+            return True
+    for index, argument in enumerate(arguments[:-1]):
+        if argument == "-m" and arguments[index + 1].lower() in AGENT_NAMES:
+            return True
+    return False
+
+
+def _cpu_ticks(pid: int) -> int | None:
+    """Return a process's accumulated user and system CPU ticks."""
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text()
+        fields = stat[stat.rfind(")") + 2 :].split()
+        return int(fields[11]) + int(fields[12])
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def _read_processes() -> list[Process]:
+    """Read process relationships and terminal assignments from procps."""
     try:
         result = subprocess.run(
-            ["ps", "-eo", "pid=,tty=,args="],
+            ["ps", "-eo", "pid=,ppid=,tty=,stat=,etimes=,comm=,args="],
             capture_output=True,
             check=False,
             text=True,
             timeout=3,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return False
-
+        return []
     if result.returncode != 0:
+        return []
+
+    processes: list[Process] = []
+    for line in result.stdout.splitlines():
+        fields = line.split(maxsplit=6)
+        if len(fields) != 7:
+            continue
+        pid_text, parent_text, terminal, state, elapsed_text, name, command = fields
+        try:
+            processes.append(
+                Process(
+                    pid=int(pid_text),
+                    parent_pid=int(parent_text),
+                    terminal=terminal,
+                    state=state,
+                    elapsed_seconds=int(elapsed_text),
+                    name=name,
+                    command=command,
+                )
+            )
+        except ValueError:
+            continue
+    return processes
+
+
+def _is_idle_agent_service(process: Process) -> bool:
+    """Skip long-lived language and application services attached to an agent."""
+    command = process.command.lower()
+    return any(
+        service in command
+        for service in ("lsp-daemon", "codex app-server", "codex-code-mode-host")
+    )
+
+
+def terminal_agent_is_active() -> bool:
+    """Return whether a recognized terminal agent is currently doing work."""
+    processes = _read_processes()
+    agents = [
+        process
+        for process in processes
+        if process.pid != os.getpid()
+        and process.terminal not in ("?", "??")
+        and _is_agent_process(process.pid, process.name)
+    ]
+    if not agents:
         return False
 
-    for line in result.stdout.splitlines():
-        fields = line.strip().split(maxsplit=2)
-        if len(fields) != 3:
-            continue
-        pid, terminal, command = fields
-        if pid == str(os.getpid()) or terminal in ("?", "??"):
-            continue
-        if AGENT_COMMAND.search(command):
+    children: dict[int, list[Process]] = {}
+    for process in processes:
+        children.setdefault(process.parent_pid, []).append(process)
+
+    work_processes: list[Process] = []
+    visited: set[int] = set()
+    for agent in agents:
+        pending = list(children.get(agent.pid, []))
+        while pending:
+            process = pending.pop()
+            if process.pid in visited:
+                continue
+            visited.add(process.pid)
+            pending.extend(children.get(process.pid, []))
+            if not _is_idle_agent_service(process):
+                work_processes.append(process)
+
+    # The agent's own terminal UI redraws and polls continuously while idle.
+    # CPU usage from that long-lived process is not evidence of active work.
+    process_ids = {process.pid for process in work_processes}
+    before = {pid: _cpu_ticks(pid) for pid in process_ids}
+    time.sleep(1)
+    for process in work_processes:
+        if process.state.startswith("R") or process.elapsed_seconds <= 2:
+            return True
+        initial_ticks = before[process.pid]
+        current_ticks = _cpu_ticks(process.pid)
+        if initial_ticks is not None and current_ticks is not None and current_ticks > initial_ticks:
             return True
     return False
 
@@ -73,7 +184,7 @@ def user_wants_agent_in_background() -> bool:
 
 
 def main() -> int:
-    if not terminal_agent_is_running():
+    if not terminal_agent_is_active():
         return 0
     return 0 if user_wants_agent_in_background() else 1
 
