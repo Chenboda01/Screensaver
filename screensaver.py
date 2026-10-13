@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ScreenBot screensaver V12: new worlds and gradient countdown and head-only Bob.
+"""ScreenBot screensaver V13: planetary space theme and gradient countdown.
 
 Theme is controlled ONLY by KDE System Settings. This version keeps the
 existing settings integration and replaces the previous full-body design with a
@@ -100,6 +100,41 @@ class Saver(QWidget):
             brightness = int(110 + 120*(.5 + .5*math.sin(t*1.4 + phase)))
             p.setBrush(QColor(177, 212, 255, brightness))
             p.drawEllipse(QPointF((x*w + t*size*1.3) % max(w, 1), y*h), size, size)
+        unit = min(w, h)
+        self.planet(p, w*.77, h*.31, unit*.105, '#d78350', '#f6c678', '#56385a', ring=True)
+        self.planet(p, w*.19, h*.43, unit*.047, '#347cbe', '#92e4f4', '#253e85')
+        self.planet(p, w*.81, h*.68, unit*.032, '#a85576', '#f3a3b2', '#4c397f')
+
+    @staticmethod
+    def planet(p, x, y, radius, shadow, light, edge, ring=False):
+        """Paint a softly shaded planet, optionally wrapped in a lit ring."""
+        bounds = QRectF(x-radius, y-radius, radius*2, radius*2)
+        if ring:
+            ring_bounds = QRectF(x-radius*1.72, y-radius*.48, radius*3.44, radius*.96)
+            p.save()
+            p.setClipRect(QRectF(x-radius*2, y-radius, radius*4, radius))
+            p.setPen(QPen(QColor('#f5ca91'), max(2, radius*.11)))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawEllipse(ring_bounds)
+            p.restore()
+
+        glow = QRadialGradient(QPointF(x-radius*.36, y-radius*.43), radius*1.65)
+        glow.setColorAt(0, QColor(light))
+        glow.setColorAt(.52, QColor(shadow))
+        glow.setColorAt(1, QColor(edge))
+        p.setPen(QPen(QColor(light).lighter(118), max(1, radius*.025)))
+        p.setBrush(glow)
+        p.drawEllipse(bounds)
+
+        if ring:
+            p.save()
+            p.setClipRect(QRectF(x-radius*2, y, radius*4, radius))
+            p.setPen(QPen(QColor('#ffdca7'), max(2, radius*.11)))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawEllipse(ring_bounds)
+            p.setPen(QPen(QColor(255, 241, 204, 125), max(1, radius*.025)))
+            p.drawEllipse(ring_bounds)
+            p.restore()
 
     def mountains(self, p, w, h, t):
         gradient = QLinearGradient(0, 0, 0, h)
