@@ -113,6 +113,49 @@ KCMUtils.SimpleKCM {
             enabled: kcm.agentDetectionMode !== "ask"
             onClicked: kcm.resetRememberedAgentChoice()
         }
+        Controls.Label {
+            Kirigami.FormData.label: "BobOS & AI Backpack"
+            text: "Optional, fictional adventures drawn inside the screensaver. BobOS never opens real applications or runs commands."
+            wrapMode: Text.WordWrap
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "AI Backpack:"
+            text: checked ? "Enabled" : "Disabled"
+            checked: kcm.aiBackpackEnabled
+            onToggled: kcm.aiBackpackEnabled = checked
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "BobOS:"
+            text: checked ? "Enabled" : "Disabled"
+            checked: kcm.bobosEnabled
+            enabled: kcm.aiBackpackEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onToggled: kcm.bobosEnabled = checked
+        }
+        Controls.SpinBox {
+            Kirigami.FormData.label: "BobOS Activation Delay:"
+            from: 1
+            to: 30
+            stepSize: 1
+            editable: true
+            value: kcm.bobosActivationDelay
+            enabled: kcm.aiBackpackEnabled && kcm.bobosEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onValueModified: kcm.bobosActivationDelay = value
+            textFromValue: function(value, locale) { return value + (value === 1 ? " minute" : " minutes") }
+            valueFromText: function(text, locale) {
+                var parsed = parseInt(text, 10)
+                return isNaN(parsed) ? 3 : Math.min(30, Math.max(1, parsed))
+            }
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Wi-Fi connection animation:"
+            text: checked ? "Shown before BobOS opens" : "Skipped"
+            checked: kcm.showWifiAnimation
+            enabled: kcm.aiBackpackEnabled && kcm.bobosEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onToggled: kcm.showWifiAnimation = checked
+        }
         Controls.Switch {
             id: passwordSwitch
             Kirigami.FormData.label: "Password unlock:"

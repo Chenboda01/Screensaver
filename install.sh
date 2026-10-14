@@ -11,7 +11,7 @@ fi
 for tool in cmake c++ make; do
  command -v "$tool" >/dev/null || { echo "Missing $tool; install CMake and build tools first." >&2; exit 1; }
 done
-/usr/bin/python -m py_compile "$ROOT/screensaver.py" "$ROOT/agent_prompt.py"
+/usr/bin/python -m py_compile "$ROOT/screensaver.py" "$ROOT/agent_prompt.py" "$ROOT/bobos.py"
 echo 'Building ScreenBot KDE Settings module...'
 cmake -S "$ROOT/kcm" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PREFIX"
 cmake --build "$BUILD" --parallel 2
@@ -25,6 +25,7 @@ fi
 mkdir -p "$DEST"
 install -m 644 "$ROOT/screensaver.py" "$DEST/screensaver.py"
 install -m 644 "$ROOT/agent_prompt.py" "$DEST/agent_prompt.py"
+install -m 644 "$ROOT/bobos.py" "$DEST/bobos.py"
 install -m 755 "$ROOT/start.sh" "$DEST/start.sh"
 echo 'Installing KDE Settings module to the user-local prefix...'
 cmake --install "$BUILD"

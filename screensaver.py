@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ScreenBot screensaver V16: configurable clock and animated weather effects.
+"""ScreenBot screensaver V18: configurable BobOS, clock, and weather effects.
 
 Theme is controlled ONLY by KDE System Settings. This version keeps the
 existing settings integration and replaces the previous full-body design with a
@@ -17,6 +17,9 @@ from typing import Final
 from PyQt6.QtCore import QDateTime, QPointF, QRectF, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtGui import QShowEvent
+
+from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
 
 CLOCK_POSITIONS: Final[frozenset[str]] = frozenset(
     {
@@ -74,6 +77,21 @@ class Saver(QWidget):
             minutes = 2
         self.lock_seconds = max(1, min(60, minutes)) * 60
         self.show_timer = self.password_lock and settings.getboolean('Screensaver', 'show_timer', fallback=False)
+        self.ai_backpack_enabled = settings.getboolean('Screensaver', 'ai_backpack_enabled', fallback=True)
+        self.bobos_enabled = settings.getboolean('Screensaver', 'bobos_enabled', fallback=True)
+        try:
+            bobos_delay_minutes = settings.getint('Screensaver', 'bobos_activation_delay', fallback=3)
+        except ValueError:
+            bobos_delay_minutes = 3
+        self.bobos_activation_delay_seconds = max(1, min(30, bobos_delay_minutes)) * 60
+        self.show_wifi_animation = settings.getboolean('Screensaver', 'show_wifi_animation', fallback=True)
+        schedule_random = random.Random()
+        self.bobos_timeline = BobOSTimeline(
+            activation_delay_seconds=self.bobos_activation_delay_seconds,
+            show_connection_animation=self.show_wifi_animation,
+            first_adventure_offset_seconds=schedule_random.randint(0, 90),
+            cooldown_offset_seconds=schedule_random.randint(60, 180),
+        )
         self.lock_attempted = False
         self.next_lock_attempt = 0.0
         self.lock_error = False
@@ -88,6 +106,22 @@ class Saver(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update)
         self.timer.start(33)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        """Start all screensaver-relative timers when Bob first becomes visible."""
+        self.start_time = time.monotonic()
+        super().showEvent(event)
+
+    def bobos_status(self, elapsed_seconds: float) -> BobOSStatus:
+        """Keep BobOS out of disabled states and yield before the real KDE lock."""
+        enabled = bobos_may_run(
+            backpack_enabled=self.ai_backpack_enabled,
+            bobos_enabled=self.bobos_enabled,
+            password_lock_enabled=self.password_lock,
+            elapsed_seconds=elapsed_seconds,
+            lock_seconds=self.lock_seconds,
+        )
+        return self.bobos_timeline.status_at(elapsed_seconds, enabled=enabled)
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -107,8 +141,9 @@ class Saver(QWidget):
         self.weather(p, w, h, t)
         if self.show_clock:
             self.clock(p, w, h)
-        self.bob(p, w, h, t)
-        self.caption(p, w, h, t)
+        bobos_status = self.bobos_status(t)
+        self.bob(p, w, h, t, bobos_status)
+        self.caption(p, w, h, t, bobos_status.phase)
         if self.show_timer:
             self.countdown(p, w, h, t)
         p.end()
@@ -408,7 +443,9 @@ class Saver(QWidget):
             p.drawEllipse(head, scale*3, scale*3)
         p.restore()
 
-    def bob(self, p, w, h, t):
+    def bob(self, p, w, h, t, bobos_status: BobOSStatus | None = None):
+        bobos_status = bobos_status or BobOSStatus(BobOSPhase.EXPLORING, 0.0)
+        bobos_phase = bobos_status.phase
         phase = t % 32.0
         mood = 'curious' if 10 <= phase < 15 else 'happy' if 15 <= phase < 22 else 'sleepy' if phase >= 22 else 'idle'
         pose_time = t - (phase - 22.0) if mood == 'sleepy' else t
@@ -421,6 +458,11 @@ class Saver(QWidget):
         p.scale(scale, scale)
         p.rotate(math.sin(pose_time*.72)*2.4)
         p.setPen(Qt.PenStyle.NoPen)
+
+        if self.ai_backpack_enabled:
+            self.draw_ai_backpack(p, bobos_phase, t)
+        if bobos_phase in (BobOSPhase.CONNECTING, BobOSPhase.ACTIVE, BobOSPhase.PACKING_UP):
+            self.draw_bobos_device(p, bobos_phase, bobos_status.phase_elapsed_seconds, t)
 
         # Big floating glow behind the head.
         halo = QRadialGradient(QPointF(0, 2), 185)
@@ -504,7 +546,77 @@ class Saver(QWidget):
                 p.drawText(QPointF(x + scale*(96 + i*25), y - scale*(72 + i*28) - 5*math.sin(pose_time + i)), 'Z')
         return mood
 
-    def caption(self, p, w, h, t):
+    @staticmethod
+    def draw_ai_backpack(p: QPainter, phase: BobOSPhase, t: float) -> None:
+        """Draw Bob's fictional wearable pack behind the head."""
+        p.save()
+        p.setPen(QPen(QColor('#60bde3'), 3))
+        p.setBrush(QColor('#15344f'))
+        p.drawRoundedRect(QRectF(55, -8, 51, 83), 14, 14)
+        p.setPen(QPen(QColor('#417c9f'), 2))
+        p.setBrush(QColor('#214d6c'))
+        p.drawRoundedRect(QRectF(62, 31, 37, 32), 8, 8)
+        p.setPen(QColor('#b8edff'))
+        p.setFont(QFont('Sans Serif', 10, QFont.Weight.Bold))
+        p.drawText(QRectF(64, 36, 33, 18), Qt.AlignmentFlag.AlignCenter, 'AI')
+        p.setPen(QPen(QColor('#6ce6ff'), 3))
+        p.drawLine(QPointF(61, 1), QPointF(79, 9 + math.sin(t*2)*2))
+        if phase in (BobOSPhase.CONNECTING, BobOSPhase.ACTIVE):
+            glow = 110 if phase is BobOSPhase.ACTIVE else round(75 + 40*(.5 + .5*math.sin(t*5)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(93, 230, 255, glow))
+            p.drawEllipse(QPointF(80, 28), 5, 5)
+        p.restore()
+
+    @staticmethod
+    def draw_bobos_device(p: QPainter, phase: BobOSPhase, phase_elapsed: float, t: float) -> None:
+        """Render a tiny fictional laptop and BobOS desktop without real I/O."""
+        p.save()
+        if phase is BobOSPhase.PACKING_UP:
+            progress = min(1.0, phase_elapsed / 6.0)
+            p.setPen(QPen(QColor('#83e8ff'), 2))
+            p.setBrush(QColor('#173a53'))
+            device_x = 92 - progress*22
+            device_y = 67 - progress*45
+            p.drawRoundedRect(QRectF(device_x, device_y, 50, 8), 4, 4)
+            p.setPen(QPen(QColor('#9cecff'), 2))
+            p.drawLine(QPointF(device_x + 4, device_y + 3), QPointF(device_x + 46, device_y + 3))
+            p.restore()
+            return
+        p.setPen(QPen(QColor('#83e8ff'), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.setBrush(QColor('#10273d'))
+        p.drawRoundedRect(QRectF(58, 23, 83, 66), 7, 7)
+        screen = QLinearGradient(60, 25, 139, 87)
+        screen.setColorAt(0, QColor('#132c54'))
+        screen.setColorAt(1, QColor('#241e54'))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(screen)
+        p.drawRoundedRect(QRectF(64, 29, 71, 53), 4, 4)
+        p.setPen(QColor('#d9f8ff'))
+        p.setFont(QFont('Sans Serif', 7, QFont.Weight.Bold))
+        p.drawText(QRectF(68, 32, 63, 11), Qt.AlignmentFlag.AlignCenter, 'BobOS 1.0')
+        p.setPen(Qt.PenStyle.NoPen)
+        app_colors = (QColor('#5ee7ff'), QColor('#a78bfa'), QColor('#64e6a2'))
+        for index, color in enumerate(app_colors):
+            p.setBrush(color)
+            p.drawRoundedRect(QRectF(72 + index*18, 48, 13, 13), 3, 3)
+            p.setBrush(QColor(224, 245, 255, 150))
+            p.drawRoundedRect(QRectF(70 + index*18, 67, 16, 3), 1, 1)
+        if phase is BobOSPhase.CONNECTING:
+            p.setPen(QColor('#a8efff'))
+            p.setFont(QFont('Sans Serif', 6, QFont.Weight.DemiBold))
+            p.drawText(QRectF(68, 80, 64, 9), Qt.AlignmentFlag.AlignCenter,
+                       'CONNECTING' if int(t*2) % 2 == 0 else 'CONNECTING…')
+        p.setPen(QPen(QColor('#9cecff'), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.drawLine(QPointF(54, 91), QPointF(145, 91))
+        p.drawLine(QPointF(54, 91), QPointF(62, 97))
+        p.drawLine(QPointF(145, 91), QPointF(137, 97))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor('#68d9f4'))
+        p.drawRoundedRect(QRectF(62, 95, 75, 5), 2, 2)
+        p.restore()
+
+    def caption(self, p, w, h, t, bobos_phase: BobOSPhase = BobOSPhase.EXPLORING):
         mood = 'curious' if 10 <= (t % 32) < 15 else 'happy' if 15 <= (t % 32) < 22 else 'sleepy' if (t % 32) >= 22 else 'idle'
         words = {
             'space': {
@@ -538,9 +650,17 @@ class Saver(QWidget):
                 'sleepy': 'Bob is dreaming of electric skies…'
             }
         }
+        if bobos_phase is BobOSPhase.CONNECTING:
+            caption = 'Bob is connecting to BobOS…'
+        elif bobos_phase is BobOSPhase.ACTIVE:
+            caption = 'BobOS 1.0 is open — Bob is exploring!'
+        elif bobos_phase is BobOSPhase.PACKING_UP:
+            caption = 'Bob is closing BobOS and packing up…'
+        else:
+            caption = words[self.theme][mood]
         p.setPen(QColor('#dcecff'))
         p.setFont(QFont('Sans Serif', max(13, min(22, w//72))))
-        p.drawText(QRectF(0, h*.79, w, 39), Qt.AlignmentFlag.AlignCenter, words[self.theme][mood])
+        p.drawText(QRectF(0, h*.79, w, 39), Qt.AlignmentFlag.AlignCenter, caption)
         p.setPen(QColor('#92adc8'))
         p.setFont(QFont('Sans Serif', 12))
         p.drawText(QRectF(0, h-55, w, 30), Qt.AlignmentFlag.AlignCenter,

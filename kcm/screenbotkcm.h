@@ -19,6 +19,10 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool fogEnabled READ fogEnabled WRITE setFogEnabled NOTIFY fogEnabledChanged)
     Q_PROPERTY(bool shootingStarsEnabled READ shootingStarsEnabled WRITE setShootingStarsEnabled NOTIFY shootingStarsEnabledChanged)
     Q_PROPERTY(QString agentDetectionMode READ agentDetectionMode WRITE setAgentDetectionMode NOTIFY agentDetectionModeChanged)
+    Q_PROPERTY(bool aiBackpackEnabled READ aiBackpackEnabled WRITE setAiBackpackEnabled NOTIFY aiBackpackEnabledChanged)
+    Q_PROPERTY(bool bobosEnabled READ bobosEnabled WRITE setBobosEnabled NOTIFY bobosEnabledChanged)
+    Q_PROPERTY(int bobosActivationDelay READ bobosActivationDelay WRITE setBobosActivationDelay NOTIFY bobosActivationDelayChanged)
+    Q_PROPERTY(bool showWifiAnimation READ showWifiAnimation WRITE setShowWifiAnimation NOTIFY showWifiAnimationChanged)
 public:
     ScreenBotKcm(QObject *parent, const KPluginMetaData &data);
     QString theme() const { return m_theme; }
@@ -36,6 +40,10 @@ public:
     bool fogEnabled() const { return m_fogEnabled; }
     bool shootingStarsEnabled() const { return m_shootingStarsEnabled; }
     QString agentDetectionMode() const { return m_agentDetectionMode; }
+    bool aiBackpackEnabled() const { return m_aiBackpackEnabled; }
+    bool bobosEnabled() const { return m_bobosEnabled; }
+    int bobosActivationDelay() const { return m_bobosActivationDelay; }
+    bool showWifiAnimation() const { return m_showWifiAnimation; }
     void setTheme(const QString &value);
     void setPasswordLock(bool value);
     void setLockMinutes(int value);
@@ -52,6 +60,10 @@ public:
     void setShootingStarsEnabled(bool value);
     void setAgentDetectionMode(const QString &value);
     Q_INVOKABLE void resetRememberedAgentChoice();
+    void setAiBackpackEnabled(bool value);
+    void setBobosEnabled(bool value);
+    void setBobosActivationDelay(int value);
+    void setShowWifiAnimation(bool value);
     void load() override;
     void save() override;
 Q_SIGNALS:
@@ -70,6 +82,10 @@ Q_SIGNALS:
     void fogEnabledChanged();
     void shootingStarsEnabledChanged();
     void agentDetectionModeChanged();
+    void aiBackpackEnabledChanged();
+    void bobosEnabledChanged();
+    void bobosActivationDelayChanged();
+    void showWifiAnimationChanged();
 private:
     void checkModified();
     QString m_theme = QStringLiteral("random");
@@ -102,4 +118,12 @@ private:
     bool m_savedFogEnabled = false;
     bool m_savedShootingStarsEnabled = false;
     QString m_savedAgentDetectionMode = QStringLiteral("ask");
+    bool m_aiBackpackEnabled = true;
+    bool m_bobosEnabled = true;
+    int m_bobosActivationDelay = 3;
+    bool m_showWifiAnimation = true;
+    bool m_savedAiBackpackEnabled = true;
+    bool m_savedBobosEnabled = true;
+    int m_savedBobosActivationDelay = 3;
+    bool m_savedShowWifiAnimation = true;
 };
