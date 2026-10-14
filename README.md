@@ -1,6 +1,6 @@
 # ScreenBot Screensaver
 
-ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob with themed backgrounds and optional animated weather. V10 through V16 are available downloads; V1 through V9 are currently unavailable.
+ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob with themed backgrounds and optional animated weather. V10 through V17 are available downloads; V1 through V9 are currently unavailable.
 
 ## Downloads
 
@@ -22,8 +22,9 @@ ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob wi
 | V14 | [Download ScreenBot Screensaver V14 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V14.zip) |
 | V15 | [Download ScreenBot Screensaver V15 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V15.zip) |
 | V16 | [Download ScreenBot Screensaver V16 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V16.zip) |
+| V17 | [Download ScreenBot Screensaver V17 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V17.zip) |
 
-## Install V10, V11, V12, V13, V14, V15, or V16
+## Install V10, V11, V12, V13, V14, V15, V16, or V17
 
 1. Download the version ZIP and extract it into `~/Downloads`.
 2. Open a terminal in the extracted version folder, such as `ScreenBot-Screensaver-V16`.
@@ -42,6 +43,8 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - Random, Space, Mountains, Snow, Forest, and Futuristic City themes
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
 - Individually enabled animated rain, snow, thunderstorms, fog, and Space shooting stars
+- AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
+- Manual launches remain available regardless of the automatic agent policy
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
 - Optional countdown with a smooth green-to-red color transition
@@ -55,12 +58,13 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - **V14:** Restored prompts during agent response processing while filtering idle terminal UI polling. Active child commands continue to trigger the prompt.
 - **V15:** Checks recent Codex and OpenCode turn status so the prompt appears during an active response, even between child commands.
 - **V16:** Adds clock format, date, position, size, and visibility controls, plus individually configurable animated weather effects.
+- **V17:** Adds a remember-choice checkbox to the active-agent prompt, persistent Always ask / Always start / Don't start preferences in KDE Settings, a reset action, safe cancellation when detection is uncertain or the prompt times out, and a manual launch bypass.
 
 ## Requirements
 
 - KDE Plasma 6 on Wayland
 - Python with PyQt6
-- `notify-send` (libnotify) for the V11 agent prompt
+- PyQt6 for the screensaver and agent-choice dialog
 - CMake, a C++ compiler, Make, and the Qt/KDE development packages required by the KCM build
 
 ## Security

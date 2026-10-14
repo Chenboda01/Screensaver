@@ -28,7 +28,8 @@ void ScreenBotKcm::checkModified() {
                  || m_snowEnabled != m_savedSnowEnabled
                  || m_thunderstormsEnabled != m_savedThunderstormsEnabled
                  || m_fogEnabled != m_savedFogEnabled
-                 || m_shootingStarsEnabled != m_savedShootingStarsEnabled);
+                 || m_shootingStarsEnabled != m_savedShootingStarsEnabled
+                 || m_agentDetectionMode != m_savedAgentDetectionMode);
 }
 
 void ScreenBotKcm::load() {
@@ -55,6 +56,9 @@ void ScreenBotKcm::load() {
     const bool thunderstorms = cfg.value(QStringLiteral("Screensaver/thunderstorms_enabled"), false).toBool();
     const bool fog = cfg.value(QStringLiteral("Screensaver/fog_enabled"), false).toBool();
     const bool shootingStars = cfg.value(QStringLiteral("Screensaver/shooting_stars_enabled"), false).toBool();
+    const QString requestedAgentMode = cfg.value(QStringLiteral("Screensaver/agent_detection_mode"), QStringLiteral("ask")).toString();
+    const QString agentMode = requestedAgentMode == QLatin1String("start") || requestedAgentMode == QLatin1String("block")
+        ? requestedAgentMode : QStringLiteral("ask");
     if (m_theme != validTheme) { m_theme = validTheme; Q_EMIT themeChanged(); }
     if (m_passwordLock != lock) { m_passwordLock = lock; Q_EMIT passwordLockChanged(); }
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
@@ -69,6 +73,7 @@ void ScreenBotKcm::load() {
     if (m_thunderstormsEnabled != thunderstorms) { m_thunderstormsEnabled = thunderstorms; Q_EMIT thunderstormsEnabledChanged(); }
     if (m_fogEnabled != fog) { m_fogEnabled = fog; Q_EMIT fogEnabledChanged(); }
     if (m_shootingStarsEnabled != shootingStars) { m_shootingStarsEnabled = shootingStars; Q_EMIT shootingStarsEnabledChanged(); }
+    if (m_agentDetectionMode != agentMode) { m_agentDetectionMode = agentMode; Q_EMIT agentDetectionModeChanged(); }
     m_savedTheme = m_theme;
     m_savedPasswordLock = m_passwordLock;
     m_savedLockMinutes = m_lockMinutes;
@@ -83,6 +88,7 @@ void ScreenBotKcm::load() {
     m_savedThunderstormsEnabled = m_thunderstormsEnabled;
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
+    m_savedAgentDetectionMode = m_agentDetectionMode;
     setNeedsSave(false);
 }
 
@@ -102,6 +108,7 @@ void ScreenBotKcm::save() {
     cfg.setValue(QStringLiteral("Screensaver/thunderstorms_enabled"), m_thunderstormsEnabled);
     cfg.setValue(QStringLiteral("Screensaver/fog_enabled"), m_fogEnabled);
     cfg.setValue(QStringLiteral("Screensaver/shooting_stars_enabled"), m_shootingStarsEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/agent_detection_mode"), m_agentDetectionMode);
     cfg.sync();
     if (cfg.status() != QSettings::NoError) {
         qWarning("Could not write ScreenBot settings.");
@@ -121,6 +128,7 @@ void ScreenBotKcm::save() {
     m_savedThunderstormsEnabled = m_thunderstormsEnabled;
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
+    m_savedAgentDetectionMode = m_agentDetectionMode;
     setNeedsSave(false);
 }
 
@@ -229,6 +237,18 @@ void ScreenBotKcm::setShootingStarsEnabled(bool value) {
     m_shootingStarsEnabled = value;
     Q_EMIT shootingStarsEnabledChanged();
     checkModified();
+}
+
+void ScreenBotKcm::setAgentDetectionMode(const QString &value) {
+    if (value != QLatin1String("ask") && value != QLatin1String("start") && value != QLatin1String("block")) return;
+    if (value == m_agentDetectionMode) return;
+    m_agentDetectionMode = value;
+    Q_EMIT agentDetectionModeChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::resetRememberedAgentChoice() {
+    setAgentDetectionMode(QStringLiteral("ask"));
 }
 
 #include "screenbotkcm.moc"

@@ -96,6 +96,23 @@ KCMUtils.SimpleKCM {
             checked: kcm.shootingStarsEnabled
             onToggled: kcm.shootingStarsEnabled = checked
         }
+        Controls.Label {
+            Kirigami.FormData.label: "AI Agent Detection:"
+            text: "Choose what happens when an active terminal agent is detected. Manual launches always remain available."
+            wrapMode: Text.WordWrap
+        }
+        Controls.ComboBox {
+            Kirigami.FormData.label: "When an agent is active:"
+            model: ["Always ask", "Always start screensaver", "Don't start screensaver while agents are running"]
+            currentIndex: ["ask", "start", "block"].indexOf(kcm.agentDetectionMode)
+            onActivated: function(index) { kcm.agentDetectionMode = ["ask", "start", "block"][index] }
+        }
+        Controls.Button {
+            Kirigami.FormData.label: "Remembered choice:"
+            text: "Reset to Always ask"
+            enabled: kcm.agentDetectionMode !== "ask"
+            onClicked: kcm.resetRememberedAgentChoice()
+        }
         Controls.Switch {
             id: passwordSwitch
             Kirigami.FormData.label: "Password unlock:"

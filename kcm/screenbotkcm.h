@@ -18,6 +18,7 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool thunderstormsEnabled READ thunderstormsEnabled WRITE setThunderstormsEnabled NOTIFY thunderstormsEnabledChanged)
     Q_PROPERTY(bool fogEnabled READ fogEnabled WRITE setFogEnabled NOTIFY fogEnabledChanged)
     Q_PROPERTY(bool shootingStarsEnabled READ shootingStarsEnabled WRITE setShootingStarsEnabled NOTIFY shootingStarsEnabledChanged)
+    Q_PROPERTY(QString agentDetectionMode READ agentDetectionMode WRITE setAgentDetectionMode NOTIFY agentDetectionModeChanged)
 public:
     ScreenBotKcm(QObject *parent, const KPluginMetaData &data);
     QString theme() const { return m_theme; }
@@ -34,6 +35,7 @@ public:
     bool thunderstormsEnabled() const { return m_thunderstormsEnabled; }
     bool fogEnabled() const { return m_fogEnabled; }
     bool shootingStarsEnabled() const { return m_shootingStarsEnabled; }
+    QString agentDetectionMode() const { return m_agentDetectionMode; }
     void setTheme(const QString &value);
     void setPasswordLock(bool value);
     void setLockMinutes(int value);
@@ -48,6 +50,8 @@ public:
     void setThunderstormsEnabled(bool value);
     void setFogEnabled(bool value);
     void setShootingStarsEnabled(bool value);
+    void setAgentDetectionMode(const QString &value);
+    Q_INVOKABLE void resetRememberedAgentChoice();
     void load() override;
     void save() override;
 Q_SIGNALS:
@@ -65,6 +69,7 @@ Q_SIGNALS:
     void thunderstormsEnabledChanged();
     void fogEnabledChanged();
     void shootingStarsEnabledChanged();
+    void agentDetectionModeChanged();
 private:
     void checkModified();
     QString m_theme = QStringLiteral("random");
@@ -85,6 +90,7 @@ private:
     bool m_thunderstormsEnabled = false;
     bool m_fogEnabled = false;
     bool m_shootingStarsEnabled = false;
+    QString m_agentDetectionMode = QStringLiteral("ask");
     bool m_savedClockVisible = true;
     QString m_savedClockFormat = QStringLiteral("12h");
     bool m_savedShowDate = false;
@@ -95,4 +101,5 @@ private:
     bool m_savedThunderstormsEnabled = false;
     bool m_savedFogEnabled = false;
     bool m_savedShootingStarsEnabled = false;
+    QString m_savedAgentDetectionMode = QStringLiteral("ask");
 };

@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """Ask before the screensaver covers a terminal running an AI agent."""
+import configparser
 import json
 import os
-import shutil
 import sqlite3
 import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Final
+
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QApplication, QCheckBox, QMessageBox
 
 
 AGENT_NAMES: Final[frozenset[str]] = frozenset(
@@ -18,6 +22,26 @@ AGENT_NAMES: Final[frozenset[str]] = frozenset(
 INTERPRETER_NAMES: Final[frozenset[str]] = frozenset({"bun", "deno", "node", "python", "python3", "uv"})
 MIN_AGENT_CPU_TICKS: Final[int] = max(1, int(os.sysconf("SC_CLK_TCK") * 0.25))
 SESSION_ACTIVITY_WINDOW_SECONDS: Final[int] = 5 * 60
+PROMPT_TIMEOUT_MILLISECONDS: Final[int] = 30_000
+CONFIG_FILE: Final[Path] = Path.home() / ".config" / "screenbot-screensaver.ini"
+
+
+class DetectionResult(StrEnum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    UNKNOWN = "unknown"
+
+
+class AgentMode(StrEnum):
+    ALWAYS_ASK = "ask"
+    ALWAYS_START = "start"
+    NEVER_START_WHILE_ACTIVE = "block"
+
+
+@dataclass(frozen=True, slots=True)
+class PromptResult:
+    start: bool
+    remember: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,7 +55,7 @@ class Process:
     command: str
 
 
-def _is_agent_process(pid: int, process_name: str) -> bool:
+def _is_agent_process(pid: int, process_name: str) -> bool | None:
     """Match the executable or launcher entry point, not arbitrary arguments."""
     normalized_name = process_name.lower()
     if normalized_name in AGENT_NAMES:
@@ -43,7 +67,7 @@ def _is_agent_process(pid: int, process_name: str) -> bool:
     try:
         arguments = Path(f"/proc/{pid}/cmdline").read_bytes().decode(errors="replace").split("\0")
     except OSError:
-        return False
+        return None
 
     for argument in arguments[1:]:
         name = Path(argument).name.lower()
@@ -67,7 +91,7 @@ def _cpu_ticks(pid: int) -> int | None:
         return None
 
 
-def _read_processes() -> list[Process]:
+def _read_processes() -> list[Process] | None:
     """Read process relationships and terminal assignments from procps."""
     try:
         result = subprocess.run(
@@ -78,9 +102,9 @@ def _read_processes() -> list[Process]:
             timeout=3,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return []
+        return None
     if result.returncode != 0:
-        return []
+        return None
 
     processes: list[Process] = []
     for line in result.stdout.splitlines():
@@ -114,7 +138,7 @@ def _is_idle_agent_service(process: Process) -> bool:
     )
 
 
-def _codex_turn_is_active() -> bool:
+def _codex_turn_is_active() -> bool | None:
     """Read Codex turn status events without loading session message contents."""
     session_root = Path.home() / ".codex" / "sessions"
     now = time.time()
@@ -125,7 +149,7 @@ def _codex_turn_is_active() -> bool:
             if now - path.stat().st_mtime <= SESSION_ACTIVITY_WINDOW_SECONDS
         ]
     except OSError:
-        return False
+        return None
 
     for path in recent_logs:
         try:
@@ -153,17 +177,17 @@ def _codex_turn_is_active() -> bool:
                     } and turn_id == latest_turn:
                         latest_turn = None
         except OSError:
-            continue
+            return None
         if latest_turn is not None:
             return True
     return False
 
 
-def _opencode_turn_is_active() -> bool:
+def _opencode_turn_is_active() -> bool | None:
     """Check for a recently updated, incomplete OpenCode assistant message."""
     database = Path.home() / ".local" / "share" / "opencode" / "opencode.db"
     if not database.is_file():
-        return False
+        return None
     try:
         with sqlite3.connect(f"file:{database}?mode=ro", uri=True, timeout=0.25) as connection:
             message = connection.execute(
@@ -172,33 +196,47 @@ def _opencode_turn_is_active() -> bool:
                 "ORDER BY time_updated DESC LIMIT 1"
             ).fetchone()
             if message is None:
-                return False
+                return None
             updated_ms, completed_type = message
             return (
                 time.time() - updated_ms / 1000 <= SESSION_ACTIVITY_WINDOW_SECONDS
                 and completed_type is None
             )
     except (OSError, sqlite3.Error):
-        return False
+        return None
     return False
 
 
-def terminal_agent_is_active() -> bool:
-    """Return whether a recognized terminal agent is currently doing work."""
+def terminal_agent_status() -> DetectionResult:
+    """Report active, inactive, or uncertain agent status without guessing."""
     processes = _read_processes()
-    agents = [
-        process
-        for process in processes
-        if process.pid != os.getpid()
-        and process.terminal not in ("?", "??")
-        and _is_agent_process(process.pid, process.name)
-    ]
+    if processes is None:
+        return DetectionResult.UNKNOWN
+    agents: list[Process] = []
+    uncertain_agent_candidate = False
+    for process in processes:
+        if process.pid == os.getpid() or process.terminal in ("?", "??"):
+            continue
+        agent_match = _is_agent_process(process.pid, process.name)
+        if agent_match is True:
+            agents.append(process)
+        elif agent_match is None:
+            uncertain_agent_candidate = True
     if not agents:
-        return False
-    if any(agent.name.lower() == "codex" for agent in agents) and _codex_turn_is_active():
-        return True
-    if any(agent.name.lower() == "opencode" for agent in agents) and _opencode_turn_is_active():
-        return True
+        return DetectionResult.UNKNOWN if uncertain_agent_candidate else DetectionResult.INACTIVE
+    for agent in agents:
+        if agent.name.lower() == "codex":
+            turn_active = _codex_turn_is_active()
+            if turn_active is True:
+                return DetectionResult.ACTIVE
+            if turn_active is None:
+                uncertain_agent_candidate = True
+        elif agent.name.lower() == "opencode":
+            turn_active = _opencode_turn_is_active()
+            if turn_active is True:
+                return DetectionResult.ACTIVE
+            if turn_active is None:
+                uncertain_agent_candidate = True
 
     children: dict[int, list[Process]] = {}
     for process in processes:
@@ -227,56 +265,111 @@ def terminal_agent_is_active() -> bool:
     for agent in agents:
         initial_ticks = before[agent.pid]
         current_ticks = _cpu_ticks(agent.pid)
-        if (
-            initial_ticks is not None
-            and current_ticks is not None
-            and current_ticks - initial_ticks >= MIN_AGENT_CPU_TICKS
-        ):
-            return True
+        if initial_ticks is None or current_ticks is None:
+            uncertain_agent_candidate = True
+        elif current_ticks - initial_ticks >= MIN_AGENT_CPU_TICKS:
+            return DetectionResult.ACTIVE
     for process in work_processes:
         if process.state.startswith("R") or process.elapsed_seconds <= 2:
-            return True
+            return DetectionResult.ACTIVE
         initial_ticks = before[process.pid]
         current_ticks = _cpu_ticks(process.pid)
-        if initial_ticks is not None and current_ticks is not None and current_ticks > initial_ticks:
-            return True
-    return False
+        if initial_ticks is None or current_ticks is None:
+            uncertain_agent_candidate = True
+        elif current_ticks > initial_ticks:
+            return DetectionResult.ACTIVE
+    return DetectionResult.UNKNOWN if uncertain_agent_candidate else DetectionResult.INACTIVE
 
 
-def user_wants_agent_in_background() -> bool:
-    """Ask whether to keep the terminal agent running behind the saver."""
-    notify_send = shutil.which("notify-send")
-    if notify_send is None:
-        print("ScreenBot: notify-send is unavailable; leaving the desktop visible.", file=sys.stderr)
-        return False
-
+def _read_mode() -> AgentMode:
+    """Read the committed KDE setting; malformed values safely ask each time."""
+    config = configparser.ConfigParser()
     try:
-        result = subprocess.run(
-            [
-                notify_send,
-                "--wait",
-                "--expire-time=0",
-                "--action=keep=Yes",
-                "--action=cancel=No",
-                "--app-name=ScreenBot Screensaver",
-                "ScreenBot Screensaver",
-                "An AI agent is active in a terminal. Keep it working in the background while the screensaver starts?",
-            ],
-            capture_output=True,
-            check=False,
-            text=True,
-        )
-    except OSError as error:
-        print(f"ScreenBot: could not show the agent prompt: {error}", file=sys.stderr)
-        return False
+        with CONFIG_FILE.open(encoding="utf-8") as config_file:
+            config.read_file(config_file)
+    except FileNotFoundError:
+        return AgentMode.ALWAYS_ASK
+    except (OSError, configparser.Error):
+        return AgentMode.ALWAYS_ASK
+    try:
+        return AgentMode(config.get("Screensaver", "agent_detection_mode", fallback="ask"))
+    except (configparser.Error, ValueError):
+        return AgentMode.ALWAYS_ASK
 
-    return result.returncode == 0 and result.stdout.strip() == "keep"
+
+def _save_mode(mode: AgentMode) -> bool:
+    """Persist a remembered answer without replacing settings on write failure."""
+    config = configparser.ConfigParser()
+    try:
+        if CONFIG_FILE.exists():
+            with CONFIG_FILE.open(encoding="utf-8") as config_file:
+                config.read_file(config_file)
+        if not config.has_section("Screensaver"):
+            config.add_section("Screensaver")
+        config.set("Screensaver", "agent_detection_mode", mode.value)
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        temporary = CONFIG_FILE.with_suffix(".ini.tmp")
+        with temporary.open("w", encoding="utf-8") as config_file:
+            config.write(config_file)
+            config_file.flush()
+            os.fsync(config_file.fileno())
+        os.replace(temporary, CONFIG_FILE)
+    except (OSError, configparser.Error):
+        print("ScreenBot: could not save the remembered agent choice.", file=sys.stderr)
+        return False
+    return True
+
+
+def user_wants_agent_in_background() -> PromptResult:
+    """Ask with a remember checkbox; timeout and UI failure cancel safely."""
+    app = QApplication.instance() or QApplication(sys.argv[:1])
+    checkbox = QCheckBox("Remember my choice")
+    dialog = QMessageBox()
+    dialog.setWindowTitle("ScreenBot Screensaver")
+    dialog.setText("An AI agent is active in a terminal. Keep it working in the background while the screensaver starts?")
+    dialog.setIcon(QMessageBox.Icon.Question)
+    dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+    dialog.setDefaultButton(QMessageBox.StandardButton.No)
+    dialog.setCheckBox(checkbox)
+    timed_out = False
+    timer = QTimer(dialog)
+    timer.setSingleShot(True)
+
+    def close_for_timeout() -> None:
+        nonlocal timed_out
+        timed_out = True
+        dialog.done(0)
+
+    timer.timeout.connect(close_for_timeout)
+    timer.start(PROMPT_TIMEOUT_MILLISECONDS)
+    answer = dialog.exec()
+    timer.stop()
+    selected_yes = answer == int(QMessageBox.StandardButton.Yes)
+    return PromptResult(start=selected_yes and not timed_out, remember=checkbox.isChecked() and not timed_out)
 
 
 def main() -> int:
-    if not terminal_agent_is_active():
+    if "--manual" in sys.argv[1:]:
         return 0
-    return 0 if user_wants_agent_in_background() else 1
+    status = terminal_agent_status()
+    if status is DetectionResult.INACTIVE:
+        return 0
+    if status is DetectionResult.UNKNOWN:
+        print("ScreenBot: agent status is uncertain; keeping the desktop visible.", file=sys.stderr)
+        return 1
+    mode = _read_mode()
+    if mode is AgentMode.ALWAYS_START:
+        return 0
+    if mode is AgentMode.NEVER_START_WHILE_ACTIVE:
+        return 1
+    try:
+        answer = user_wants_agent_in_background()
+    except RuntimeError as error:
+        print(f"ScreenBot: could not show the agent prompt: {error}", file=sys.stderr)
+        return 1
+    if answer.remember:
+        _save_mode(AgentMode.ALWAYS_START if answer.start else AgentMode.NEVER_START_WHILE_ACTIVE)
+    return 0 if answer.start else 1
 
 
 if __name__ == "__main__":
