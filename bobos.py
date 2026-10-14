@@ -1,4 +1,4 @@
-"""Pure timing rules for Bob's fictional, screensaver-only BobOS adventures."""
+"""Deterministic timing for Bob's entirely fictional phone adventure."""
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
@@ -6,15 +6,58 @@ from typing import Final
 
 class BobOSPhase(StrEnum):
     EXPLORING = "exploring"
-    CONNECTING = "connecting"
-    ACTIVE = "active"
-    PACKING_UP = "packing-up"
+    CURIOUS = "curious"
+    PHONE_ACTIVATION = "phone-activation"
+    WIFI_CONNECTING = "wifi-connecting"
+    BOOTING = "booting"
+    ZOOM_IN = "zoom-in"
+    HOME = "home"
+    BROWSER = "browser"
+    NOTIFICATION = "notification"
+    FILES = "files"
+    TERMINAL = "terminal"
+    GAMES = "games"
+    SETTINGS = "settings"
+    SHUTDOWN = "shutdown"
+    ZOOM_OUT = "zoom-out"
+    RETURN = "return"
 
 
-ADVENTURE_SECONDS: Final[int] = 42
-CONNECTION_SECONDS: Final[int] = 8
-PACK_UP_SECONDS: Final[int] = 6
 MIN_COOLDOWN_SECONDS: Final[int] = 5 * 60
+NORMAL_SEQUENCE: Final[tuple[tuple[BobOSPhase, int], ...]] = (
+    (BobOSPhase.CURIOUS, 4),
+    (BobOSPhase.PHONE_ACTIVATION, 5),
+    (BobOSPhase.WIFI_CONNECTING, 8),
+    (BobOSPhase.BOOTING, 8),
+    (BobOSPhase.ZOOM_IN, 5),
+    (BobOSPhase.HOME, 26),
+    (BobOSPhase.BROWSER, 32),
+    (BobOSPhase.NOTIFICATION, 6),
+    (BobOSPhase.FILES, 24),
+    (BobOSPhase.TERMINAL, 32),
+    (BobOSPhase.GAMES, 36),
+    (BobOSPhase.SETTINGS, 24),
+    (BobOSPhase.SHUTDOWN, 8),
+    (BobOSPhase.ZOOM_OUT, 5),
+    (BobOSPhase.RETURN, 3),
+)
+PREVIEW_SEQUENCE: Final[tuple[tuple[BobOSPhase, int], ...]] = (
+    (BobOSPhase.CURIOUS, 2),
+    (BobOSPhase.PHONE_ACTIVATION, 2),
+    (BobOSPhase.WIFI_CONNECTING, 3),
+    (BobOSPhase.BOOTING, 3),
+    (BobOSPhase.ZOOM_IN, 3),
+    (BobOSPhase.HOME, 5),
+    (BobOSPhase.BROWSER, 6),
+    (BobOSPhase.NOTIFICATION, 2),
+    (BobOSPhase.FILES, 5),
+    (BobOSPhase.TERMINAL, 6),
+    (BobOSPhase.GAMES, 6),
+    (BobOSPhase.SETTINGS, 5),
+    (BobOSPhase.SHUTDOWN, 3),
+    (BobOSPhase.ZOOM_OUT, 3),
+    (BobOSPhase.RETURN, 2),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,56 +68,75 @@ class BobOSStatus:
 
 @dataclass(frozen=True, slots=True)
 class BobOSTimeline:
-    """Compute BobOS phases relative to the screensaver's first visible frame."""
+    """Schedule adventures from the screensaver's first visible frame."""
 
     activation_delay_seconds: int
     show_connection_animation: bool
     first_adventure_offset_seconds: int = 0
     cooldown_offset_seconds: int = 0
+    preview_mode: bool = False
+
+    @property
+    def adventure_sequence(self) -> tuple[tuple[BobOSPhase, int], ...]:
+        """Return the full fictional activity, omitting only optional Wi-Fi."""
+        sequence = PREVIEW_SEQUENCE if self.preview_mode else NORMAL_SEQUENCE
+        if self.show_connection_animation:
+            return sequence
+        return tuple(item for item in sequence if item[0] is not BobOSPhase.WIFI_CONNECTING)
+
+    @property
+    def sequence_duration_seconds(self) -> int:
+        return sum(duration for _, duration in self.adventure_sequence)
 
     def phase_at(self, elapsed_seconds: float, *, enabled: bool = True) -> BobOSPhase:
-        """Return the fictional activity phase without starting real applications."""
+        """Return the phase at an elapsed screen time without performing real I/O."""
         return self.status_at(elapsed_seconds, enabled=enabled).phase
 
     def status_at(self, elapsed_seconds: float, *, enabled: bool = True) -> BobOSStatus:
-        """Return a phase and its local elapsed time for smooth visual transitions."""
+        """Return the current phase and its elapsed time for animation drawing."""
         if not enabled or elapsed_seconds < 0:
             return BobOSStatus(BobOSPhase.EXPLORING, 0.0)
 
-        first_start = self.activation_delay_seconds + max(0, self.first_adventure_offset_seconds)
-        connection_seconds = CONNECTION_SECONDS if self.show_connection_animation else 0
-        adventure_end = first_start + connection_seconds + ADVENTURE_SECONDS
-        pack_up_end = adventure_end + PACK_UP_SECONDS
+        delay = 0 if self.preview_mode else max(0, self.activation_delay_seconds)
+        first_start = delay + (0 if self.preview_mode else max(0, self.first_adventure_offset_seconds))
+        sequence = self.adventure_sequence
+        cycle_offset = 0
+        last_completed_at = 0.0
+        while True:
+            sequence_start = first_start + cycle_offset
+            if elapsed_seconds < sequence_start:
+                return BobOSStatus(BobOSPhase.EXPLORING, elapsed_seconds - last_completed_at)
 
-        if elapsed_seconds < first_start:
-            return BobOSStatus(BobOSPhase.EXPLORING, elapsed_seconds)
-        while elapsed_seconds >= first_start:
-            if elapsed_seconds < first_start + connection_seconds:
-                return BobOSStatus(BobOSPhase.CONNECTING, elapsed_seconds - first_start)
-            if elapsed_seconds < adventure_end:
-                return BobOSStatus(BobOSPhase.ACTIVE, elapsed_seconds - (first_start + connection_seconds))
-            if elapsed_seconds < pack_up_end:
-                return BobOSStatus(BobOSPhase.PACKING_UP, elapsed_seconds - adventure_end)
-            previous_pack_up_end = pack_up_end
-            first_start = pack_up_end + MIN_COOLDOWN_SECONDS + max(0, self.cooldown_offset_seconds)
-            if elapsed_seconds < first_start:
-                return BobOSStatus(BobOSPhase.EXPLORING, elapsed_seconds - previous_pack_up_end)
-            adventure_end = first_start + connection_seconds + ADVENTURE_SECONDS
-            pack_up_end = adventure_end + PACK_UP_SECONDS
+            cursor = sequence_start
+            for phase, duration in sequence:
+                phase_end = cursor + duration
+                if elapsed_seconds < phase_end:
+                    return BobOSStatus(phase, elapsed_seconds - cursor)
+                cursor = phase_end
 
-        return BobOSStatus(BobOSPhase.EXPLORING, 0.0)
+            completed_at = cursor
+            next_start = completed_at + self.cooldown_seconds
+            if elapsed_seconds < next_start:
+                return BobOSStatus(BobOSPhase.EXPLORING, elapsed_seconds - completed_at)
+            last_completed_at = completed_at
+            cycle_offset += self.sequence_duration_seconds + self.cooldown_seconds
+
+    @property
+    def cooldown_seconds(self) -> int:
+        """Return a cooldown that is always at least five minutes."""
+        return MIN_COOLDOWN_SECONDS + max(0, self.cooldown_offset_seconds)
 
 
 def bobos_may_run(
     *,
-    backpack_enabled: bool,
+    phone_enabled: bool,
     bobos_enabled: bool,
     password_lock_enabled: bool,
     elapsed_seconds: float,
     lock_seconds: float,
 ) -> bool:
-    """Enforce the feature dependency and let KDE's configured lock win."""
-    if not backpack_enabled or not bobos_enabled:
+    """Enforce the phone dependency and yield before KDE's real password lock."""
+    if not phone_enabled or not bobos_enabled:
         return False
     if password_lock_enabled and elapsed_seconds >= lock_seconds:
         return False

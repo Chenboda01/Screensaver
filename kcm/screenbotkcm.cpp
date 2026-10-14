@@ -1,6 +1,8 @@
 #include "screenbotkcm.h"
 #include <KPluginFactory>
 #include <QSettings>
+#include <QProcess>
+#include <QDir>
 #include <QStandardPaths>
 #include <QStringList>
 #include <QtGlobal>
@@ -30,7 +32,7 @@ void ScreenBotKcm::checkModified() {
                  || m_fogEnabled != m_savedFogEnabled
                  || m_shootingStarsEnabled != m_savedShootingStarsEnabled
                  || m_agentDetectionMode != m_savedAgentDetectionMode
-                 || m_aiBackpackEnabled != m_savedAiBackpackEnabled
+                 || m_phoneEnabled != m_savedPhoneEnabled
                  || m_bobosEnabled != m_savedBobosEnabled
                  || m_bobosActivationDelay != m_savedBobosActivationDelay
                  || m_showWifiAnimation != m_savedShowWifiAnimation);
@@ -63,7 +65,8 @@ void ScreenBotKcm::load() {
     const QString requestedAgentMode = cfg.value(QStringLiteral("Screensaver/agent_detection_mode"), QStringLiteral("ask")).toString();
     const QString agentMode = requestedAgentMode == QLatin1String("start") || requestedAgentMode == QLatin1String("block")
         ? requestedAgentMode : QStringLiteral("ask");
-    const bool aiBackpack = cfg.value(QStringLiteral("Screensaver/ai_backpack_enabled"), true).toBool();
+    const bool phone = cfg.value(QStringLiteral("Screensaver/bob_phone_enabled"),
+                                  cfg.value(QStringLiteral("Screensaver/ai_backpack_enabled"), true)).toBool();
     const bool bobos = cfg.value(QStringLiteral("Screensaver/bobos_enabled"), true).toBool();
     const int bobosDelay = qBound(1, cfg.value(QStringLiteral("Screensaver/bobos_activation_delay"), 3).toInt(), 30);
     const bool wifiAnimation = cfg.value(QStringLiteral("Screensaver/show_wifi_animation"), true).toBool();
@@ -82,7 +85,7 @@ void ScreenBotKcm::load() {
     if (m_fogEnabled != fog) { m_fogEnabled = fog; Q_EMIT fogEnabledChanged(); }
     if (m_shootingStarsEnabled != shootingStars) { m_shootingStarsEnabled = shootingStars; Q_EMIT shootingStarsEnabledChanged(); }
     if (m_agentDetectionMode != agentMode) { m_agentDetectionMode = agentMode; Q_EMIT agentDetectionModeChanged(); }
-    if (m_aiBackpackEnabled != aiBackpack) { m_aiBackpackEnabled = aiBackpack; Q_EMIT aiBackpackEnabledChanged(); }
+    if (m_phoneEnabled != phone) { m_phoneEnabled = phone; Q_EMIT phoneEnabledChanged(); }
     if (m_bobosEnabled != bobos) { m_bobosEnabled = bobos; Q_EMIT bobosEnabledChanged(); }
     if (m_bobosActivationDelay != bobosDelay) { m_bobosActivationDelay = bobosDelay; Q_EMIT bobosActivationDelayChanged(); }
     if (m_showWifiAnimation != wifiAnimation) { m_showWifiAnimation = wifiAnimation; Q_EMIT showWifiAnimationChanged(); }
@@ -101,7 +104,7 @@ void ScreenBotKcm::load() {
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
     m_savedAgentDetectionMode = m_agentDetectionMode;
-    m_savedAiBackpackEnabled = m_aiBackpackEnabled;
+    m_savedPhoneEnabled = m_phoneEnabled;
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
@@ -125,7 +128,7 @@ void ScreenBotKcm::save() {
     cfg.setValue(QStringLiteral("Screensaver/fog_enabled"), m_fogEnabled);
     cfg.setValue(QStringLiteral("Screensaver/shooting_stars_enabled"), m_shootingStarsEnabled);
     cfg.setValue(QStringLiteral("Screensaver/agent_detection_mode"), m_agentDetectionMode);
-    cfg.setValue(QStringLiteral("Screensaver/ai_backpack_enabled"), m_aiBackpackEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/bob_phone_enabled"), m_phoneEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_enabled"), m_bobosEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_activation_delay"), m_bobosActivationDelay);
     cfg.setValue(QStringLiteral("Screensaver/show_wifi_animation"), m_showWifiAnimation);
@@ -149,7 +152,7 @@ void ScreenBotKcm::save() {
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
     m_savedAgentDetectionMode = m_agentDetectionMode;
-    m_savedAiBackpackEnabled = m_aiBackpackEnabled;
+    m_savedPhoneEnabled = m_phoneEnabled;
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
@@ -275,10 +278,10 @@ void ScreenBotKcm::resetRememberedAgentChoice() {
     setAgentDetectionMode(QStringLiteral("ask"));
 }
 
-void ScreenBotKcm::setAiBackpackEnabled(bool value) {
-    if (value == m_aiBackpackEnabled) return;
-    m_aiBackpackEnabled = value;
-    Q_EMIT aiBackpackEnabledChanged();
+void ScreenBotKcm::setPhoneEnabled(bool value) {
+    if (value == m_phoneEnabled) return;
+    m_phoneEnabled = value;
+    Q_EMIT phoneEnabledChanged();
     checkModified();
 }
 
@@ -302,6 +305,17 @@ void ScreenBotKcm::setShowWifiAnimation(bool value) {
     m_showWifiAnimation = value;
     Q_EMIT showWifiAnimationChanged();
     checkModified();
+}
+
+void ScreenBotKcm::previewBobOS(bool showWifiAnimation) {
+    const QString script = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver/screensaver.py");
+    QStringList arguments{script, QStringLiteral("--preview-bobos")};
+    arguments.append(showWifiAnimation ? QStringLiteral("--wifi-animation")
+                                      : QStringLiteral("--no-wifi-animation"));
+    if (!QProcess::startDetached(QStringLiteral("/usr/bin/python"), arguments,
+                                 QDir::homePath() + QStringLiteral("/ScreenBot/screensaver"))) {
+        qWarning("Could not start the BobOS preview.");
+    }
 }
 
 #include "screenbotkcm.moc"

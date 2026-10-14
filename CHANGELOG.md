@@ -1,5 +1,12 @@
 # Changelog
 
+## V19
+
+- Replaced the AI Backpack and tiny laptop with Bob's Phone while keeping Bob head-only.
+- Rebuilt BobOS as a scripted, animated phone experience with home, Browser, Files, Terminal, Games, Settings, notification, boot, shutdown, and camera-zoom phases. All content is painted locally; it never opens apps, files, websites, or commands.
+- Renamed the KDE control to Enable Bob's Phone and added a lock-safe Preview full adventure button. Preview skips the activation delay but still yields to the configured KDE password lock.
+- Added automated timeline and offscreen rendering checks for the complete preview sequence, lock priority, theme return, and app interactions.
+
 ## V18
 
 - Added separate AI Backpack and BobOS switches, both enabled by default; disabling the backpack disables BobOS controls without changing the saved BobOS choice.

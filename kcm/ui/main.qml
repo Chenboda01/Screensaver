@@ -114,21 +114,21 @@ KCMUtils.SimpleKCM {
             onClicked: kcm.resetRememberedAgentChoice()
         }
         Controls.Label {
-            Kirigami.FormData.label: "BobOS & AI Backpack"
-            text: "Optional, fictional adventures drawn inside the screensaver. BobOS never opens real applications or runs commands."
+            Kirigami.FormData.label: "Bob's Phone & BobOS"
+            text: "Bob's Phone contains a fictional mobile operating system. Its apps, files, browser, Wi-Fi, and terminal are animated drawings only."
             wrapMode: Text.WordWrap
         }
         Controls.Switch {
-            Kirigami.FormData.label: "AI Backpack:"
+            Kirigami.FormData.label: "Enable Bob's Phone:"
             text: checked ? "Enabled" : "Disabled"
-            checked: kcm.aiBackpackEnabled
-            onToggled: kcm.aiBackpackEnabled = checked
+            checked: kcm.phoneEnabled
+            onToggled: kcm.phoneEnabled = checked
         }
         Controls.Switch {
-            Kirigami.FormData.label: "BobOS:"
+            Kirigami.FormData.label: "Enable BobOS:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.bobosEnabled
-            enabled: kcm.aiBackpackEnabled
+            enabled: kcm.phoneEnabled
             opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.bobosEnabled = checked
         }
@@ -139,7 +139,7 @@ KCMUtils.SimpleKCM {
             stepSize: 1
             editable: true
             value: kcm.bobosActivationDelay
-            enabled: kcm.aiBackpackEnabled && kcm.bobosEnabled
+            enabled: kcm.phoneEnabled && kcm.bobosEnabled
             opacity: enabled ? 1.0 : 0.4
             onValueModified: kcm.bobosActivationDelay = value
             textFromValue: function(value, locale) { return value + (value === 1 ? " minute" : " minutes") }
@@ -149,12 +149,19 @@ KCMUtils.SimpleKCM {
             }
         }
         Controls.Switch {
-            Kirigami.FormData.label: "Wi-Fi connection animation:"
+            Kirigami.FormData.label: "AI Wi-Fi animation:"
             text: checked ? "Shown before BobOS opens" : "Skipped"
             checked: kcm.showWifiAnimation
-            enabled: kcm.aiBackpackEnabled && kcm.bobosEnabled
+            enabled: kcm.phoneEnabled && kcm.bobosEnabled
             opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.showWifiAnimation = checked
+        }
+        Controls.Button {
+            Kirigami.FormData.label: "BobOS preview:"
+            text: "Preview full adventure"
+            enabled: kcm.phoneEnabled && kcm.bobosEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onClicked: kcm.previewBobOS(kcm.showWifiAnimation)
         }
         Controls.Switch {
             id: passwordSwitch
