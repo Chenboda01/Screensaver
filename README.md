@@ -1,6 +1,6 @@
 # ScreenBot Screensaver
 
-ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob with a clock and themed animated backgrounds. V10 through V15 are available downloads; V1 through V9 are currently unavailable.
+ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob with themed backgrounds and optional animated weather. V10 through V16 are available downloads; V1 through V9 are currently unavailable.
 
 ## Downloads
 
@@ -21,11 +21,12 @@ ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob wi
 | V13 | [Download ScreenBot Screensaver V13 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V13.zip) |
 | V14 | [Download ScreenBot Screensaver V14 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V14.zip) |
 | V15 | [Download ScreenBot Screensaver V15 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V15.zip) |
+| V16 | [Download ScreenBot Screensaver V16 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V16.zip) |
 
-## Install V10, V11, V12, V13, V14, or V15
+## Install V10, V11, V12, V13, V14, V15, or V16
 
 1. Download the version ZIP and extract it into `~/Downloads`.
-2. Open a terminal in the extracted version folder, such as `ScreenBot-Screensaver-V12`.
+2. Open a terminal in the extracted version folder, such as `ScreenBot-Screensaver-V16`.
 3. Run:
 
    ```bash
@@ -34,11 +35,13 @@ ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows an animated Bob wi
 
 The installer builds the KDE Settings module and installs it to your user account without requiring `sudo`. Log out and back in once so Plasma can discover the module. Then open **System Settings → Screensaver**, choose a theme, and select **Apply**.
 
-The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves a backup of an existing installation. The existing Plasma idle trigger can invoke `~/ScreenBot/screensaver/start.sh`.
+The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves a backup of an existing installation. The existing Plasma idle trigger can invoke `~/ScreenBot/screensaver/start.sh`. Use **System Settings → Screensaver** to configure the clock and toggle each animated weather effect.
 
 ## Features
 
 - Random, Space, Mountains, Snow, Forest, and Futuristic City themes
+- Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
+- Individually enabled animated rain, snow, thunderstorms, fog, and Space shooting stars
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
 - Optional countdown with a smooth green-to-red color transition
@@ -51,6 +54,7 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - **V13:** Added three shaded planets, including a ringed planet, to the Space theme.
 - **V14:** Restored prompts during agent response processing while filtering idle terminal UI polling. Active child commands continue to trigger the prompt.
 - **V15:** Checks recent Codex and OpenCode turn status so the prompt appears during an active response, even between child commands.
+- **V16:** Adds clock format, date, position, size, and visibility controls, plus individually configurable animated weather effects.
 
 ## Requirements
 

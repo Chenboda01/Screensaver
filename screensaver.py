@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ScreenBot screensaver V15: session-aware prompting and planetary space theme.
+"""ScreenBot screensaver V16: configurable clock and animated weather effects.
 
 Theme is controlled ONLY by KDE System Settings. This version keeps the
 existing settings integration and replaces the previous full-body design with a
@@ -12,10 +12,19 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Final
 
 from PyQt6.QtCore import QDateTime, QPointF, QRectF, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 from PyQt6.QtWidgets import QApplication, QWidget
+
+CLOCK_POSITIONS: Final[frozenset[str]] = frozenset(
+    {
+        'top-left', 'top-center', 'top-right',
+        'center-left', 'center-center', 'center-right',
+        'bottom-left', 'bottom-center', 'bottom-right',
+    }
+)
 
 
 def read_settings():
@@ -41,6 +50,23 @@ class Saver(QWidget):
         self.setCursor(Qt.CursorShape.BlankCursor)
         settings = read_settings()
         self.theme = selected_theme(settings)
+        self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
+        self.clock_format = settings.get('Screensaver', 'clock_format', fallback='12h').strip()
+        if self.clock_format not in ('12h', '24h'):
+            self.clock_format = '12h'
+        self.show_date = settings.getboolean('Screensaver', 'show_date', fallback=False)
+        clock_position = settings.get('Screensaver', 'clock_position', fallback='top-center').strip()
+        self.clock_position = clock_position if clock_position in CLOCK_POSITIONS else 'top-center'
+        try:
+            clock_font_size = settings.getint('Screensaver', 'clock_font_size', fallback=48)
+        except ValueError:
+            clock_font_size = 48
+        self.clock_font_size = max(16, min(72, clock_font_size))
+        self.rain_enabled = settings.getboolean('Screensaver', 'rain_enabled', fallback=False)
+        self.snow_enabled = settings.getboolean('Screensaver', 'snow_enabled', fallback=False)
+        self.thunderstorms_enabled = settings.getboolean('Screensaver', 'thunderstorms_enabled', fallback=False)
+        self.fog_enabled = settings.getboolean('Screensaver', 'fog_enabled', fallback=False)
+        self.shooting_stars_enabled = settings.getboolean('Screensaver', 'shooting_stars_enabled', fallback=False)
         self.password_lock = settings.getboolean('Screensaver', 'password_lock', fallback=False)
         try:
             minutes = settings.getint('Screensaver', 'lock_minutes', fallback=2)
@@ -55,6 +81,10 @@ class Saver(QWidget):
         self.old_mouse = None
         r = random.Random()
         self.particles = [(r.random(), r.random(), r.uniform(.65, 2.6), r.random()*math.tau) for _ in range(110)]
+        self.rain_drops = [(r.random(), r.random(), r.uniform(.8, 1.8), r.random()) for _ in range(150)]
+        self.snowflakes = [(r.random(), r.random(), r.uniform(1.2, 4.0), r.uniform(.5, 1.6), r.random()*math.tau) for _ in range(110)]
+        self.lightning_events = [(r.uniform(0, 20), r.uniform(12, 24), r.uniform(.15, .85)) for _ in range(4)]
+        self.shooting_star_events = [(r.uniform(0, 24), r.uniform(10, 22), r.uniform(.1, .8), r.uniform(.08, .35)) for _ in range(5)]
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update)
         self.timer.start(33)
@@ -74,7 +104,9 @@ class Saver(QWidget):
             self.forest(p, w, h, t)
         else:
             self.city(p, w, h, t)
-        self.clock(p, w, h)
+        self.weather(p, w, h, t)
+        if self.show_clock:
+            self.clock(p, w, h)
         self.bob(p, w, h, t)
         self.caption(p, w, h, t)
         if self.show_timer:
@@ -256,11 +288,125 @@ class Saver(QWidget):
         p.drawLine(QPointF(0,h*.91),QPointF(w,h*.91))
         p.setPen(Qt.PenStyle.NoPen)
 
-    def clock(self, p, w, h):
+    def clock(self, p: QPainter, w: int, h: int) -> None:
+        columns = {
+            'left': (w*.035, w*.42, Qt.AlignmentFlag.AlignLeft),
+            'center': (w*.29, w*.42, Qt.AlignmentFlag.AlignHCenter),
+            'right': (w*.545, w*.42, Qt.AlignmentFlag.AlignRight),
+        }
+        rows = {'top': h*.08, 'center': h*.38, 'bottom': h*.65}
+        row, column = self.clock_position.split('-')
+        x, width, horizontal_alignment = columns[column]
+        y = rows[row]
+        alignment = horizontal_alignment | Qt.AlignmentFlag.AlignVCenter
+        date_y = y + self.clock_font_size * 1.5
         p.setPen(QColor('#ecf7ff'))
-        p.setFont(QFont('Sans Serif', max(24, min(62, w//24)), QFont.Weight.DemiBold))
-        p.drawText(QRectF(0, h*.12, w, 90), Qt.AlignmentFlag.AlignCenter,
-                   QDateTime.currentDateTime().toString('h:mm AP'))
+        p.setFont(QFont('Sans Serif', self.clock_font_size, QFont.Weight.DemiBold))
+        time_format = 'HH:mm' if self.clock_format == '24h' else 'h:mm AP'
+        p.drawText(QRectF(x, y, width, self.clock_font_size*1.5), alignment,
+                   QDateTime.currentDateTime().toString(time_format))
+        if self.show_date:
+            p.setPen(QColor('#a9c1df'))
+            p.setFont(QFont('Sans Serif', max(10, round(self.clock_font_size*.34))))
+            p.drawText(QRectF(x, date_y, width, self.clock_font_size*.62), alignment,
+                       QDateTime.currentDateTime().toString('ddd, MMM d'))
+
+    def weather(self, p: QPainter, w: int, h: int, t: float) -> None:
+        if self.rain_enabled:
+            self.draw_rain(p, w, h, t)
+        if self.snow_enabled:
+            self.draw_snowfall(p, w, h, t)
+        if self.fog_enabled:
+            self.draw_fog(p, w, h, t)
+        if self.thunderstorms_enabled:
+            self.draw_thunderstorms(p, w, h, t)
+        if self.shooting_stars_enabled and self.theme == 'space':
+            self.draw_shooting_stars(p, w, h, t)
+
+    def draw_rain(self, p: QPainter, w: int, h: int, t: float) -> None:
+        scale = min(w, h) / 900
+        p.save()
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(QColor(171, 218, 255, 125), max(1, scale*1.5)))
+        for x, y, speed, phase in self.rain_drops:
+            drop_x = (x*w + math.sin(t*.7 + phase)*12*scale) % w
+            drop_y = (y*h + t*(170 + speed*100)*scale) % h
+            p.drawLine(QPointF(drop_x, drop_y), QPointF(drop_x - 5*scale, drop_y + 19*scale))
+        p.restore()
+
+    def draw_snowfall(self, p: QPainter, w: int, h: int, t: float) -> None:
+        scale = min(w, h) / 900
+        p.save()
+        p.setPen(Qt.PenStyle.NoPen)
+        for x, y, size, speed, phase in self.snowflakes:
+            flake_x = (x*w + math.sin(t*.55 + phase)*24*scale) % w
+            flake_y = (y*h + t*(18 + speed*17)*scale) % h
+            p.setBrush(QColor(237, 247, 255, 185))
+            p.drawEllipse(QPointF(flake_x, flake_y), size*scale, size*scale)
+        p.restore()
+
+    def draw_fog(self, p: QPainter, w: int, h: int, t: float) -> None:
+        p.save()
+        p.setPen(Qt.PenStyle.NoPen)
+        veil = QLinearGradient(0, h*.47, 0, h)
+        veil.setColorAt(0, QColor(190, 211, 232, 0))
+        veil.setColorAt(.55, QColor(190, 211, 232, 19))
+        veil.setColorAt(1, QColor(190, 211, 232, 46))
+        p.setBrush(veil)
+        p.drawRect(QRectF(0, h*.47, w, h*.53))
+        for index in range(4):
+            center_x = ((index*.37 + t*.012) % 1.5 - .25) * w
+            center_y = h*(.69 + math.sin(t*.16 + index)*.025)
+            radius = min(w*.42, h*.2)
+            haze = QRadialGradient(QPointF(center_x, center_y), radius)
+            haze.setColorAt(0, QColor(218, 229, 240, 38))
+            haze.setColorAt(1, QColor(218, 229, 240, 0))
+            p.setBrush(haze)
+            p.drawEllipse(QPointF(center_x, center_y), radius*1.8, radius*.62)
+        p.restore()
+
+    def draw_thunderstorms(self, p: QPainter, w: int, h: int, t: float) -> None:
+        flashes: list[tuple[float, float]] = []
+        for offset, period, x in self.lightning_events:
+            phase = (t + offset) % period
+            if phase < .2:
+                flashes.append((x, 1 - phase/.2))
+        if not flashes:
+            return
+        p.save()
+        p.setPen(Qt.PenStyle.NoPen)
+        for x, intensity in flashes:
+            alpha = round(72*intensity)
+            p.fillRect(QRectF(0, 0, w, h), QColor(207, 224, 255, alpha))
+            points = [
+                QPointF(w*x, 0),
+                QPointF(w*(x-.035), h*.18),
+                QPointF(w*(x+.012), h*.17),
+                QPointF(w*(x-.055), h*.40),
+                QPointF(w*(x+.004), h*.27),
+                QPointF(w*(x-.012), h*.28),
+                QPointF(w*x, 0),
+            ]
+            p.setBrush(QColor(231, 241, 255, round(230*intensity)))
+            p.drawPolygon(QPolygonF(points))
+        p.restore()
+
+    def draw_shooting_stars(self, p: QPainter, w: int, h: int, t: float) -> None:
+        scale = min(w, h) / 900
+        p.save()
+        for offset, period, x, y in self.shooting_star_events:
+            phase = (t + offset) % period
+            if phase >= 1.15:
+                continue
+            progress = phase / 1.15
+            head = QPointF(w*(x + progress*.35), h*(y + progress*.19))
+            tail = QPointF(head.x() - w*.065, head.y() - h*.035)
+            p.setPen(QPen(QColor(210, 237, 255, round(235*(1-progress))), max(1.5, scale*2.4), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawLine(tail, head)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(242, 250, 255, round(230*(1-progress))))
+            p.drawEllipse(head, scale*3, scale*3)
+        p.restore()
 
     def bob(self, p, w, h, t):
         phase = t % 32.0

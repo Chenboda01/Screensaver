@@ -1,10 +1,10 @@
 {
   "KPlugin": {
-    "Name": "Screensaver",
-    "Description": "Configure ScreenBot themes and password-lock countdown",
-    "Icon": "preferences-desktop-screensaver",
+    "Name": "Screensaver Settings",
+    "Description": "Configure ScreenBot themes, clock, weather effects, and password-lock countdown",
+    "Icon": "preferences-system",
     "EnabledByDefault": true
   },
-  "X-KDE-Keywords": "Screensaver,ScreenBot,Bob,Space,Mountains,Theme",
+  "X-KDE-Keywords": "Screensaver,ScreenBot,Bob,Space,Mountains,Theme,Clock,Weather,Rain,Snow,Fog",
   "X-KDE-System-Settings-Parent-Category": "workspace"
 }

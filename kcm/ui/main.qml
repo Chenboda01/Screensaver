@@ -18,6 +18,85 @@ KCMUtils.SimpleKCM {
             onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city"][index] }
         }
         Controls.Switch {
+            Kirigami.FormData.label: "Clock:"
+            text: checked ? "Visible" : "Hidden"
+            checked: kcm.clockVisible
+            onToggled: kcm.clockVisible = checked
+        }
+        Controls.ComboBox {
+            Kirigami.FormData.label: "Time format:"
+            model: ["12-hour", "24-hour"]
+            currentIndex: kcm.clockFormat === "24h" ? 1 : 0
+            enabled: kcm.clockVisible
+            onActivated: function(index) { kcm.clockFormat = index === 1 ? "24h" : "12h" }
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Date:"
+            text: checked ? "Show date below the time" : "Hide date"
+            checked: kcm.showDate
+            enabled: kcm.clockVisible
+            onToggled: kcm.showDate = checked
+        }
+        Controls.ComboBox {
+            id: clockPosition
+            Kirigami.FormData.label: "Clock position:"
+            model: ["Top left", "Top center", "Top right", "Center left", "Center", "Center right", "Bottom left", "Bottom center", "Bottom right"]
+            property var values: ["top-left", "top-center", "top-right", "center-left", "center-center", "center-right", "bottom-left", "bottom-center", "bottom-right"]
+            currentIndex: Math.max(0, values.indexOf(kcm.clockPosition))
+            enabled: kcm.clockVisible
+            onActivated: function(index) { kcm.clockPosition = values[index] }
+        }
+        Controls.SpinBox {
+            Kirigami.FormData.label: "Clock font size:"
+            from: 16
+            to: 72
+            stepSize: 1
+            editable: true
+            value: kcm.clockFontSize
+            enabled: kcm.clockVisible
+            onValueModified: kcm.clockFontSize = value
+            textFromValue: function(value, locale) { return value + " pt" }
+            valueFromText: function(text, locale) {
+                var parsed = parseInt(text, 10)
+                return isNaN(parsed) ? 48 : Math.min(72, Math.max(16, parsed))
+            }
+        }
+        Controls.Label {
+            Kirigami.FormData.label: "Animated weather:"
+            text: "Choose any effects to layer over the scene. Shooting stars appear in Space."
+            wrapMode: Text.WordWrap
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Rain:"
+            text: checked ? "Enabled" : "Disabled"
+            checked: kcm.rainEnabled
+            onToggled: kcm.rainEnabled = checked
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Snowfall:"
+            text: checked ? "Enabled" : "Disabled"
+            checked: kcm.snowEnabled
+            onToggled: kcm.snowEnabled = checked
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Thunderstorms:"
+            text: checked ? "Enabled" : "Disabled"
+            checked: kcm.thunderstormsEnabled
+            onToggled: kcm.thunderstormsEnabled = checked
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Fog:"
+            text: checked ? "Enabled" : "Disabled"
+            checked: kcm.fogEnabled
+            onToggled: kcm.fogEnabled = checked
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Shooting stars:"
+            text: checked ? "Enabled" : "Disabled"
+            checked: kcm.shootingStarsEnabled
+            onToggled: kcm.shootingStarsEnabled = checked
+        }
+        Controls.Switch {
             id: passwordSwitch
             Kirigami.FormData.label: "Password unlock:"
             text: checked ? "On" : "Off"
