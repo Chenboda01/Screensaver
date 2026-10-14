@@ -114,8 +114,8 @@ KCMUtils.SimpleKCM {
             onClicked: kcm.resetRememberedAgentChoice()
         }
         Controls.Label {
-            Kirigami.FormData.label: "Bob's Phone & BobOS"
-            text: "Bob's Phone contains a fictional mobile operating system. Its apps, files, browser, Wi-Fi, and terminal are animated drawings only."
+            Kirigami.FormData.label: "Bob's Phone & BobOS 2.0"
+            text: "Bob's Phone contains a fictional mobile operating system and optional relationship story. Its apps, messages, places, and characters are animated drawings only."
             wrapMode: Text.WordWrap
         }
         Controls.Switch {
@@ -156,12 +156,20 @@ KCMUtils.SimpleKCM {
             opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.showWifiAnimation = checked
         }
+        Controls.Switch {
+            Kirigami.FormData.label: "BobOS 2.0:"
+            text: "Enable Bob's Relationship Story"
+            checked: kcm.relationshipStoryEnabled
+            enabled: kcm.phoneEnabled && kcm.bobosEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onToggled: kcm.relationshipStoryEnabled = checked
+        }
         Controls.Button {
             Kirigami.FormData.label: "BobOS preview:"
             text: "Preview full adventure"
             enabled: kcm.phoneEnabled && kcm.bobosEnabled
             opacity: enabled ? 1.0 : 0.4
-            onClicked: kcm.previewBobOS(kcm.showWifiAnimation)
+            onClicked: kcm.previewBobOS(kcm.showWifiAnimation, kcm.relationshipStoryEnabled)
         }
         Controls.Switch {
             id: passwordSwitch

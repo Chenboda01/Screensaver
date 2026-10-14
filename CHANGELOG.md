@@ -1,5 +1,12 @@
 # Changelog
 
+## V20
+
+- Upgraded BobOS to 2.0 with an optional, recurring relationship story about Bob and his girlfriend of two years, Luna.
+- Added fictional BobChat messages, Bob Maps destination browsing, Bob Weather, Bob Calendar scheduling, dating advice, an incoming call, a theme-specific floating robot date scene, and follow-up messages.
+- Added an enabled-by-default "Enable Bob's Relationship Story" KDE setting with Apply/Discard persistence; disabling it removes every relationship scene while preserving other BobOS adventures.
+- Extended the lock-safe preview to include the full story and added timeline, setting, five-theme render, and offscreen sequence tests. All relationship content is painted fiction and never uses real contacts, messaging, maps, or weather services.
+
 ## V19
 
 - Replaced the AI Backpack and tiny laptop with Bob's Phone while keeping Bob head-only.

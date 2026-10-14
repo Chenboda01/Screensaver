@@ -16,6 +16,7 @@ from bobos import (
     MIN_COOLDOWN_SECONDS,
     NORMAL_SEQUENCE,
     PREVIEW_SEQUENCE,
+    RELATIONSHIP_PHASES,
     BobOSPhase,
     BobOSStatus,
     BobOSTimeline,
@@ -59,7 +60,7 @@ class BobOSTimelineTests(unittest.TestCase):
         timeline = BobOSTimeline(activation_delay_seconds=0, show_connection_animation=True)
         phases = tuple(phase for phase, _ in timeline.adventure_sequence)
 
-        self.assertEqual(phases, tuple(phase for phase, _ in NORMAL_SEQUENCE))
+        self.assertEqual(phases, tuple(phase for phase, _ in NORMAL_SEQUENCE if phase not in RELATIONSHIP_PHASES))
         self.assertTrue({BobOSPhase.HOME, BobOSPhase.BROWSER, BobOSPhase.FILES,
                          BobOSPhase.TERMINAL, BobOSPhase.GAMES, BobOSPhase.SETTINGS}.issubset(phases))
 
@@ -80,11 +81,20 @@ class BobOSTimelineTests(unittest.TestCase):
             preview_mode=True,
         )
 
-        self.assertEqual(tuple(phase for phase, _ in timeline.adventure_sequence),
-                         tuple(phase for phase, _ in PREVIEW_SEQUENCE))
+        self.assertEqual(
+            tuple(phase for phase, _ in timeline.adventure_sequence),
+            tuple(phase for phase, _ in PREVIEW_SEQUENCE if phase not in RELATIONSHIP_PHASES),
+        )
         self.assertLess(timeline.sequence_duration_seconds, 60)
         self.assertEqual(timeline.phase_at(0), BobOSPhase.CURIOUS)
         self.assertEqual(timeline.phase_at(timeline.sequence_duration_seconds), BobOSPhase.EXPLORING)
+        relationship_preview = BobOSTimeline(
+            activation_delay_seconds=180,
+            show_connection_animation=True,
+            preview_mode=True,
+            relationship_story_enabled=True,
+        )
+        self.assertLess(relationship_preview.sequence_duration_seconds, 60)
 
     def test_disabled_features_keep_bob_exploring(self) -> None:
         timeline = BobOSTimeline(activation_delay_seconds=0, show_connection_animation=True)
@@ -222,13 +232,15 @@ class SaverPreviewTests(unittest.TestCase):
             self.addCleanup(without_wifi.close)
 
             self.assertTrue(with_wifi.show_wifi_animation)
-            self.assertIn(BobOSPhase.WIFI_CONNECTING, with_wifi.bobos_timeline.phases)
+            self.assertIn(BobOSPhase.WIFI_CONNECTING,
+                          tuple(phase for phase, _ in with_wifi.bobos_timeline.adventure_sequence))
             self.assertFalse(without_wifi.show_wifi_animation)
-            self.assertNotIn(BobOSPhase.WIFI_CONNECTING, without_wifi.bobos_timeline.phases)
+            self.assertNotIn(BobOSPhase.WIFI_CONNECTING,
+                             tuple(phase for phase, _ in without_wifi.bobos_timeline.adventure_sequence))
 
     def test_full_preview_sequence_renders_offscreen_frames(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            saver = self.make_saver(Path(directory), preview_bobos=True)
+            saver = self.make_saver(Path(directory), preview_bobos=True, preview_relationship_story=True)
             self.addCleanup(saver.close)
             saver.resize(1280, 720)
             saver.theme = "forest"
@@ -273,7 +285,6 @@ class SaverPreviewTests(unittest.TestCase):
                 render_phase(saver, BobOSPhase.TERMINAL, 0.2),
                 render_phase(saver, BobOSPhase.TERMINAL, 4.5),
             )
-
 
 if __name__ == "__main__":
     unittest.main()

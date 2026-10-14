@@ -23,6 +23,7 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool bobosEnabled READ bobosEnabled WRITE setBobosEnabled NOTIFY bobosEnabledChanged)
     Q_PROPERTY(int bobosActivationDelay READ bobosActivationDelay WRITE setBobosActivationDelay NOTIFY bobosActivationDelayChanged)
     Q_PROPERTY(bool showWifiAnimation READ showWifiAnimation WRITE setShowWifiAnimation NOTIFY showWifiAnimationChanged)
+    Q_PROPERTY(bool relationshipStoryEnabled READ relationshipStoryEnabled WRITE setRelationshipStoryEnabled NOTIFY relationshipStoryEnabledChanged)
 public:
     ScreenBotKcm(QObject *parent, const KPluginMetaData &data);
     QString theme() const { return m_theme; }
@@ -44,6 +45,7 @@ public:
     bool bobosEnabled() const { return m_bobosEnabled; }
     int bobosActivationDelay() const { return m_bobosActivationDelay; }
     bool showWifiAnimation() const { return m_showWifiAnimation; }
+    bool relationshipStoryEnabled() const { return m_relationshipStoryEnabled; }
     void setTheme(const QString &value);
     void setPasswordLock(bool value);
     void setLockMinutes(int value);
@@ -60,11 +62,12 @@ public:
     void setShootingStarsEnabled(bool value);
     void setAgentDetectionMode(const QString &value);
     Q_INVOKABLE void resetRememberedAgentChoice();
-    Q_INVOKABLE void previewBobOS(bool showWifiAnimation);
+    Q_INVOKABLE void previewBobOS(bool showWifiAnimation, bool relationshipStoryEnabled);
     void setPhoneEnabled(bool value);
     void setBobosEnabled(bool value);
     void setBobosActivationDelay(int value);
     void setShowWifiAnimation(bool value);
+    void setRelationshipStoryEnabled(bool value);
     void load() override;
     void save() override;
 Q_SIGNALS:
@@ -87,6 +90,7 @@ Q_SIGNALS:
     void bobosEnabledChanged();
     void bobosActivationDelayChanged();
     void showWifiAnimationChanged();
+    void relationshipStoryEnabledChanged();
 private:
     void checkModified();
     QString m_theme = QStringLiteral("random");
@@ -123,8 +127,10 @@ private:
     bool m_bobosEnabled = true;
     int m_bobosActivationDelay = 3;
     bool m_showWifiAnimation = true;
+    bool m_relationshipStoryEnabled = true;
     bool m_savedPhoneEnabled = true;
     bool m_savedBobosEnabled = true;
     int m_savedBobosActivationDelay = 3;
     bool m_savedShowWifiAnimation = true;
+    bool m_savedRelationshipStoryEnabled = true;
 };

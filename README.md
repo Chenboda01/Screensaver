@@ -1,6 +1,6 @@
 # ScreenBot Screensaver
 
-ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows head-only animated Bob across themed backgrounds, optional weather, and fictional BobOS phone adventures. V10 through V19 are available downloads; V1 through V9 are currently unavailable.
+ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows head-only animated Bob across themed backgrounds, optional weather, and fictional BobOS phone adventures. V10 through V20 are available downloads; V1 through V9 are currently unavailable.
 
 ## Downloads
 
@@ -25,11 +25,12 @@ ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows head-only animated
 | V17 | [Download ScreenBot Screensaver V17 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V17.zip) |
 | V18 | [Download ScreenBot Screensaver V18 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V18.zip) |
 | V19 | [Download ScreenBot Screensaver V19 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V19.zip) |
+| V20 | [Download ScreenBot Screensaver V20 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V20.zip) |
 
-## Install V10, V11, V12, V13, V14, V15, V16, V17, V18, or V19
+## Install V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, or V20
 
 1. Download the version ZIP and extract it into `~/Downloads`.
-2. Open a terminal in the extracted version folder, such as `ScreenBot-Screensaver-V19`.
+2. Open a terminal in the extracted version folder, such as `ScreenBot-Screensaver-V20`.
 3. Run:
 
    ```bash
@@ -47,7 +48,7 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - Individually enabled animated rain, snow, thunderstorms, fog, and Space shooting stars
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
 - Manual launches remain available regardless of the automatic agent policy
-- Bob's Phone and animated BobOS 1.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, AI Wi-Fi, and an immediate preview button
+- Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, AI Wi-Fi, an immediate preview, and an optional relationship story
 - Configurable BobOS delay of 1–30 minutes from the first visible screensaver frame, plus a cooldown of at least five minutes
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
@@ -65,6 +66,7 @@ The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves 
 - **V17:** Adds a remember-choice checkbox to the active-agent prompt, persistent Always ask / Always start / Don't start preferences in KDE Settings, a reset action, safe cancellation when detection is uncertain or the prompt times out, and a manual launch bypass.
 - **V18:** Adds separate AI Backpack and BobOS switches, a 1–30 minute first-adventure delay, an optional fictional Wi-Fi sequence, and occasional follow-up adventures after a cooldown of at least five minutes. BobOS is drawn entirely inside the screensaver, and KDE's configured password lock takes priority.
 - **V19:** Replaces the backpack and tiny laptop with Bob's Phone. BobOS now zooms into an animated fictional mobile interface and autonomously visits Bob Browser, Bob Files, Bob Terminal, Bob Games, and Bob Settings before shutting down and returning to the selected theme. Adds a lock-safe full-sequence preview in KDE Settings.
+- **V20:** Adds Bob's optional relationship story in BobOS 2.0. Bob receives a sweet message from his established girlfriend Luna, plans a date in fictional Maps, Weather, Calendar, and Chat apps, gets a call, meets her in the selected theme, and receives follow-up messages. The entire storyline is simulated, and its KDE switch is enabled by default.
 
 ## Requirements
 
