@@ -214,6 +214,22 @@ private Q_SLOTS:
         kcm.setTheme(QStringLiteral("photos"));
         QCoreApplication::processEvents();
         QVERIFY(photoFolder->property("enabled").toBool());
+        auto *photoSwitchText = photoSubfolders->property("contentItem").value<QQuickItem *>();
+        QVERIFY(photoSwitchText);
+        QCOMPARE(photoSwitchText->property("text").toString(), QStringLiteral("Only this folder"));
+        const QColor switchForeground = photoSwitchText->property("color").value<QColor>();
+        const double switchLighter = std::max(luminance(switchForeground), luminance(view.color()));
+        const double switchDarker = std::min(luminance(switchForeground), luminance(view.color()));
+        QVERIFY2((switchLighter + 0.05) / (switchDarker + 0.05) >= 4.5,
+                 qPrintable(QStringLiteral("Insufficient subfolder switch text contrast: foreground %1, background %2")
+                     .arg(switchForeground.name(), view.color().name())));
+        photoSubfolders->forceActiveFocus();
+        QTest::keyClick(&view, Qt::Key_Space);
+        QVERIFY(photoSubfolders->property("checked").toBool());
+        QVERIFY(kcm.photoIncludeSubfolders());
+        QTest::keyClick(&view, Qt::Key_Space);
+        QVERIFY(!photoSubfolders->property("checked").toBool());
+        QVERIFY(!kcm.photoIncludeSubfolders());
         const QUrl selectedFolder = QUrl::fromLocalFile(QStringLiteral("/tmp/synthetic album"));
         QVERIFY(QMetaObject::invokeMethod(photoFolderDialog, "stageSelectedFolder", Qt::DirectConnection,
                                           Q_ARG(QVariant, QVariant::fromValue(selectedFolder))));
