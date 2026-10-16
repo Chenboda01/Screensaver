@@ -12,12 +12,61 @@
 #include <QQuickWindow>
 #include <QScreen>
 #include <QTemporaryFile>
+#include <QColor>
+#include <QTextBoundaryFinder>
 
 K_PLUGIN_CLASS_WITH_JSON(ScreenBotKcm, "kcm_screenbot_screensaver.json")
 
 static QString configFile() {
     return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
            + QStringLiteral("/screenbot-screensaver.ini");
+}
+
+static QString sanitizedBobName(QString value) {
+    QString safe;
+    for (qsizetype index = 0; index < value.size(); ++index) {
+        const QChar character = value.at(index);
+        if (character.isHighSurrogate() && index + 1 < value.size()
+            && value.at(index + 1).isLowSurrogate()) {
+            safe.append(character);
+            safe.append(value.at(++index));
+            continue;
+        }
+        if (character.isSpace()) {
+            safe.append(QLatin1Char(' '));
+            continue;
+        }
+        if (character == QChar(0x200d)) {
+            safe.append(character);
+            continue;
+        }
+        const auto category = character.category();
+        if (category == QChar::Other_Control || category == QChar::Other_Format
+            || category == QChar::Other_Surrogate) continue;
+        safe.append(character);
+    }
+    safe = safe.simplified();
+    QTextBoundaryFinder boundaryFinder(QTextBoundaryFinder::Grapheme, safe);
+    qsizetype end = 0;
+    for (int grapheme = 0; grapheme < 16; ++grapheme) {
+        const qsizetype next = boundaryFinder.toNextBoundary();
+        if (next < 0) break;
+        end = next;
+    }
+    safe.truncate(end);
+    return safe.isEmpty() ? QStringLiteral("Bob") : safe;
+}
+
+static bool validBobColor(const QString &value) {
+    return value.size() == 7 && value.front() == QLatin1Char('#')
+        && QColor(value).isValid();
+}
+
+static bool validBobAccessory(const QString &value) {
+    return value == QLatin1String("none") || value == QLatin1String("cap")
+        || value == QLatin1String("bow-tie") || value == QLatin1String("headphones")
+        || value == QLatin1String("flower") || value == QLatin1String("crown")
+        || value == QLatin1String("antenna-ball");
 }
 
 ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data)
@@ -71,6 +120,9 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_bobosEnabled != m_savedBobosEnabled
         || m_bobosActivationDelay != m_savedBobosActivationDelay
         || m_showWifiAnimation != m_savedShowWifiAnimation) sections.append(QStringLiteral("bobos"));
+    if (m_bobName != m_savedBobName || m_bobColorPreset != m_savedBobColorPreset
+        || m_bobCustomColor != m_savedBobCustomColor || m_bobAccessory != m_savedBobAccessory)
+        sections.append(QStringLiteral("appearance"));
     if (m_performanceMode != m_savedPerformanceMode || m_reduceMotion != m_savedReduceMotion
         || m_burnInProtection != m_savedBurnInProtection)
         sections.append(QStringLiteral("performance"));
@@ -92,7 +144,7 @@ bool ScreenBotKcm::sectionExpanded(const QString &section) const {
 }
 
 void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
-    const QStringList sections{QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"),
+    const QStringList sections{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"),
         QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"),
         QStringLiteral("performance"), QStringLiteral("lock")};
     if (!sections.contains(section)) return;
@@ -127,6 +179,16 @@ void ScreenBotKcm::load() {
     const bool fog = cfg.value(QStringLiteral("Screensaver/fog_enabled"), false).toBool();
     const bool shootingStars = cfg.value(QStringLiteral("Screensaver/shooting_stars_enabled"), false).toBool();
     const bool bobWeather = cfg.value(QStringLiteral("Screensaver/bob_weather_enabled"), true).toBool();
+    const QString bobName = sanitizedBobName(cfg.value(QStringLiteral("Screensaver/bob_name"), QStringLiteral("Bob")).toString());
+    const QString requestedBobColorPreset = cfg.value(QStringLiteral("Screensaver/bob_color_preset"), QStringLiteral("cyan")).toString().toLower();
+    const QStringList bobColorPresets{QStringLiteral("cyan"), QStringLiteral("green"), QStringLiteral("purple"),
+        QStringLiteral("orange"), QStringLiteral("pink"), QStringLiteral("gold"), QStringLiteral("custom")};
+    const QString bobColorPreset = bobColorPresets.contains(requestedBobColorPreset)
+        ? requestedBobColorPreset : QStringLiteral("cyan");
+    QString bobCustomColor = cfg.value(QStringLiteral("Screensaver/bob_custom_color"), QStringLiteral("#6bf6ff")).toString().toLower();
+    if (!validBobColor(bobCustomColor)) bobCustomColor = QStringLiteral("#6bf6ff");
+    const QString requestedBobAccessory = cfg.value(QStringLiteral("Screensaver/bob_accessory"), QStringLiteral("none")).toString().toLower();
+    const QString bobAccessory = validBobAccessory(requestedBobAccessory) ? requestedBobAccessory : QStringLiteral("none");
     const bool liveSky = cfg.value(QStringLiteral("Screensaver/live_sky_enabled"), false).toBool();
     const QVariant locationValue = cfg.value(QStringLiteral("Screensaver/live_sky_location"));
     const QString requestedLiveSkyLocation = locationValue.metaType().id() == QMetaType::QStringList
@@ -191,6 +253,10 @@ void ScreenBotKcm::load() {
     if (m_fogEnabled != fog) { m_fogEnabled = fog; Q_EMIT fogEnabledChanged(); }
     if (m_shootingStarsEnabled != shootingStars) { m_shootingStarsEnabled = shootingStars; Q_EMIT shootingStarsEnabledChanged(); }
     if (m_bobWeatherEnabled != bobWeather) { m_bobWeatherEnabled = bobWeather; Q_EMIT bobWeatherEnabledChanged(); }
+    if (m_bobName != bobName) { m_bobName = bobName; Q_EMIT bobNameChanged(); }
+    if (m_bobColorPreset != bobColorPreset) { m_bobColorPreset = bobColorPreset; Q_EMIT bobColorPresetChanged(); }
+    if (m_bobCustomColor != bobCustomColor) { m_bobCustomColor = bobCustomColor; Q_EMIT bobCustomColorChanged(); }
+    if (m_bobAccessory != bobAccessory) { m_bobAccessory = bobAccessory; Q_EMIT bobAccessoryChanged(); }
     if (m_liveSkyEnabled != liveSky) { m_liveSkyEnabled = liveSky; Q_EMIT liveSkyEnabledChanged(); }
     m_liveSkyLocation = liveSkyLocation;
     Q_EMIT liveSkyLocationChanged();
@@ -223,6 +289,10 @@ void ScreenBotKcm::load() {
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
     m_savedBobWeatherEnabled = m_bobWeatherEnabled;
+    m_savedBobName = m_bobName;
+    m_savedBobColorPreset = m_bobColorPreset;
+    m_savedBobCustomColor = m_bobCustomColor;
+    m_savedBobAccessory = m_bobAccessory;
     m_savedLiveSkyEnabled = m_liveSkyEnabled;
     m_savedLiveSkyLocation = m_liveSkyLocation;
     m_savedLiveSkyPlace = m_liveSkyPlace;
@@ -259,6 +329,10 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/fog_enabled"), m_fogEnabled);
     cfg.setValue(QStringLiteral("Screensaver/shooting_stars_enabled"), m_shootingStarsEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bob_weather_enabled"), m_bobWeatherEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/bob_name"), m_bobName);
+    cfg.setValue(QStringLiteral("Screensaver/bob_color_preset"), m_bobColorPreset);
+    cfg.setValue(QStringLiteral("Screensaver/bob_custom_color"), m_bobCustomColor);
+    cfg.setValue(QStringLiteral("Screensaver/bob_accessory"), m_bobAccessory);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_enabled"), m_liveSkyEnabled);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_location"), m_liveSkyLocation);
     for (const QString &field : {QStringLiteral("latitude"), QStringLiteral("longitude"), QStringLiteral("timezone")}) {
@@ -305,6 +379,10 @@ void ScreenBotKcm::save() {
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
     m_savedBobWeatherEnabled = m_bobWeatherEnabled;
+    m_savedBobName = m_bobName;
+    m_savedBobColorPreset = m_bobColorPreset;
+    m_savedBobCustomColor = m_bobCustomColor;
+    m_savedBobAccessory = m_bobAccessory;
     m_savedLiveSkyEnabled = m_liveSkyEnabled;
     m_savedLiveSkyLocation = m_liveSkyLocation;
     m_savedLiveSkyPlace = m_liveSkyPlace;
@@ -436,6 +514,42 @@ void ScreenBotKcm::setBobWeatherEnabled(bool value) {
     if (value == m_bobWeatherEnabled) return;
     m_bobWeatherEnabled = value;
     Q_EMIT bobWeatherEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setBobName(const QString &value) {
+    const QString safe = sanitizedBobName(value);
+    if (safe == m_bobName) return;
+    m_bobName = safe;
+    Q_EMIT bobNameChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setBobColorPreset(const QString &value) {
+    const QString normalized = value.toLower();
+    if (normalized != QLatin1String("cyan") && normalized != QLatin1String("green")
+        && normalized != QLatin1String("purple") && normalized != QLatin1String("orange")
+        && normalized != QLatin1String("pink") && normalized != QLatin1String("gold")
+        && normalized != QLatin1String("custom")) return;
+    if (normalized == m_bobColorPreset) return;
+    m_bobColorPreset = normalized;
+    Q_EMIT bobColorPresetChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setBobCustomColor(const QString &value) {
+    const QString normalized = value.toLower();
+    if (!validBobColor(normalized) || normalized == m_bobCustomColor) return;
+    m_bobCustomColor = normalized;
+    Q_EMIT bobCustomColorChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setBobAccessory(const QString &value) {
+    const QString normalized = value.toLower();
+    if (!validBobAccessory(normalized) || normalized == m_bobAccessory) return;
+    m_bobAccessory = normalized;
+    Q_EMIT bobAccessoryChanged();
     checkModified();
 }
 

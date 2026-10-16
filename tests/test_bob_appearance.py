@@ -20,6 +20,7 @@ from screenbot.appearance import (
     sanitize_bob_name,
 )
 from screenbot.bob import BobRenderer
+from screenbot.phone.frame import PhoneFrameRenderer
 
 
 @pytest.fixture(scope='module')
@@ -109,6 +110,21 @@ def test_custom_accessory_is_a_separate_visible_layer(accessory: str) -> None:
     default = _bob_image(BobAppearance(), BobOSPhase.EXPLORING)
     customized = _bob_image(BobAppearance(accessory=accessory), BobOSPhase.EXPLORING)
     assert customized != default
+
+
+def test_bobos_avatar_uses_the_selected_palette(app) -> None:
+    del app
+    frames = []
+    for appearance in (BobAppearance(), BobAppearance(color_preset='purple')):
+        image = QImage(120, 120, QImage.Format.Format_ARGB32_Premultiplied)
+        image.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(image)
+        PhoneFrameRenderer.draw_phone_avatar(
+            painter, image.rect(), 'happy', appearance.palette()
+        )
+        painter.end()
+        frames.append(image)
+    assert frames[0] != frames[1]
 
 
 def test_name_cap_preserves_unicode_graphemes_and_removes_controls() -> None:
