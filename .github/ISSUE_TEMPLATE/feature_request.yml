@@ -1,0 +1,71 @@
+name: Feature request
+description: Suggest an addition or improvement to ScreenBot.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: In one or two sentences, what should be added or changed?
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Problem / motivation
+      description: What is hard, missing, or annoying today?
+    validations:
+      required: true
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current behavior
+      description: What does the screensaver or settings page do now? Include files or versions if known.
+  - type: textarea
+    id: proposed-behavior
+    attributes:
+      label: Proposed behavior
+      description: Describe what it should do. Mockups or tables are welcome.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Themes / animation
+        - Clock
+        - Weather
+        - Live Sky
+        - BobOS
+        - Lock
+        - KDE settings page
+        - Installation
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: edge-cases
+    attributes:
+      label: Edge cases
+      description: Consider offline use, the Random theme, small screens, or accessibility.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues for this idea.
+          required: true
