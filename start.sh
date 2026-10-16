@@ -2,6 +2,9 @@
 # Plasma Power Management can invoke this launcher after a period of inactivity.
 set -euo pipefail
 cd "$HOME/ScreenBot/screensaver"
+if [[ "${1:-}" == --check ]]; then
+    exec bash ./idle-trigger.sh --check
+fi
 source ./python-runtime.sh
 screenbot_select_python ./python-path
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
