@@ -2,8 +2,9 @@
 from dataclasses import replace
 from pathlib import Path
 import sys
+import time
 
-from PyQt6.QtCore import QCoreApplication, QEventLoop, QTimer
+from PyQt6.QtCore import QCoreApplication
 import pytest
 
 from screenbot.ambient.engine import AmbientSoundEngine, _is_quiet_now
@@ -154,12 +155,13 @@ def test_engine_fades_mutes_resumes_changes_scene_handles_errors_and_closes(monk
             self.sources = []
             self.play_count = 0
             self.output = None
+            self.loops = None
 
         def setAudioOutput(self, output) -> None:
             self.output = output
 
-        def setLoops(self, _loops) -> None:
-            pass
+        def setLoops(self, loops) -> None:
+            self.loops = loops
 
         def setSource(self, source) -> None:
             self.sources.append(source)
@@ -183,31 +185,40 @@ def test_engine_fades_mutes_resumes_changes_scene_handles_errors_and_closes(monk
     engine.update_scene(scene, playing_media=False)
     player, output = engine._player, engine._output
     assert player.sources and output.volume() == 0.0
-    loop = QEventLoop()
-    QTimer.singleShot(180, loop.quit)
-    loop.exec()
+    for _ in range(5):
+        engine._advance_fade()
     assert 0.0 < output.volume() < .8  # fade is in progress
-    QTimer.singleShot(3100, loop.quit)
-    loop.exec()
+    for _ in range(25):
+        engine._advance_fade()
     assert output.volume() <= .8  # the output never exceeds the configured maximum
     engine.update_scene(scene, playing_media=True)
     assert output.volume() == 0.0 and player.playbackState() == Player.PlaybackState.StoppedState
     engine.update_scene(scene, playing_media=False)
-    QTimer.singleShot(180, loop.quit)
-    loop.exec()
+    engine._advance_fade()
     assert output.volume() > 0.0 and player.playbackState() == Player.PlaybackState.PlayingState
     storm = replace(scene, weather=WeatherCategory.THUNDERSTORM, live_sky_enabled=True, live_sky_fresh=True)
     engine.update_scene(storm, playing_media=False)
     engine.set_lightning_visible(True)
-    QTimer.singleShot(1200, loop.quit)
-    loop.exec()
+    deadline = time.monotonic() + 4.0
+    while not player.sources[-1].toLocalFile().endswith('/thunder.ogg') and time.monotonic() < deadline:
+        app.processEvents()
+        time.sleep(.01)
     assert player.sources[-1].toLocalFile().endswith('/thunder.ogg')
+    assert player.loops == Player.Loops.Once
     player.mediaStatusChanged.emit(Player.MediaStatus.EndOfMedia)
     assert player.sources[-1].toLocalFile().endswith('/rain.ogg')
+    assert player.loops == Player.Loops.Infinite
     engine.set_lightning_visible(False)
+    engine.set_lightning_visible(True)
+    deadline = time.monotonic() + 4.0
+    while not player.sources[-1].toLocalFile().endswith('/thunder.ogg') and time.monotonic() < deadline:
+        app.processEvents()
+        time.sleep(.01)
+    assert player.loops == Player.Loops.Once
     changed = replace(scene, theme=SceneTheme.CITY)
     engine.update_scene(changed, playing_media=False)
     assert player.sources[-1].toLocalFile().endswith('/city.ogg')
+    assert player.loops == Player.Loops.Infinite
     player.errorOccurred.emit(1, 'decode failure')
     assert output.volume() == 0.0 and player.playbackState() == Player.PlaybackState.StoppedState
     failed_count = len(player.sources)

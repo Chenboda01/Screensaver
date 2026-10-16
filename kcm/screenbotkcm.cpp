@@ -258,7 +258,6 @@ void ScreenBotKcm::load() {
     if (m_ambientSoundVolume != ambientSoundVolume) { m_ambientSoundVolume = ambientSoundVolume; Q_EMIT ambientSoundVolumeChanged(); }
     if (m_ambientSoundMode != ambientSoundMode) { m_ambientSoundMode = ambientSoundMode; Q_EMIT ambientSoundModeChanged(); }
     if (m_ambientQuietHours != ambientQuietHours) { m_ambientQuietHours = ambientQuietHours; Q_EMIT ambientQuietHoursChanged(); }
-    if (m_ambientQuietHours != ambientQuietHours) { m_ambientQuietHours = ambientQuietHours; Q_EMIT ambientQuietHoursChanged(); }
     if (m_clockVisible != clockVisible) { m_clockVisible = clockVisible; Q_EMIT clockVisibleChanged(); }
     if (m_clockFormat != validClockFormat) { m_clockFormat = validClockFormat; Q_EMIT clockFormatChanged(); }
     if (m_showDate != showDate) { m_showDate = showDate; Q_EMIT showDateChanged(); }

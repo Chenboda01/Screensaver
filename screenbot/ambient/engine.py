@@ -80,6 +80,7 @@ class AmbientSoundEngine(QObject):
             self._thunder_active = False
             self._thunder_pending = False
             self._player.stop()
+            self._player.setLoops(self._infinite_loops())
             if loop is not None:
                 source = self.asset_directory / f'{loop}.ogg'
                 if source in self._failed_assets:
@@ -190,6 +191,12 @@ class AmbientSoundEngine(QObject):
         self._player.setLoops(QMediaPlayer.Loops.Once)
         self._player.setSource(QUrl.fromLocalFile(str(source)))
         self._player.play()
+
+    @staticmethod
+    def _infinite_loops() -> object:
+        """Get Qt's continuous-loop enum only when multimedia is available."""
+        from PyQt6.QtMultimedia import QMediaPlayer
+        return QMediaPlayer.Loops.Infinite
 
     def _cache_failure(self, source: Path, *, missing: bool) -> None:
         """Remember the asset's current fingerprint for timer-based, change-only retry."""
