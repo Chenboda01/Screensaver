@@ -18,6 +18,7 @@ from screensaver import Saver
 
 GOLDEN_DIR = Path(__file__).parent / 'golden_rendering'
 SCENES = ('space', 'mountains', 'snow', 'forest', 'city')
+ALL_THEMES = SCENES + ('aurora', 'ocean', 'desert', 'underwater')
 WIDTH = 640
 HEIGHT = 360
 ELAPSED = 17.25
@@ -108,7 +109,7 @@ def test_custom_bob_palette_renders_across_all_themes_and_bobos(tmp_path: Path, 
     original = _renderer(tmp_path)
     custom = _renderer(tmp_path)
     custom.bob_appearance = BobAppearance(color_preset='purple')
-    for theme in SCENES:
+    for theme in ALL_THEMES:
         assert _pixels(_scene_frame(original, theme)) != _pixels(_scene_frame(custom, theme))
     assert _pixels(_bobos_frame(original)) != _pixels(_bobos_frame(custom))
     original.close()
