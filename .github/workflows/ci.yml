@@ -25,7 +25,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes libegl1 libgl1 libxkbcommon0
-          python -m pip install PyQt6 pytest
+          python -m pip install PyQt6 pytest Pillow
       - name: Compile Python sources
         run: python -m py_compile *.py
       - name: Run all tests without a display or network

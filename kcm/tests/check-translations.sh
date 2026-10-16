@@ -30,5 +30,7 @@ done
 unset SCREENBOT_TEST_DARK
 export SCREENBOT_EVIDENCE_DIR="$output/ctest-evidence"
 mkdir -p -- "$SCREENBOT_EVIDENCE_DIR"
-LANGUAGE=en_US ctest --test-dir "$output/build" --exclude-regex '^i18n_' --output-on-failure > "$output/ctest.log" 2>&1
+# CTest's contrast checks should not inherit an arbitrary host desktop palette.
+# Use Breeze Dark explicitly; the locale screenshot loop above exercises both palettes.
+SCREENBOT_TEST_DARK=1 LANGUAGE=en_US ctest --test-dir "$output/build" --exclude-regex '^i18n_' --output-on-failure > "$output/ctest.log" 2>&1
 printf 'Installed locale and Apply/Discard checks passed: %s\n' "$output"
