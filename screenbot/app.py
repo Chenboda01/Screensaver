@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
 from live_sky_render import SpaceSky
 from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
+from screenbot.appearance import BobAppearance
 from screenbot.bob import BobRenderer
 from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
 from screenbot.clock import ClockRenderer
@@ -39,6 +40,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.quick_preview = preview
         self.is_preview = preview or preview_bobos
         settings = read_settings(config_path)
+        self.bob_appearance = BobAppearance.from_settings(settings)
         self.theme = selected_theme(settings)
         self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)

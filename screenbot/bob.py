@@ -7,6 +7,12 @@ from bobos import BobOSPhase, BobOSStatus
 class BobRenderer:
     def bob(self, p: QPainter, w: int, h: int, t: float, status: BobOSStatus) -> None:
         """Paint Bob as a floating head with expressions driven by his phone use."""
+        appearance = self.bob_appearance
+        palette = appearance.palette()
+
+        def color(key: str, alpha: int = 255) -> QColor:
+            return QColor(*palette[key], alpha)
+
         mood = self.bob_mood(status.phase, t)
         pose_time = t
         if mood == 'sleepy':
@@ -21,31 +27,31 @@ class BobRenderer:
         p.rotate(math.sin(pose_time*.72)*2.4)
         p.setPen(Qt.PenStyle.NoPen)
         halo = QRadialGradient(QPointF(0, 2), 185)
-        halo.setColorAt(0, QColor(41, 212, 255, 78))
-        halo.setColorAt(.55, QColor(41, 212, 255, 20))
-        halo.setColorAt(1, QColor(41, 212, 255, 0))
+        halo.setColorAt(0, color('glow', 78))
+        halo.setColorAt(.55, color('glow', 20))
+        halo.setColorAt(1, color('glow', 0))
         p.setBrush(halo)
         p.drawEllipse(QPointF(0, 0), 186, 186)
-        p.setBrush(QColor(120, 220, 255, 28))
+        p.setBrush(color('halo_detail', 28))
         p.drawEllipse(QPointF(0, 92), 34, 9)
-        p.setPen(QPen(QColor('#66dfff'), 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.setPen(QPen(color('outline'), 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         p.drawLine(0, -96, 0, -124)
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor('#b2f9ff'))
+        p.setBrush(color('antenna'))
         p.drawEllipse(QPointF(0, -130), 8, 8)
-        p.setBrush(QColor('#1f5482'))
+        p.setBrush(color('ear_piece'))
         p.drawRoundedRect(QRectF(-87, -28, 16, 42), 7, 7)
         p.drawRoundedRect(QRectF(71, -28, 16, 42), 7, 7)
-        p.setPen(QPen(QColor('#73dcff'), 4))
-        p.setBrush(QColor('#12355f'))
+        p.setPen(QPen(color('face_outline'), 4))
+        p.setBrush(color('face'))
         p.drawRoundedRect(QRectF(-76, -96, 152, 144), 32, 32)
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor('#081b3c'))
+        p.setBrush(color('face_inset'))
         p.drawRoundedRect(QRectF(-63, -76, 126, 102), 24, 24)
-        p.setBrush(QColor(102, 217, 255, 26))
+        p.setBrush(color('screen_glint', 26))
         p.drawRoundedRect(QRectF(-52, -68, 104, 20), 10, 10)
 
-        eyes = QColor('#6bf6ff')
+        eyes = color('eyes')
         blink = math.sin(t*1.55) > .988 or mood == 'sleepy'
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(eyes)
@@ -79,9 +85,11 @@ class BobRenderer:
         else:
             p.drawArc(QRectF(-16, 0, 32, 18), 180*16, 180*16)
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(107, 246, 255, 40))
+        p.setBrush(color('cheek', 40))
         p.drawEllipse(QPointF(-44, 5), 5, 5)
         p.drawEllipse(QPointF(44, 5), 5, 5)
+        self.draw_custom_accessory(p, appearance.accessory, palette)
+        self.draw_weather_accessory(p, t, palette)
         if self.phone_enabled and status.phase in {
             BobOSPhase.EXPLORING,
             BobOSPhase.PHONE_ACTIVATION,
@@ -90,6 +98,66 @@ class BobRenderer:
             BobOSPhase.RETURN,
         }:
             self.draw_small_phone(p, status, t)
+        p.restore()
+
+    def draw_weather_accessory(self, p: QPainter, t: float, palette: dict[str, tuple[int, int, int]]) -> None:
+        """Optional weather-owned overlay hook, in Bob's local head coordinates."""
+        return
+
+    def weather_mood_override(self, status: BobOSStatus, t: float) -> str | None:
+        """Optional weather-owned expression, separate from the normal mood cycle."""
+        return None
+
+    @staticmethod
+    def draw_custom_accessory(p: QPainter, accessory: str, palette: dict[str, tuple[int, int, int]]) -> None:
+        """Paint only the user's chosen head accessory; weather layers stay separate."""
+        if accessory == 'none':
+            return
+        p.save()
+        p.setPen(QPen(QColor('#e8f7ff'), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        accent = QColor(*palette['outline'])
+        if accessory == 'cap':
+            p.setBrush(QColor('#315d88'))
+            p.drawPie(QRectF(-51, -118, 102, 62), 0, 180 * 16)
+            p.drawRoundedRect(QRectF(-57, -75, 114, 12), 6, 6)
+        elif accessory == 'bow-tie':
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(accent)
+            p.drawPolygon([QPointF(-20, -104), QPointF(-2, -96), QPointF(-20, -88)])
+            p.drawPolygon([QPointF(20, -104), QPointF(2, -96), QPointF(20, -88)])
+            p.setBrush(QColor('#fff3d0'))
+            p.drawEllipse(QPointF(0, -96), 4, 4)
+        elif accessory == 'headphones':
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawArc(QRectF(-81, -110, 162, 116), 0, 180 * 16)
+            p.setBrush(accent)
+            p.drawRoundedRect(QRectF(-87, -54, 17, 35), 7, 7)
+            p.drawRoundedRect(QRectF(70, -54, 17, 35), 7, 7)
+        elif accessory == 'flower':
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor('#ff83c7'))
+            for angle in range(0, 360, 72):
+                p.save()
+                p.translate(-46, -99)
+                p.rotate(angle)
+                p.drawEllipse(QPointF(0, -8), 5, 8)
+                p.restore()
+            p.setBrush(QColor('#ffd15c'))
+            p.drawEllipse(QPointF(-46, -99), 5, 5)
+        elif accessory == 'crown':
+            p.setPen(QPen(QColor('#ffe7a2'), 2))
+            p.setBrush(QColor('#dba834'))
+            p.drawPolygon([QPointF(-42, -101), QPointF(-35, -130), QPointF(-16, -113),
+                           QPointF(0, -136), QPointF(16, -113), QPointF(35, -130),
+                           QPointF(42, -101)])
+        elif accessory == 'antenna-ball':
+            p.setPen(QPen(accent, 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawLine(QPointF(44, -91), QPointF(64, -125))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(accent)
+            p.drawEllipse(QPointF(67, -130), 11, 11)
+            p.setBrush(QColor(255, 255, 255, 180))
+            p.drawEllipse(QPointF(64, -133), 3, 3)
         p.restore()
 
     @staticmethod
@@ -158,21 +226,22 @@ class BobRenderer:
 
     def caption(self, p: QPainter, w: int, h: int, t: float, phase: BobOSPhase) -> None:
         """Keep the existing theme narration visible outside the phone close-up."""
+        name = self.bob_appearance.name
         words = {
-            'space': 'Bob is exploring the stars…',
-            'mountains': 'Bob is exploring the mountains…',
-            'snow': 'Bob is watching the snowfall…',
-            'forest': 'Bob is exploring the forest…',
-            'city': 'Bob is exploring the neon city…',
+            'space': f'{name} is exploring the stars…',
+            'mountains': f'{name} is exploring the mountains…',
+            'snow': f'{name} is watching the snowfall…',
+            'forest': f'{name} is exploring the forest…',
+            'city': f'{name} is exploring the neon city…',
         }
         bobos_words = {
-            BobOSPhase.CURIOUS: 'Bob spotted a new adventure!',
-            BobOSPhase.PHONE_ACTIVATION: "Bob is waking up his phone…",
+            BobOSPhase.CURIOUS: f'{name} spotted a new adventure!',
+            BobOSPhase.PHONE_ACTIVATION: f'{name} is waking up his phone…',
             BobOSPhase.WIFI_CONNECTING: 'Connecting to fictional AI Wi-Fi…',
             BobOSPhase.BOOTING: 'BobOS 2.0 is booting…',
             BobOSPhase.ZOOM_IN: 'Opening BobOS…',
-            BobOSPhase.ZOOM_OUT: "Bob is putting away Bob's Phone…",
-            BobOSPhase.RETURN: 'Bob is heading back to exploring…',
+            BobOSPhase.ZOOM_OUT: f'{name} is putting away Bob\'s Phone…',
+            BobOSPhase.RETURN: f'{name} is heading back to exploring…',
         }
         caption = bobos_words.get(phase, words[self.theme])
         p.setPen(QColor('#dcecff'))
