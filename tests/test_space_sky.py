@@ -202,6 +202,12 @@ def test_random_space_uses_live_sky_and_preserves_foreground_phone() -> None:
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     saver.draw_phone_os(painter, 1000, 1000, saver.bobos_status(20), 20)
     painter.end()
-    assert image.copy(100, 100, 800, 800) == phone.copy(100, 100, 800, 800)
+    # Compare a fixed, text-free status-bar patch inside the phone screen. A
+    # whole-window pixel comparison is brittle across Qt/Python font rasterizers
+    # and also includes transparent pixels where the Space backdrop is expected.
+    assert phone.pixelColor(500, 70).name() == '#080f20'
+    for y in range(65, 75):
+        for x in range(495, 505):
+            assert image.pixelColor(x, y) == phone.pixelColor(x, y)
     saver.close()
     saver.deleteLater()
