@@ -177,7 +177,7 @@ A Python screensaver is not a secure lock screen. KDE Screen Locking controls wh
 
 ## Translating the settings page
 
-KDE settings follow the language selected in **System Settings → Region & Language**. Spanish is included; untranslated languages fall back to English. Restart System Settings after changing its language. Settings values remain language independent, and Apply/Discard work in every language. The screensaver's fictional dialogue and agent prompt are currently English only.
+KDE settings follow the language selected in **System Settings → Region & Language**. Spanish is included; untranslated languages fall back to English. Restart System Settings after changing its language. Settings values remain language independent, and Apply/Discard work in every language. The built-in facts and Bob quotes include Spanish text with English fallback; other fictional dialogue and the agent prompt are currently English only.
 
 Install GNU gettext (`xgettext`, `msginit`, `msgmerge`, and `msgfmt`) to work on translations. From the repository root, regenerate the template with:
 
@@ -198,3 +198,9 @@ Enable **System Settings → Screensaver → Clock → Show what's playing**, th
 ScreenBot reads MPRIS metadata from players such as Elisa, VLC, Spotify, and browsers. Playing media takes priority when several players are open. Track changes appear within a few seconds; pausing or stopping fades the card away. Long titles are shortened, and no player or an unavailable session bus leaves the card hidden. Reduced motion hides the card without fading.
 
 Song titles can be personal. ScreenBot never controls playback, reads browser tabs, fetches artwork or media URLs, or saves media metadata. Browser titles come only from the browser's MPRIS media information. Disable the setting and Apply before the next screensaver launch to stop showing it.
+
+### Did you know?
+
+Open **System Settings → Screensaver → Did you know?** to enable or hide the card, choose a 2–5 minute interval (3 minutes by default), and select **Facts**, **Quotes**, or **Facts and quotes**. The card fades between items, wraps long text to two lines, and does not repeat an item until its selected list has been used. It matches Space to astronomy, Forest to plants and animals, City to technology, Mountains and Snow to mountain/weather facts, rain to the water cycle, and a visible full Moon to lunar facts. Live Moon matching uses the configured Live Sky location. Space weather remains suppressed. The card is hidden while BobOS is active and moves to a free corner or side away from the clock, Bob, captions, lock countdown, and other cards. It follows the scene's burn-in shift.
+
+The catalogue is offline and editable. `facts/facts.json` contains at least 30 short facts for each science category; every fact includes a source URL that is kept with the record and is not drawn on screen. `facts/quotes.json` contains original Bob lines, labeled as ScreenBot-written. To add a translation, add fact and quote ID-to-text mappings in `facts/translations/<language>.json` under the `facts` and `quotes` keys. Unknown or missing translations fall back to English. The installer copies the catalogue and translation files alongside the runtime.

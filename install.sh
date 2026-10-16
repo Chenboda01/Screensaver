@@ -63,6 +63,10 @@ while IFS= read -r -d '' MODULE; do
  install -D -m 644 "$MODULE" "$DEST/$RELATIVE_PATH"
 done < <(find "$ROOT/screenbot" -type f -name '*.py' -print0)
 install -m 644 "$ROOT/countries_and_cities.txt" "$DEST/countries_and_cities.txt"
+while IFS= read -r -d '' FACT_DATA; do
+ RELATIVE_PATH="${FACT_DATA#"$ROOT"/}"
+ install -D -m 644 "$FACT_DATA" "$DEST/$RELATIVE_PATH"
+done < <(find "$ROOT/facts" -type f -name '*.json' -print0)
 install -m 755 "$ROOT/start.sh" "$DEST/start.sh"
 install -m 755 "$ROOT/idle-trigger.sh" "$DEST/idle-trigger.sh"
 install -m 755 "$ROOT/uninstall.sh" "$DEST/uninstall.sh"

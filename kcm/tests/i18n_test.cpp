@@ -31,6 +31,7 @@ private Q_SLOTS:
         const auto item = [&](const char *name) { return root->findChild<QQuickItem *>(QLatin1String(name)); };
         QCOMPARE(item("themeSection")->property("title").toString(), spanish ? QStringLiteral("Tema") : QStringLiteral("Theme"));
         QCOMPARE(item("clockSection")->property("title").toString(), spanish ? QStringLiteral("Reloj") : QStringLiteral("Clock"));
+        QCOMPARE(item("factsSection")->property("title").toString(), spanish ? QStringLiteral("¿Sabías que?") : QStringLiteral("Did you know?"));
         QCOMPARE(item("appearanceSection")->property("title").toString(),
                  spanish ? QStringLiteral("Personalizar Bob") : QStringLiteral("Customize Bob"));
         QCOMPARE(item("themePreviewButton")->property("text").toString(), spanish ? QStringLiteral("Vista previa") : QStringLiteral("Preview"));
@@ -94,7 +95,7 @@ private Q_SLOTS:
             QCOMPARE(kcm->property("theme").toString(), QStringLiteral("forest"));
             QVERIFY(!kcm->needsSave());
         }
-        const QStringList keys{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock")};
+        const QStringList keys{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("facts"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock")};
         window.setColor(QApplication::palette().window().color());
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));

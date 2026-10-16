@@ -101,6 +101,9 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_showDate != m_savedShowDate
         || m_clockPosition != m_savedClockPosition
         || m_clockFontSize != m_savedClockFontSize) sections.append(QStringLiteral("clock"));
+    if (m_factsEnabled != m_savedFactsEnabled
+        || m_factsIntervalMinutes != m_savedFactsIntervalMinutes
+        || m_factsContentMode != m_savedFactsContentMode) sections.append(QStringLiteral("facts"));
     if (m_rainEnabled != m_savedRainEnabled
         || m_snowEnabled != m_savedSnowEnabled
         || m_thunderstormsEnabled != m_savedThunderstormsEnabled
@@ -147,7 +150,7 @@ bool ScreenBotKcm::sectionExpanded(const QString &section) const {
 void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
     const QStringList sections{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"),
         QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"),
-        QStringLiteral("performance"), QStringLiteral("lock")};
+        QStringLiteral("performance"), QStringLiteral("lock"), QStringLiteral("facts")};
     if (!sections.contains(section)) return;
     QSettings state(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
                     + QStringLiteral("/screenbot-kcm-state.ini"), QSettings::IniFormat);
@@ -163,6 +166,14 @@ void ScreenBotKcm::load() {
     const int mins = qBound(1, cfg.value(QStringLiteral("Screensaver/lock_minutes"), 2).toInt(), 60);
     const bool show = cfg.value(QStringLiteral("Screensaver/show_timer"), false).toBool();
     const bool nowPlayingEnabled = cfg.value(QStringLiteral("Screensaver/now_playing_enabled"), false).toBool();
+    const bool factsEnabled = cfg.value(QStringLiteral("Screensaver/facts_enabled"), true).toBool();
+    bool factsIntervalOk = false;
+    const int requestedFactsInterval = cfg.value(QStringLiteral("Screensaver/facts_interval_minutes"), 3).toInt(&factsIntervalOk);
+    const int factsIntervalMinutes = qBound(2, factsIntervalOk ? requestedFactsInterval : 3, 5);
+    const QString requestedFactsContentMode = cfg.value(QStringLiteral("Screensaver/facts_content_mode"), QStringLiteral("facts")).toString();
+    const QString factsContentMode = requestedFactsContentMode == QLatin1String("quotes")
+        || requestedFactsContentMode == QLatin1String("both")
+        ? requestedFactsContentMode : QStringLiteral("facts");
     const bool clockVisible = cfg.value(QStringLiteral("Screensaver/show_clock"), true).toBool();
     const QString clockFormat = cfg.value(QStringLiteral("Screensaver/clock_format"), QStringLiteral("12h")).toString();
     const QString validClockFormat = clockFormat == QLatin1String("24h") ? clockFormat : QStringLiteral("12h");
@@ -245,6 +256,9 @@ void ScreenBotKcm::load() {
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
     if (m_showTimer != show) { m_showTimer = show; Q_EMIT showTimerChanged(); }
     if (m_nowPlayingEnabled != nowPlayingEnabled) { m_nowPlayingEnabled = nowPlayingEnabled; Q_EMIT nowPlayingEnabledChanged(); }
+    if (m_factsEnabled != factsEnabled) { m_factsEnabled = factsEnabled; Q_EMIT factsEnabledChanged(); }
+    if (m_factsIntervalMinutes != factsIntervalMinutes) { m_factsIntervalMinutes = factsIntervalMinutes; Q_EMIT factsIntervalMinutesChanged(); }
+    if (m_factsContentMode != factsContentMode) { m_factsContentMode = factsContentMode; Q_EMIT factsContentModeChanged(); }
     if (m_clockVisible != clockVisible) { m_clockVisible = clockVisible; Q_EMIT clockVisibleChanged(); }
     if (m_clockFormat != validClockFormat) { m_clockFormat = validClockFormat; Q_EMIT clockFormatChanged(); }
     if (m_showDate != showDate) { m_showDate = showDate; Q_EMIT showDateChanged(); }
@@ -283,6 +297,9 @@ void ScreenBotKcm::load() {
     m_savedShowTimer = m_showTimer;
     m_savedClockVisible = m_clockVisible;
     m_savedNowPlayingEnabled = m_nowPlayingEnabled;
+    m_savedFactsEnabled = m_factsEnabled;
+    m_savedFactsIntervalMinutes = m_factsIntervalMinutes;
+    m_savedFactsContentMode = m_factsContentMode;
     m_savedClockFormat = m_clockFormat;
     m_savedShowDate = m_showDate;
     m_savedClockPosition = m_clockPosition;
@@ -324,6 +341,9 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/show_timer"), m_showTimer);
     cfg.setValue(QStringLiteral("Screensaver/show_clock"), m_clockVisible);
     cfg.setValue(QStringLiteral("Screensaver/now_playing_enabled"), m_nowPlayingEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/facts_enabled"), m_factsEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/facts_interval_minutes"), m_factsIntervalMinutes);
+    cfg.setValue(QStringLiteral("Screensaver/facts_content_mode"), m_factsContentMode);
     cfg.setValue(QStringLiteral("Screensaver/clock_format"), m_clockFormat);
     cfg.setValue(QStringLiteral("Screensaver/show_date"), m_showDate);
     cfg.setValue(QStringLiteral("Screensaver/clock_position"), m_clockPosition);
@@ -375,6 +395,9 @@ void ScreenBotKcm::save() {
     m_savedShowTimer = m_showTimer;
     m_savedClockVisible = m_clockVisible;
     m_savedNowPlayingEnabled = m_nowPlayingEnabled;
+    m_savedFactsEnabled = m_factsEnabled;
+    m_savedFactsIntervalMinutes = m_factsIntervalMinutes;
+    m_savedFactsContentMode = m_factsContentMode;
     m_savedClockFormat = m_clockFormat;
     m_savedShowDate = m_showDate;
     m_savedClockPosition = m_clockPosition;
@@ -443,6 +466,30 @@ void ScreenBotKcm::setNowPlayingEnabled(bool value) {
     if (value == m_nowPlayingEnabled) return;
     m_nowPlayingEnabled = value;
     Q_EMIT nowPlayingEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setFactsEnabled(bool value) {
+    if (value == m_factsEnabled) return;
+    m_factsEnabled = value;
+    Q_EMIT factsEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setFactsIntervalMinutes(int value) {
+    value = qBound(2, value, 5);
+    if (value == m_factsIntervalMinutes) return;
+    m_factsIntervalMinutes = value;
+    Q_EMIT factsIntervalMinutesChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setFactsContentMode(const QString &value) {
+    if (value != QLatin1String("facts") && value != QLatin1String("quotes")
+        && value != QLatin1String("both")) return;
+    if (value == m_factsContentMode) return;
+    m_factsContentMode = value;
+    Q_EMIT factsContentModeChanged();
     checkModified();
 }
 

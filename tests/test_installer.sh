@@ -30,6 +30,9 @@ run_home bash "$ROOT/install.sh" --no-idle > "$EVIDENCE/install-declined.log" 2>
 [[ -f "$SANDBOX/ScreenBot/screensaver/uninstall.sh" && -s "$SANDBOX/ScreenBot/install_manifest.txt" ]]
 [[ -f "$SANDBOX/ScreenBot/screensaver/screenbot/app.py" ]]
 [[ -f "$SANDBOX/ScreenBot/screensaver/screenbot/themes/space.py" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/facts/facts.json" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/facts/quotes.json" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/facts/translations/es.json" ]]
 [[ ! -e "$SANDBOX/.config/powerdevilrc" ]]
 while IFS= read -r entry; do [[ -z "$entry" || -f "$entry" ]]; done < "$SANDBOX/ScreenBot/install_manifest.txt"
 echo 'PASS actual user-prefix install, persisted manifest, no-idle leaves PowerDevil untouched'
@@ -75,6 +78,8 @@ echo 'PASS interactive uninstall removes every installed artifact and trigger, r
 run_home bash "$ROOT/install.sh" --no-idle > "$EVIDENCE/install-after-uninstall.log" 2>&1
 [[ -f "$SANDBOX/ScreenBot/screensaver/screensaver.py" ]]
 [[ -f "$SANDBOX/ScreenBot/screensaver/screenbot/phone/apps.py" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/facts/facts.json" && -f "$SANDBOX/ScreenBot/screensaver/facts/quotes.json" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/facts/translations/es.json" ]]
 cp "$SANDBOX/ScreenBot/install_manifest.txt" "$EVIDENCE/clean-manifest.txt"
 printf '%s\n' "$SANDBOX/.local/keep-me" >> "$SANDBOX/ScreenBot/install_manifest.txt"
 if run_home bash "$ROOT/uninstall.sh" --yes > "$EVIDENCE/unsafe-manifest.log" 2>&1; then exit 1; fi
