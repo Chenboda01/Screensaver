@@ -35,8 +35,7 @@ void ScreenBotKcm::checkModified() {
                  || m_phoneEnabled != m_savedPhoneEnabled
                  || m_bobosEnabled != m_savedBobosEnabled
                  || m_bobosActivationDelay != m_savedBobosActivationDelay
-                 || m_showWifiAnimation != m_savedShowWifiAnimation
-                 || m_relationshipStoryEnabled != m_savedRelationshipStoryEnabled);
+                 || m_showWifiAnimation != m_savedShowWifiAnimation);
 }
 
 void ScreenBotKcm::load() {
@@ -71,7 +70,6 @@ void ScreenBotKcm::load() {
     const bool bobos = cfg.value(QStringLiteral("Screensaver/bobos_enabled"), true).toBool();
     const int bobosDelay = qBound(1, cfg.value(QStringLiteral("Screensaver/bobos_activation_delay"), 3).toInt(), 30);
     const bool wifiAnimation = cfg.value(QStringLiteral("Screensaver/show_wifi_animation"), true).toBool();
-    const bool relationshipStory = cfg.value(QStringLiteral("Screensaver/relationship_story_enabled"), true).toBool();
     if (m_theme != validTheme) { m_theme = validTheme; Q_EMIT themeChanged(); }
     if (m_passwordLock != lock) { m_passwordLock = lock; Q_EMIT passwordLockChanged(); }
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
@@ -91,7 +89,6 @@ void ScreenBotKcm::load() {
     if (m_bobosEnabled != bobos) { m_bobosEnabled = bobos; Q_EMIT bobosEnabledChanged(); }
     if (m_bobosActivationDelay != bobosDelay) { m_bobosActivationDelay = bobosDelay; Q_EMIT bobosActivationDelayChanged(); }
     if (m_showWifiAnimation != wifiAnimation) { m_showWifiAnimation = wifiAnimation; Q_EMIT showWifiAnimationChanged(); }
-    if (m_relationshipStoryEnabled != relationshipStory) { m_relationshipStoryEnabled = relationshipStory; Q_EMIT relationshipStoryEnabledChanged(); }
     m_savedTheme = m_theme;
     m_savedPasswordLock = m_passwordLock;
     m_savedLockMinutes = m_lockMinutes;
@@ -111,7 +108,6 @@ void ScreenBotKcm::load() {
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
-    m_savedRelationshipStoryEnabled = m_relationshipStoryEnabled;
     setNeedsSave(false);
 }
 
@@ -136,7 +132,6 @@ void ScreenBotKcm::save() {
     cfg.setValue(QStringLiteral("Screensaver/bobos_enabled"), m_bobosEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_activation_delay"), m_bobosActivationDelay);
     cfg.setValue(QStringLiteral("Screensaver/show_wifi_animation"), m_showWifiAnimation);
-    cfg.setValue(QStringLiteral("Screensaver/relationship_story_enabled"), m_relationshipStoryEnabled);
     cfg.sync();
     if (cfg.status() != QSettings::NoError) {
         qWarning("Could not write ScreenBot settings.");
@@ -161,7 +156,6 @@ void ScreenBotKcm::save() {
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
-    m_savedRelationshipStoryEnabled = m_relationshipStoryEnabled;
     setNeedsSave(false);
 }
 
@@ -313,20 +307,11 @@ void ScreenBotKcm::setShowWifiAnimation(bool value) {
     checkModified();
 }
 
-void ScreenBotKcm::setRelationshipStoryEnabled(bool value) {
-    if (value == m_relationshipStoryEnabled) return;
-    m_relationshipStoryEnabled = value;
-    Q_EMIT relationshipStoryEnabledChanged();
-    checkModified();
-}
-
-void ScreenBotKcm::previewBobOS(bool showWifiAnimation, bool relationshipStoryEnabled) {
+void ScreenBotKcm::previewBobOS(bool showWifiAnimation) {
     const QString script = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver/screensaver.py");
     QStringList arguments{script, QStringLiteral("--preview-bobos")};
     arguments.append(showWifiAnimation ? QStringLiteral("--wifi-animation")
                                       : QStringLiteral("--no-wifi-animation"));
-    arguments.append(relationshipStoryEnabled ? QStringLiteral("--relationship-story")
-                                              : QStringLiteral("--no-relationship-story"));
     if (!QProcess::startDetached(QStringLiteral("/usr/bin/python"), arguments,
                                  QDir::homePath() + QStringLiteral("/ScreenBot/screensaver"))) {
         qWarning("Could not start the BobOS preview.");

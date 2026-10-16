@@ -16,7 +16,6 @@ from bobos import (
     MIN_COOLDOWN_SECONDS,
     NORMAL_SEQUENCE,
     PREVIEW_SEQUENCE,
-    RELATIONSHIP_PHASES,
     BobOSPhase,
     BobOSStatus,
     BobOSTimeline,
@@ -60,9 +59,11 @@ class BobOSTimelineTests(unittest.TestCase):
         timeline = BobOSTimeline(activation_delay_seconds=0, show_connection_animation=True)
         phases = tuple(phase for phase, _ in timeline.adventure_sequence)
 
-        self.assertEqual(phases, tuple(phase for phase, _ in NORMAL_SEQUENCE if phase not in RELATIONSHIP_PHASES))
+        self.assertEqual(phases, tuple(phase for phase, _ in NORMAL_SEQUENCE))
         self.assertTrue({BobOSPhase.HOME, BobOSPhase.BROWSER, BobOSPhase.FILES,
-                         BobOSPhase.TERMINAL, BobOSPhase.GAMES, BobOSPhase.SETTINGS}.issubset(phases))
+                         BobOSPhase.TERMINAL, BobOSPhase.GAMES, BobOSPhase.SETTINGS,
+                         BobOSPhase.CHAT, BobOSPhase.MAPS, BobOSPhase.WEATHER,
+                         BobOSPhase.CALENDAR, BobOSPhase.APP_STORE}.issubset(phases))
 
     def test_adventure_shuts_down_returns_to_exploring_then_waits_full_cooldown(self) -> None:
         timeline = BobOSTimeline(activation_delay_seconds=30, show_connection_animation=True)
@@ -83,18 +84,11 @@ class BobOSTimelineTests(unittest.TestCase):
 
         self.assertEqual(
             tuple(phase for phase, _ in timeline.adventure_sequence),
-            tuple(phase for phase, _ in PREVIEW_SEQUENCE if phase not in RELATIONSHIP_PHASES),
+            tuple(phase for phase, _ in PREVIEW_SEQUENCE),
         )
         self.assertLess(timeline.sequence_duration_seconds, 60)
         self.assertEqual(timeline.phase_at(0), BobOSPhase.CURIOUS)
         self.assertEqual(timeline.phase_at(timeline.sequence_duration_seconds), BobOSPhase.EXPLORING)
-        relationship_preview = BobOSTimeline(
-            activation_delay_seconds=180,
-            show_connection_animation=True,
-            preview_mode=True,
-            relationship_story_enabled=True,
-        )
-        self.assertLess(relationship_preview.sequence_duration_seconds, 60)
 
     def test_disabled_features_keep_bob_exploring(self) -> None:
         timeline = BobOSTimeline(activation_delay_seconds=0, show_connection_animation=True)
@@ -240,7 +234,7 @@ class SaverPreviewTests(unittest.TestCase):
 
     def test_full_preview_sequence_renders_offscreen_frames(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            saver = self.make_saver(Path(directory), preview_bobos=True, preview_relationship_story=True)
+            saver = self.make_saver(Path(directory), preview_bobos=True)
             self.addCleanup(saver.close)
             saver.resize(1280, 720)
             saver.theme = "forest"
@@ -285,6 +279,27 @@ class SaverPreviewTests(unittest.TestCase):
                 render_phase(saver, BobOSPhase.TERMINAL, 0.2),
                 render_phase(saver, BobOSPhase.TERMINAL, 4.5),
             )
+
+    def test_preserved_phone_apps_render_and_animate_offscreen(self) -> None:
+        def render_phase(saver: Saver, phase: BobOSPhase, elapsed: float) -> QImage:
+            image = QImage(900, 520, QImage.Format.Format_ARGB32)
+            image.fill(0)
+            painter = QPainter(image)
+            saver.draw_phone_canvas(
+                painter, QRectF(0, 0, 900, 520), BobOSStatus(phase, elapsed), 0
+            )
+            painter.end()
+            return image
+
+        with tempfile.TemporaryDirectory() as directory:
+            saver = self.make_saver(Path(directory), preview_bobos=True)
+            self.addCleanup(saver.close)
+
+            for phase in (BobOSPhase.CHAT, BobOSPhase.MAPS, BobOSPhase.WEATHER,
+                          BobOSPhase.CALENDAR, BobOSPhase.APP_STORE):
+                with self.subTest(phase=phase):
+                    self.assertNotEqual(render_phase(saver, phase, 0.2),
+                                        render_phase(saver, phase, 4.8))
 
 if __name__ == "__main__":
     unittest.main()

@@ -18,34 +18,17 @@ class BobOSPhase(StrEnum):
     TERMINAL = "terminal"
     GAMES = "games"
     SETTINGS = "settings"
-    DATE_MESSAGE = "date-message"
-    DATE_MAPS = "date-maps"
-    DATE_WEATHER = "date-weather"
-    DATE_CALENDAR = "date-calendar"
-    DATE_ADVICE = "date-advice"
-    DATE_CONFIRM = "date-confirm"
-    GIRLFRIEND_CALL = "girlfriend-call"
-    DATE_MEET = "date-meet"
-    DATE_FOLLOWUP = "date-followup"
+    CHAT = "chat"
+    MAPS = "maps"
+    WEATHER = "weather"
+    CALENDAR = "calendar"
+    APP_STORE = "app-store"
     SHUTDOWN = "shutdown"
     ZOOM_OUT = "zoom-out"
     RETURN = "return"
 
 
 MIN_COOLDOWN_SECONDS: Final[int] = 5 * 60
-RELATIONSHIP_PHASES: Final[frozenset[BobOSPhase]] = frozenset(
-    {
-        BobOSPhase.DATE_MESSAGE,
-        BobOSPhase.DATE_MAPS,
-        BobOSPhase.DATE_WEATHER,
-        BobOSPhase.DATE_CALENDAR,
-        BobOSPhase.DATE_ADVICE,
-        BobOSPhase.DATE_CONFIRM,
-        BobOSPhase.GIRLFRIEND_CALL,
-        BobOSPhase.DATE_MEET,
-        BobOSPhase.DATE_FOLLOWUP,
-    }
-)
 NORMAL_SEQUENCE: Final[tuple[tuple[BobOSPhase, int], ...]] = (
     (BobOSPhase.CURIOUS, 4),
     (BobOSPhase.PHONE_ACTIVATION, 5),
@@ -59,15 +42,11 @@ NORMAL_SEQUENCE: Final[tuple[tuple[BobOSPhase, int], ...]] = (
     (BobOSPhase.TERMINAL, 32),
     (BobOSPhase.GAMES, 36),
     (BobOSPhase.SETTINGS, 24),
-    (BobOSPhase.DATE_MESSAGE, 14),
-    (BobOSPhase.DATE_MAPS, 16),
-    (BobOSPhase.DATE_WEATHER, 12),
-    (BobOSPhase.DATE_CALENDAR, 12),
-    (BobOSPhase.DATE_ADVICE, 10),
-    (BobOSPhase.DATE_CONFIRM, 12),
-    (BobOSPhase.GIRLFRIEND_CALL, 8),
-    (BobOSPhase.DATE_MEET, 22),
-    (BobOSPhase.DATE_FOLLOWUP, 10),
+    (BobOSPhase.CHAT, 16),
+    (BobOSPhase.MAPS, 16),
+    (BobOSPhase.WEATHER, 12),
+    (BobOSPhase.CALENDAR, 12),
+    (BobOSPhase.APP_STORE, 18),
     (BobOSPhase.SHUTDOWN, 8),
     (BobOSPhase.ZOOM_OUT, 5),
     (BobOSPhase.RETURN, 3),
@@ -85,15 +64,11 @@ PREVIEW_SEQUENCE: Final[tuple[tuple[BobOSPhase, int], ...]] = (
     (BobOSPhase.TERMINAL, 4),
     (BobOSPhase.GAMES, 4),
     (BobOSPhase.SETTINGS, 3),
-    (BobOSPhase.DATE_MESSAGE, 2),
-    (BobOSPhase.DATE_MAPS, 2),
-    (BobOSPhase.DATE_WEATHER, 2),
-    (BobOSPhase.DATE_CALENDAR, 2),
-    (BobOSPhase.DATE_ADVICE, 2),
-    (BobOSPhase.DATE_CONFIRM, 2),
-    (BobOSPhase.GIRLFRIEND_CALL, 2),
-    (BobOSPhase.DATE_MEET, 3),
-    (BobOSPhase.DATE_FOLLOWUP, 2),
+    (BobOSPhase.CHAT, 2),
+    (BobOSPhase.MAPS, 2),
+    (BobOSPhase.WEATHER, 2),
+    (BobOSPhase.CALENDAR, 2),
+    (BobOSPhase.APP_STORE, 2),
     (BobOSPhase.SHUTDOWN, 2),
     (BobOSPhase.ZOOM_OUT, 2),
     (BobOSPhase.RETURN, 1),
@@ -115,14 +90,11 @@ class BobOSTimeline:
     first_adventure_offset_seconds: int = 0
     cooldown_offset_seconds: int = 0
     preview_mode: bool = False
-    relationship_story_enabled: bool = False
 
     @property
     def adventure_sequence(self) -> tuple[tuple[BobOSPhase, int], ...]:
         """Return the full fictional activity, omitting only optional Wi-Fi."""
         sequence = PREVIEW_SEQUENCE if self.preview_mode else NORMAL_SEQUENCE
-        if not self.relationship_story_enabled:
-            sequence = tuple(item for item in sequence if item[0] not in RELATIONSHIP_PHASES)
         if self.show_connection_animation:
             return sequence
         return tuple(item for item in sequence if item[0] is not BobOSPhase.WIFI_CONNECTING)

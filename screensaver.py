@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ScreenBot screensaver V20: BobOS 2.0, Bob's phone, clock, and weather.
+"""ScreenBot screensaver V21: BobOS 2.0, Bob's phone, clock, and weather.
 
 Theme is controlled ONLY by KDE System Settings. This version keeps the
 existing settings integration and replaces the previous full-body design with a
@@ -11,7 +11,6 @@ import random
 import subprocess
 import sys
 import time
-from collections.abc import Callable
 from pathlib import Path
 from typing import Final
 
@@ -38,14 +37,11 @@ PHONE_UI_PHASES: Final[frozenset[BobOSPhase]] = frozenset(
         BobOSPhase.TERMINAL,
         BobOSPhase.GAMES,
         BobOSPhase.SETTINGS,
-        BobOSPhase.DATE_MESSAGE,
-        BobOSPhase.DATE_MAPS,
-        BobOSPhase.DATE_WEATHER,
-        BobOSPhase.DATE_CALENDAR,
-        BobOSPhase.DATE_ADVICE,
-        BobOSPhase.DATE_CONFIRM,
-        BobOSPhase.GIRLFRIEND_CALL,
-        BobOSPhase.DATE_FOLLOWUP,
+        BobOSPhase.CHAT,
+        BobOSPhase.MAPS,
+        BobOSPhase.WEATHER,
+        BobOSPhase.CALENDAR,
+        BobOSPhase.APP_STORE,
         BobOSPhase.SHUTDOWN,
     }
 )
@@ -65,8 +61,7 @@ def selected_theme(settings):
 
 
 class Saver(QWidget):
-    def __init__(self, *, preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
-                 preview_relationship_story: bool | None = None):
+    def __init__(self, *, preview_bobos: bool = False, preview_wifi_animation: bool | None = None):
         super().__init__()
         self.setWindowTitle('ScreenBot Screensaver')
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
@@ -108,34 +103,6 @@ class Saver(QWidget):
         self.bobos_enabled = settings.getboolean('Screensaver', 'bobos_enabled', fallback=True)
         if preview_bobos:
             self.bobos_enabled = True
-        configured_relationship_story = settings.getboolean(
-            'Screensaver', 'relationship_story_enabled', fallback=True
-        )
-        self.relationship_story_enabled = (
-            preview_relationship_story
-            if preview_relationship_story is not None
-            else configured_relationship_story
-        )
-        self.relationship_drawers: dict[BobOSPhase, Callable[[QPainter, float, float], None]] = {
-            BobOSPhase.DATE_MESSAGE: lambda painter, elapsed, clock: self.draw_date_chat(
-                painter, 'BobChat', 'Luna', 'Two years with you, Bob. Date night?',
-                'Bob', 'Yes! 7:30? I will pick somewhere with snacks.', elapsed, clock,
-            ),
-            BobOSPhase.DATE_MAPS: self.draw_date_maps,
-            BobOSPhase.DATE_WEATHER: self.draw_date_weather,
-            BobOSPhase.DATE_CALENDAR: self.draw_date_calendar,
-            BobOSPhase.DATE_ADVICE: self.draw_date_advice,
-            BobOSPhase.DATE_CONFIRM: lambda painter, elapsed, clock: self.draw_date_chat(
-                painter, 'BobChat', 'Bob',
-                f'Confirmed: 7:30 at {self.date_destination()}! I changed the restaurant four times.',
-                'Luna', 'Perfect! I saved you the window seat.', elapsed, clock,
-            ),
-            BobOSPhase.GIRLFRIEND_CALL: self.draw_girlfriend_call,
-            BobOSPhase.DATE_FOLLOWUP: lambda painter, elapsed, clock: self.draw_date_chat(
-                painter, 'BobChat', 'Luna', 'Best date ever. Next time: bring extra snacks!',
-                'Bob', 'Already packed three. Just in case.', elapsed, clock,
-            ),
-        }
         try:
             bobos_delay_minutes = settings.getint('Screensaver', 'bobos_activation_delay', fallback=3)
         except ValueError:
@@ -153,7 +120,6 @@ class Saver(QWidget):
             first_adventure_offset_seconds=0 if preview_bobos else schedule_random.randint(0, 90),
             cooldown_offset_seconds=schedule_random.randint(60, 180),
             preview_mode=preview_bobos,
-            relationship_story_enabled=self.relationship_story_enabled,
         )
         self.lock_attempted = False
         self.next_lock_attempt = 0.0
@@ -209,8 +175,6 @@ class Saver(QWidget):
         if phase not in PHONE_UI_PHASES:
             self.bob(p, w, h, t, bobos_status)
             self.caption(p, w, h, t, phase)
-        if phase is BobOSPhase.DATE_MEET:
-            self.draw_girlfriend_scene(p, w, h, t)
         if phase in PHONE_UI_PHASES:
             self.draw_phone_os(p, w, h, bobos_status, t)
         elif phase in (BobOSPhase.ZOOM_IN, BobOSPhase.ZOOM_OUT):
@@ -520,7 +484,7 @@ class Saver(QWidget):
         pose_time = t
         if mood == 'sleepy':
             pose_time = t - (t % 32.0 - 22.0)
-        x = w*.34 if status.phase is BobOSPhase.DATE_MEET else w*.5 + math.sin(pose_time*.36)*min(w*.075, 85)
+        x = w*.5 + math.sin(pose_time*.36)*min(w*.075, 85)
         y = h*.56 + math.sin(pose_time*1.45)*9
         scale = min(w/1250, h/800, 1.35)
 
@@ -682,13 +646,8 @@ class Saver(QWidget):
             BobOSPhase.ZOOM_IN: 'Opening BobOS…',
             BobOSPhase.ZOOM_OUT: "Bob is putting away Bob's Phone…",
             BobOSPhase.RETURN: 'Bob is heading back to exploring…',
-            BobOSPhase.DATE_MEET: 'Bob and his girlfriend share a little date beneath the theme’s stars.',
         }
         caption = bobos_words.get(phase, words[self.theme])
-        if phase is BobOSPhase.DATE_MEET:
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColor(5, 14, 30, 185))
-            p.drawRoundedRect(QRectF(w*.12, h*.78, w*.76, 38), 18, 18)
         p.setPen(QColor('#dcecff'))
         p.setFont(QFont('Sans Serif', max(13, min(22, w//72))))
         p.drawText(QRectF(0, h*.79, w, 39), Qt.AlignmentFlag.AlignCenter, caption)
@@ -768,17 +727,23 @@ class Saver(QWidget):
             self.draw_games(p, status.phase_elapsed_seconds, t)
         elif status.phase is BobOSPhase.SETTINGS:
             self.draw_phone_settings(p, status.phase_elapsed_seconds, t)
+        elif status.phase is BobOSPhase.CHAT:
+            self.draw_chat(p, status.phase_elapsed_seconds, t)
+        elif status.phase is BobOSPhase.MAPS:
+            self.draw_maps(p, status.phase_elapsed_seconds, t)
+        elif status.phase is BobOSPhase.WEATHER:
+            self.draw_phone_weather(p, status.phase_elapsed_seconds, t)
+        elif status.phase is BobOSPhase.CALENDAR:
+            self.draw_calendar(p, status.phase_elapsed_seconds, t)
+        elif status.phase is BobOSPhase.APP_STORE:
+            self.draw_app_store(p, status.phase_elapsed_seconds, t)
         else:
-            relationship_drawer = self.relationship_drawers.get(status.phase)
-            if relationship_drawer is not None:
-                relationship_drawer(p, status.phase_elapsed_seconds, t)
-            else:
-                p.fillRect(screen, QColor(3, 6, 15, min(235, int(status.phase_elapsed_seconds*40))))
-                p.setPen(QColor('#aeefff'))
-                p.setFont(QFont('Sans Serif', 34, QFont.Weight.Bold))
-                p.drawText(QRectF(80, 205, 740, 72), Qt.AlignmentFlag.AlignCenter, 'BobOS is powering down')
-                p.setFont(QFont('Sans Serif', 18))
-                p.drawText(QRectF(80, 280, 740, 45), Qt.AlignmentFlag.AlignCenter, 'Saving Bob’s imaginary high score…')
+            p.fillRect(screen, QColor(3, 6, 15, min(235, int(status.phase_elapsed_seconds*40))))
+            p.setPen(QColor('#aeefff'))
+            p.setFont(QFont('Sans Serif', 34, QFont.Weight.Bold))
+            p.drawText(QRectF(80, 205, 740, 72), Qt.AlignmentFlag.AlignCenter, 'BobOS is powering down')
+            p.setFont(QFont('Sans Serif', 18))
+            p.drawText(QRectF(80, 280, 740, 45), Qt.AlignmentFlag.AlignCenter, 'Saving Bob’s imaginary high score…')
         p.restore()
 
     @staticmethod
@@ -806,22 +771,23 @@ class Saver(QWidget):
             ('Bob Browser', '#54c9ef', 'B'), ('Bob Files', '#f3bd5b', 'F'), ('Bob Terminal', '#8be58f', '>_'),
             ('Bob Games', '#e58bf0', '★'), ('Bob Settings', '#8c9fff', '⚙'), ('BobChat', '#ed91bc', '♡'),
             ('Bob Maps', '#62c89c', 'M'), ('Bob Weather', '#85b9ed', '☼'), ('Bob Calendar', '#d5a5f4', 'C'),
+            ('App Store', '#f2ad55', '↓'),
         )
         for index, (name, color, icon) in enumerate(apps):
             column, row = index % 3, index // 3
-            rect = QRectF(47 + column*278, 145 + row*108, 250, 96)
+            rect = QRectF(47 + column*278, 145 + row*77, 250, 70)
             p.setPen(QPen(QColor(125, 187, 231, 80), 1))
             p.setBrush(QColor(28, 47, 78, 220))
             p.drawRoundedRect(rect, 16, 16)
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor(color))
-            p.drawRoundedRect(QRectF(rect.x()+14, rect.y()+19, 48, 48), 14, 14)
+            p.drawRoundedRect(QRectF(rect.x()+14, rect.y()+14, 42, 42), 12, 12)
             p.setPen(QColor('#081426'))
             p.setFont(QFont('Sans Serif', 17, QFont.Weight.Bold))
-            p.drawText(QRectF(rect.x()+14, rect.y()+19, 48, 48), Qt.AlignmentFlag.AlignCenter, icon)
+            p.drawText(QRectF(rect.x()+14, rect.y()+14, 42, 42), Qt.AlignmentFlag.AlignCenter, icon)
             p.setPen(QColor('#edf6ff'))
             p.setFont(QFont('Sans Serif', 15, QFont.Weight.DemiBold))
-            p.drawText(QRectF(rect.x()+72, rect.y()+9, 166, 76), Qt.AlignmentFlag.AlignVCenter, name)
+            p.drawText(QRectF(rect.x()+66, rect.y()+5, 174, 60), Qt.AlignmentFlag.AlignVCenter, name)
 
     def draw_browser(self, p: QPainter, elapsed: float, t: float) -> None:
         self.draw_phone_header(p, 'Bob Browser', 'bob://the-moon-is-cheeseish')
@@ -970,41 +936,30 @@ class Saver(QWidget):
             p.drawEllipse(QRectF(774 if enabled else 739, y+18, 22, 22))
         self.draw_bob_reaction(p, t, 'happy')
 
-    def draw_date_chat(self, p: QPainter, title: str, sender: str, message: str,
-                       reply_sender: str, reply: str, elapsed: float, t: float) -> None:
-        """Animate a fictional BobChat exchange without contacting anyone."""
-        self.draw_phone_header(p, title, 'Luna · together for two years')
-        p.setPen(QPen(QColor(133, 174, 221, 75), 1))
-        p.setBrush(QColor('#152943'))
-        p.drawRoundedRect(QRectF(88, 145, 724, 250), 22, 22)
-        self.draw_girlfriend_head(p, QPointF(142, 204), 42, 'happy', t)
-        bubble = QRectF(188, 164, 560, 84)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor('#503b70'))
-        p.drawRoundedRect(bubble, 18, 18)
-        p.setPen(QColor('#f4eaff'))
-        p.setFont(QFont('Sans Serif', 16, QFont.Weight.DemiBold))
-        p.drawText(QRectF(210, 174, 516, 64), Qt.AlignmentFlag.AlignVCenter | Qt.TextFlag.TextWordWrap,
-                   f'{sender}: {message}')
-        progress = min(1.0, elapsed / 3.0)
-        p.setBrush(QColor('#254c70'))
-        p.drawRoundedRect(QRectF(245, 278, 493, 72), 18, 18)
-        p.setPen(QColor('#e7f8ff'))
-        p.setFont(QFont('Sans Serif', 14))
-        visible_reply = reply[:round(len(reply) * progress)]
-        p.drawText(QRectF(265, 286, 450, 58),
-                   Qt.AlignmentFlag.AlignVCenter | Qt.TextFlag.TextWordWrap,
-                   f'{reply_sender}: {visible_reply}')
-        if progress < 1.0:
-            dots = '.' * (1 + int(elapsed * 2) % 3)
-            p.setPen(QColor('#a9d9f1'))
-            p.setFont(QFont('Sans Serif', 14))
-            p.drawText(QRectF(603, 356, 141, 25), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                       f'{reply_sender} is typing{dots}')
+    def draw_chat(self, p: QPainter, elapsed: float, t: float) -> None:
+        """Animate a self-contained, fictional BobChat group conversation."""
+        self.draw_phone_header(p, 'BobChat', 'A pretend group chat · offline')
+        messages = (
+            ('Bob', 'Has anyone seen a meteor made of marshmallows?'),
+            ('Orbit Club', 'That was your snack bag, Bob.'),
+            ('Bob', 'Mystery solved. Deliciously.'),
+        )
+        for index, (sender, message) in enumerate(messages):
+            y = 144 + index * 91
+            visible = max(0, min(len(message), int((elapsed * 18) - index * 30)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor('#254c70') if sender == 'Bob' else QColor('#503b70'))
+            p.drawRoundedRect(QRectF(95, y, 710, 72), 18, 18)
+            p.setPen(QColor('#9edcf5'))
+            p.setFont(QFont('Sans Serif', 13, QFont.Weight.Bold))
+            p.drawText(QRectF(116, y + 7, 650, 22), Qt.AlignmentFlag.AlignVCenter, sender)
+            p.setPen(QColor('#e7f8ff'))
+            p.setFont(QFont('Sans Serif', 15))
+            p.drawText(QRectF(116, y + 31, 660, 34), Qt.AlignmentFlag.AlignVCenter, message[:visible])
         self.draw_bob_reaction(p, t, 'happy')
 
-    def draw_date_maps(self, p: QPainter, elapsed: float, t: float) -> None:
-        """Show Bob browsing a made-up map of romantic destinations."""
+    def draw_maps(self, p: QPainter, elapsed: float, t: float) -> None:
+        """Show a pretend map of whimsical landmarks in Bob's world."""
         self.draw_phone_header(p, 'Bob Maps', 'Fictional places · no navigation data')
         p.setPen(QPen(QColor('#6da6c7'), 2))
         p.setBrush(QColor('#132c3d'))
@@ -1013,12 +968,11 @@ class Saver(QWidget):
             y = 176 + index * 49
             p.setPen(QPen(QColor('#31556a'), 12, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             p.drawLine(QPointF(104, y), QPointF(794, y + math.sin(index * 2.2) * 24))
-        destination = self.date_destination()
-        options = ('Cloud Café', 'Moonlight Noodles', 'Stargazer Terrace', destination)
-        choice = options[min(len(options) - 1, int(elapsed / 3.0))]
+        places = ('Cloud Café', 'Moon Crater 7', 'Glowtree Garden', 'Snowglobe Lookout')
+        choice = places[min(len(places) - 1, int(elapsed / 3.0))]
         pin_x = 470 + math.sin(elapsed * 2.0) * 24
         p.setPen(QPen(QColor('#fff0a8'), 3))
-        p.setBrush(QColor('#ff829f'))
+        p.setBrush(QColor('#ffca68'))
         p.drawEllipse(QPointF(pin_x, 264), 17, 17)
         p.setPen(QColor('#f5f8ff'))
         p.setFont(QFont('Sans Serif', 19, QFont.Weight.Bold))
@@ -1026,29 +980,18 @@ class Saver(QWidget):
         p.setPen(QColor('#b6cde0'))
         p.setFont(QFont('Sans Serif', 14))
         p.drawText(QRectF(133, 398, 630, 28), Qt.AlignmentFlag.AlignCenter,
-                   'Bob zooms in, zooms out, and picks the place with snacks nearby.')
+                   'Bob zooms in, zooms out, and finds the snack district.')
         self.draw_bob_reaction(p, t, 'curious')
 
-    def date_destination(self) -> str:
-        """Pick a fictional date location that suits the current theme."""
-        destinations = {
-            'forest': 'Glowtree Garden',
-            'mountains': 'Moonlit Lookout',
-            'snow': 'Snowglobe Cocoa Hut',
-            'space': 'Stargazer Observatory',
-            'city': 'Cloud Café Rooftop',
-        }
-        return destinations[self.theme]
-
-    def draw_date_weather(self, p: QPainter, elapsed: float, t: float) -> None:
-        """Show a locally simulated, always-fictional date forecast."""
-        self.draw_phone_header(p, 'Bob Weather', 'Pretend forecast for date night')
+    def draw_phone_weather(self, p: QPainter, elapsed: float, t: float) -> None:
+        """Draw a fictional forecast without using real weather data."""
+        self.draw_phone_header(p, 'Bob Weather', 'Pretend forecast · no weather service')
         p.setPen(QPen(QColor(132, 187, 224, 90), 1))
         p.setBrush(QColor('#172d4b'))
         p.drawRoundedRect(QRectF(130, 142, 640, 280), 25, 25)
+        pulse = 62 + math.sin(elapsed * 2) * 5
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QColor('#ffd98a'))
-        pulse = 62 + math.sin(elapsed * 2) * 5
         p.drawEllipse(QPointF(450, 238), pulse, pulse)
         p.setPen(QColor('#f4f8ff'))
         p.setFont(QFont('Sans Serif', 27, QFont.Weight.Bold))
@@ -1056,120 +999,52 @@ class Saver(QWidget):
         p.setPen(QColor('#c8dbf0'))
         p.setFont(QFont('Sans Serif', 16))
         p.drawText(QRectF(190, 358, 520, 42), Qt.AlignmentFlag.AlignCenter,
-                   '100% chance of a lovely evening · 0% chance of real weather data')
+                   'Forecast confidence: 100% imaginary')
         self.draw_bob_reaction(p, t, 'happy')
 
-    def draw_date_calendar(self, p: QPainter, elapsed: float, t: float) -> None:
-        """Animate Bob saving a pretend anniversary date to Bob Calendar."""
-        self.draw_phone_header(p, 'Bob Calendar', 'A very important imaginary event')
-        p.setPen(QPen(QColor(137, 180, 224, 80), 1))
-        p.setBrush(QColor('#172a47'))
-        p.drawRoundedRect(QRectF(165, 142, 570, 288), 22, 22)
-        p.setPen(QColor('#ff9bae'))
-        p.setFont(QFont('Sans Serif', 20, QFont.Weight.Bold))
-        p.drawText(QRectF(197, 157, 506, 42), Qt.AlignmentFlag.AlignCenter, 'TONIGHT · 7:30 PM')
-        p.setPen(QColor('#eef6ff'))
-        p.setFont(QFont('Sans Serif', 23, QFont.Weight.DemiBold))
-        p.drawText(QRectF(200, 211, 500, 54), Qt.AlignmentFlag.AlignCenter, 'Two-year anniversary date')
-        p.setPen(QColor('#a9c2de'))
-        p.setFont(QFont('Sans Serif', 16))
-        p.drawText(QRectF(205, 271, 490, 45), Qt.AlignmentFlag.AlignCenter,
-                   f'Meet at {self.date_destination()}')
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor('#4bd5a0') if elapsed > 2 else QColor('#53708d'))
-        p.drawRoundedRect(QRectF(340, 342, 220, 46), 22, 22)
-        p.setPen(QColor('#f7fffc'))
-        p.setFont(QFont('Sans Serif', 15, QFont.Weight.Bold))
-        p.drawText(QRectF(340, 342, 220, 46), Qt.AlignmentFlag.AlignCenter, 'Saved to Bob Calendar')
+    def draw_calendar(self, p: QPainter, elapsed: float, t: float) -> None:
+        """Animate Bob checking a fictional calendar of ordinary activities."""
+        self.draw_phone_header(p, 'Bob Calendar', 'A pretend schedule · stored nowhere')
+        entries = ('09:00 · Water the moon flowers', '12:30 · Snack break',
+                   '18:00 · Watch the meteor shower')
+        for index, entry in enumerate(entries):
+            y = 155 + index * 82
+            p.setPen(QPen(QColor(137, 180, 224, 80), 1))
+            p.setBrush(QColor('#172a47'))
+            p.drawRoundedRect(QRectF(115, y, 670, 64), 17, 17)
+            p.setPen(QColor('#eef6ff'))
+            p.setFont(QFont('Sans Serif', 17, QFont.Weight.DemiBold))
+            p.drawText(QRectF(145, y + 7, 610, 50), Qt.AlignmentFlag.AlignVCenter, entry)
+        self.draw_toast(p, 'Reminder', 'Snack break is approaching!', min(1.0, elapsed / 2.0))
         self.draw_bob_reaction(p, t, 'surprised')
 
-    def draw_date_advice(self, p: QPainter, elapsed: float, t: float) -> None:
-        """Show Bob asking a fictional assistant for sweet, harmless advice."""
-        self.draw_phone_header(p, 'BobOS Buddy', 'Imaginary dating advice')
-        self.draw_toast(p, 'Bob asks', 'How do I make date night special?', 1.0)
-        practice = (
-            "Bob rehearses: ‘Hello, Luna!’ …too formal.",
-            "Bob rehearses: ‘Hey, snacks?’ …getting warmer.",
-            'Bob decides to just say what he means.',
-        )[min(2, int(elapsed / 3.0))]
-        p.setPen(QColor('#f1dcff'))
-        p.setFont(QFont('Sans Serif', 15, QFont.Weight.DemiBold))
-        p.drawText(QRectF(120, 160, 660, 54), Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap,
-                   practice)
-        advice = 'Be yourself. Listen closely. Bring the emergency snack stash.'
-        visible = max(0, min(len(advice), int(elapsed * 16)))
-        p.setPen(QPen(QColor('#63dcb7'), 2))
-        p.setBrush(QColor('#10293a'))
-        p.drawRoundedRect(QRectF(110, 270, 680, 118), 23, 23)
-        p.setPen(QColor('#e4fff6'))
-        p.setFont(QFont('Sans Serif', 21, QFont.Weight.DemiBold))
-        p.drawText(QRectF(140, 282, 620, 92), Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap,
-                   advice[:visible])
+    def draw_app_store(self, p: QPainter, elapsed: float, t: float) -> None:
+        """Browse made-up BobOS apps without downloading or installing anything."""
+        self.draw_phone_header(p, 'App Store', 'All apps are imaginary · nothing downloads')
+        apps = (
+            ('Cloud Counter', 'Count clouds drifting by', '#65bfe8'),
+            ('Pixel Garden', 'Grow a tiny digital flower', '#72d59a'),
+            ('Star Catch', 'Catch stars in a pretend game', '#d7a2ef'),
+        )
+        selected = int(elapsed / 4) % len(apps)
+        for index, (name, description, color) in enumerate(apps):
+            y = 145 + index * 96
+            p.setPen(QPen(QColor(130, 181, 224, 80), 1))
+            p.setBrush(QColor('#203c5e') if index == selected else QColor('#172b49'))
+            p.drawRoundedRect(QRectF(84, y, 732, 78), 18, 18)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(color))
+            p.drawRoundedRect(QRectF(103, y + 16, 46, 46), 14, 14)
+            p.setPen(QColor('#f0f8ff'))
+            p.setFont(QFont('Sans Serif', 16, QFont.Weight.Bold))
+            p.drawText(QRectF(170, y + 7, 410, 30), Qt.AlignmentFlag.AlignVCenter, name)
+            p.setPen(QColor('#b7c9df'))
+            p.setFont(QFont('Sans Serif', 13))
+            p.drawText(QRectF(170, y + 38, 430, 26), Qt.AlignmentFlag.AlignVCenter, description)
+            p.setPen(QColor('#84efbd'))
+            p.setFont(QFont('Sans Serif', 14, QFont.Weight.Bold))
+            p.drawText(QRectF(618, y + 13, 160, 50), Qt.AlignmentFlag.AlignCenter, 'Preview')
         self.draw_bob_reaction(p, t, 'curious')
-
-    def draw_girlfriend_call(self, p: QPainter, elapsed: float, t: float) -> None:
-        """Draw an incoming fictional call from Bob's established girlfriend."""
-        self.draw_phone_header(p, 'BobChat · incoming call', 'Luna is calling')
-        float_y = math.sin(elapsed * 3) * 8
-        self.draw_girlfriend_head(p, QPointF(450, 225 + float_y), 92, 'happy', t)
-        p.setPen(QColor('#f4f5ff'))
-        p.setFont(QFont('Sans Serif', 25, QFont.Weight.Bold))
-        p.drawText(QRectF(240, 335, 420, 42), Qt.AlignmentFlag.AlignCenter, 'Luna · your favorite robot')
-        p.setPen(QColor('#a9c4db'))
-        p.setFont(QFont('Sans Serif', 16))
-        p.drawText(QRectF(245, 379, 410, 32), Qt.AlignmentFlag.AlignCenter,
-                   '“I saved you the window seat!”')
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor('#48cf9a'))
-        p.drawEllipse(QPointF(380, 449), 24, 24)
-        p.setBrush(QColor('#ec7999'))
-        p.drawEllipse(QPointF(520, 449), 24, 24)
-        self.draw_bob_reaction(p, t, 'happy')
-
-    def draw_girlfriend_head(self, p: QPainter, center: QPointF, size: float,
-                             mood: str, t: float) -> None:
-        """Paint Luna as a distinct floating robot head with no body or limbs."""
-        p.save()
-        center = QPointF(center.x(), center.y() + math.sin(t * 2.1) * min(6, size * .07))
-        p.translate(center)
-        p.rotate(math.sin(t * .9) * 2.0)
-        p.setPen(QPen(QColor('#ffacd0'), max(2, size * .055)))
-        p.setBrush(QColor('#754778'))
-        p.drawRoundedRect(QRectF(-size*.53, -size*.46, size*1.06, size*.94), size*.34, size*.34)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor('#b87bc0'))
-        p.drawEllipse(QPointF(-size*.53, 0), size*.15, size*.2)
-        p.drawEllipse(QPointF(size*.53, 0), size*.15, size*.2)
-        p.setBrush(QColor('#ffbdd7'))
-        p.drawRoundedRect(QRectF(size*.14, -size*.58, size*.27, size*.17), size*.08, size*.08)
-        p.setBrush(QColor('#2f2244'))
-        p.drawRoundedRect(QRectF(-size*.43, -size*.34, size*.86, size*.68), size*.26, size*.26)
-        p.setBrush(QColor('#ffe8fa'))
-        p.drawEllipse(QPointF(-size*.18, -size*.04), size*.07, size*.095)
-        p.drawEllipse(QPointF(size*.18, -size*.04), size*.07, size*.095)
-        p.setPen(QPen(QColor('#ffafd0'), max(2, size * .045), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        if mood == 'surprised':
-            p.drawEllipse(QPointF(0, size*.17), size*.07, size*.09)
-        else:
-            p.drawArc(QRectF(-size*.14, size*.07, size*.28, size*.2), 190*16, 160*16)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(255, 152, 189, 150))
-        p.drawEllipse(QPointF(-size*.30, size*.15), size*.07, size*.045)
-        p.drawEllipse(QPointF(size*.30, size*.15), size*.07, size*.045)
-        p.restore()
-
-    def draw_girlfriend_scene(self, p: QPainter, w: int, h: int, t: float) -> None:
-        """Meet Luna in the selected theme, keeping both characters head-only."""
-        scale = min(w / 1250, h / 800, 1.35)
-        self.draw_girlfriend_head(p, QPointF(w*.68, h*.56), 152 * scale, 'happy', t)
-        p.save()
-        p.setPen(Qt.PenStyle.NoPen)
-        for index in range(5):
-            x = w*.43 + ((index * 41 + t * 28) % (w*.19))
-            y = h*.45 + math.sin(t * 2 + index) * 28
-            p.setPen(QColor(255, 185, 212, 220))
-            p.drawText(QRectF(x, y, 34, 34), Qt.AlignmentFlag.AlignCenter, '♥')
-        p.restore()
 
     @staticmethod
     def draw_phone_avatar(p: QPainter, rect: QRectF, mood: str) -> None:
@@ -1298,17 +1173,10 @@ def main(arguments: list[str] | None = None) -> int:
         wifi_override = False
     else:
         wifi_override = None
-    if '--relationship-story' in command_arguments:
-        relationship_override = True
-    elif '--no-relationship-story' in command_arguments:
-        relationship_override = False
-    else:
-        relationship_override = None
     app = QApplication(sys.argv[:1])
     saver = Saver(
         preview_bobos=preview,
         preview_wifi_animation=wifi_override,
-        preview_relationship_story=relationship_override,
     )
     saver.showFullScreen()
     saver.activateWindow()

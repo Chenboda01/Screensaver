@@ -1,11 +1,15 @@
 # Changelog
 
+## V21
+
+- Removed the relationship storyline, its character and message content, story-specific animation phases, and its KDE Settings option.
+- Kept BobOS 2.0 running through the standard phone adventure, with fictional BobChat, Maps, Weather, Calendar, App Store, and game screens.
+- Preserved the phone preview, staged KDE Apply/Discard behavior for remaining settings, and the real KDE password-lock priority.
+- Updated offscreen tests to cover the full BobOS sequence and animated rendering for the retained phone apps.
+
 ## V20
 
-- Upgraded BobOS to 2.0 with an optional, recurring relationship story about Bob and his girlfriend of two years, Luna.
-- Added fictional BobChat messages, Bob Maps destination browsing, Bob Weather, Bob Calendar scheduling, dating advice, an incoming call, a theme-specific floating robot date scene, and follow-up messages.
-- Added an enabled-by-default "Enable Bob's Relationship Story" KDE setting with Apply/Discard persistence; disabling it removes every relationship scene while preserving other BobOS adventures.
-- Extended the lock-safe preview to include the full story and added timeline, setting, five-theme render, and offscreen sequence tests. All relationship content is painted fiction and never uses real contacts, messaging, maps, or weather services.
+- Expanded BobOS 2.0 with additional fictional phone apps and longer animated interactions. V21 retains the ordinary BobChat, Maps, Weather, Calendar, and App Store simulations.
 
 ## V19
 

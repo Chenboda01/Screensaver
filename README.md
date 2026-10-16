@@ -3,8 +3,8 @@
   <h1>ScreenBot Screensaver</h1>
   <p>A little robot, a lot of worlds. A playful screensaver for KDE Plasma 6 on Wayland.</p>
   <p>
-    <a href="https://github.com/Chenboda01/Screensaver/releases/tag/V20"><img alt="Latest release V20" src="https://img.shields.io/badge/release-V20-168eb7"></a>
-    <a href="https://github.com/Chenboda01/Screensaver/releases"><img alt="Downloads" src="https://img.shields.io/badge/downloads-V10%E2%80%93V20-263b52"></a>
+    <a href="https://github.com/Chenboda01/Screensaver/releases/tag/V21"><img alt="Latest release V21" src="https://img.shields.io/badge/release-V21-168eb7"></a>
+    <a href="https://github.com/Chenboda01/Screensaver/releases"><img alt="Downloads" src="https://img.shields.io/badge/downloads-V10%E2%80%93V19%20%2B%20V21-263b52"></a>
     <a href="#platform-support-and-installation"><img alt="Platform" src="https://img.shields.io/badge/platform-KDE%20Plasma%206%20%7C%20Wayland-512bd4"></a>
     <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-4c9a70"></a>
   </p>
@@ -12,7 +12,7 @@
 
 ---
 
-ScreenBot shows head-only animated Bob exploring themed backgrounds, optional weather, and fictional BobOS phone adventures. V10 through V20 are available downloads; V1 through V9 are currently unavailable.
+ScreenBot shows head-only animated Bob exploring themed backgrounds, optional weather, and fictional BobOS phone adventures. V10 through V19 and V21 are listed for download; V1 through V9 are unavailable.
 
 ## Downloads
 
@@ -37,7 +37,7 @@ ScreenBot shows head-only animated Bob exploring themed backgrounds, optional we
 | V17 | [Download ScreenBot Screensaver V17 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V17.zip) |
 | V18 | [Download ScreenBot Screensaver V18 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V18.zip) |
 | V19 | [Download ScreenBot Screensaver V19 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V19.zip) |
-| V20 | [Download ScreenBot Screensaver V20 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V20.zip) |
+| V21 | [Download ScreenBot Screensaver V21 (.zip)](https://github.com/Chenboda01/Screensaver/releases/download/V21/ScreenBot-Screensaver-V21.zip) |
 
 ## Platform support and installation
 
@@ -47,8 +47,8 @@ The full screensaver and KDE System Settings module are supported on **Linux wit
 
 1. Confirm that KDE Plasma 6 is installed and you are using its Wayland session.
 2. Install your distribution's packages for Python 3 with PyQt6, CMake 3.20 or newer, a C++17 compiler, Make, ECM 6+, Qt 6.5+ (Core, Quick, and QML), and KDE Frameworks 6+ (KCMUtils, CoreAddons, and I18n). Package names vary by distribution.
-3. Download the [V20 ZIP release](https://github.com/Chenboda01/Screensaver/releases/download/V20/ScreenBot-Screensaver-V20.zip) (or another available version) and extract it, for example, into `~/Downloads`.
-4. Open a terminal in the extracted `ScreenBot-Screensaver-V20` folder and run:
+3. Download the [V21 ZIP release](https://github.com/Chenboda01/Screensaver/releases/download/V21/ScreenBot-Screensaver-V21.zip) (or another available version) and extract it, for example, into `~/Downloads`.
+4. Open a terminal in the extracted `ScreenBot-Screensaver-V21` folder and run:
 
    ```bash
    bash install.sh
@@ -75,7 +75,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - Individually enabled animated rain, snow, thunderstorms, fog, and Space shooting stars
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
 - Manual launches remain available regardless of the automatic agent policy
-- Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, AI Wi-Fi, an immediate preview, and an optional relationship story
+- Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, AI Wi-Fi, and an immediate preview
 - Configurable BobOS delay of 1–30 minutes from the first visible screensaver frame, plus a cooldown of at least five minutes
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
@@ -93,7 +93,8 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - **V17:** Adds a remember-choice checkbox to the active-agent prompt, persistent Always ask / Always start / Don't start preferences in KDE Settings, a reset action, safe cancellation when detection is uncertain or the prompt times out, and a manual launch bypass.
 - **V18:** Adds separate AI Backpack and BobOS switches, a 1–30 minute first-adventure delay, an optional fictional Wi-Fi sequence, and occasional follow-up adventures after a cooldown of at least five minutes. BobOS is drawn entirely inside the screensaver, and KDE's configured password lock takes priority.
 - **V19:** Replaces the backpack and tiny laptop with Bob's Phone. BobOS now zooms into an animated fictional mobile interface and autonomously visits Bob Browser, Bob Files, Bob Terminal, Bob Games, and Bob Settings before shutting down and returning to the selected theme. Adds a lock-safe full-sequence preview in KDE Settings.
-- **V20:** Adds Bob's optional relationship story in BobOS 2.0. Bob receives a sweet message from his established girlfriend Luna, plans a date in fictional Maps, Weather, Calendar, and Chat apps, gets a call, meets her in the selected theme, and receives follow-up messages. The entire storyline is simulated, and its KDE switch is enabled by default.
+- **V20:** Introduced BobOS 2.0 with an expanded set of fictional phone apps and a longer sequence of animated phone interactions.
+- **V21:** Removes the relationship storyline and its KDE setting. BobOS continues its normal phone adventure, including BobChat, Maps, Weather, Calendar, App Store, and games; the preview and lock-safe shutdown behavior remain available.
 
 ## Requirements
 
