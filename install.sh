@@ -8,10 +8,12 @@ if [[ "$ROOT" == "$DEST" ]]; then
  echo 'Extract the ZIP outside ~/ScreenBot/screensaver, then run install.sh.' >&2
  exit 1
 fi
-for tool in cmake c++ make; do
+source "$ROOT/python-runtime.sh"
+screenbot_select_python
+for tool in cmake c++ make bash flock; do
  command -v "$tool" >/dev/null || { echo "Missing $tool; install CMake and build tools first." >&2; exit 1; }
 done
-/usr/bin/python -m py_compile "$ROOT/screensaver.py" "$ROOT/screen_session.py" "$ROOT/agent_prompt.py" "$ROOT/bobos.py" "$ROOT/live_sky.py" "$ROOT/live_sky_network.py" "$ROOT/live_sky_render.py"
+"$SCREENBOT_PYTHON" -m py_compile "$ROOT/screensaver.py" "$ROOT/screen_session.py" "$ROOT/agent_prompt.py" "$ROOT/bobos.py" "$ROOT/live_sky.py" "$ROOT/live_sky_network.py" "$ROOT/live_sky_render.py"
 echo 'Building ScreenBot KDE Settings module...'
 cmake -S "$ROOT/kcm" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PREFIX"
 cmake --build "$BUILD" --parallel 2
@@ -32,6 +34,9 @@ install -m 644 "$ROOT/live_sky_network.py" "$DEST/live_sky_network.py"
 install -m 644 "$ROOT/live_sky_render.py" "$DEST/live_sky_render.py"
 install -m 644 "$ROOT/countries_and_cities.txt" "$DEST/countries_and_cities.txt"
 install -m 755 "$ROOT/start.sh" "$DEST/start.sh"
+install -m 644 "$ROOT/python-runtime.sh" "$DEST/python-runtime.sh"
+printf '%s\n' "$SCREENBOT_PYTHON" > "$DEST/python-path"
+echo "Using Python 3: $SCREENBOT_PYTHON"
 LOCATION_DATA="$PREFIX/share/screenbot-screensaver"
 mkdir -p "$LOCATION_DATA"
 install -m 644 "$ROOT/countries_and_cities.txt" "$LOCATION_DATA/countries_and_cities.txt"

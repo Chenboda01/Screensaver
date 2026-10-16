@@ -47,6 +47,15 @@ int main(int argc, char **argv) {
     const QString install = home.path() + "/ScreenBot/screensaver";
     REQUIRE(QDir().mkpath(install));
     REQUIRE(QFile::copy(source + "/tests/kcm_preview/preview_probe.py", install + "/screensaver.py"));
+    REQUIRE(QFile::copy(source + "/start.sh", install + "/start.sh"));
+    REQUIRE(QFile::copy(source + "/python-runtime.sh", install + "/python-runtime.sh"));
+    const QString python = qEnvironmentVariable("SCREENBOT_TEST_PYTHON");
+    REQUIRE(!python.isEmpty());
+    QFile interpreter(install + "/python-path");
+    REQUIRE(interpreter.open(QIODevice::WriteOnly));
+    interpreter.write(python.toUtf8() + '\n');
+    interpreter.close();
+    qunsetenv("SCREENBOT_PYTHON");
     kcm->setProperty("theme", "forest");
     kcm->setProperty("clockPosition", "bottom-right");
     kcm->setProperty("clockFontSize", 24);
@@ -85,6 +94,7 @@ int main(int argc, char **argv) {
     const auto lines = receipt.readAll().trimmed().split('\n');
     REQUIRE(lines.size() == 1);
     const auto result = QJsonDocument::fromJson(lines.first()).object();
+    REQUIRE(result["executable"].toString() == python);
     REQUIRE(result["full_screen"].toBool());
     REQUIRE(result["screen_name"].toString() == view.screen()->name());
     REQUIRE(result["theme"].toString() == "forest");
@@ -113,6 +123,7 @@ int main(int argc, char **argv) {
     const auto adventures = receipt.readAll().trimmed().split('\n');
     REQUIRE(adventures.size() == 2);
     const auto adventure = QJsonDocument::fromJson(adventures.last()).object();
+    REQUIRE(adventure["executable"].toString() == python);
     REQUIRE(adventure["bobos_enabled"].toBool());
     REQUIRE(!adventure["password_lock"].toBool());
     REQUIRE(!QFile::exists(adventure["temporary_path"].toString()));
@@ -135,6 +146,16 @@ int main(int argc, char **argv) {
     QTest::qWait(50);
     REQUIRE(QDir(home.path() + "/tmp").entryList({"screenbot-preview-*"}, QDir::Files).isEmpty());
     std::cout << "PASS early process failure reports an error and removes temporary config\n";
+    REQUIRE(interpreter.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    interpreter.write("/missing/screenbot-python\n");
+    interpreter.close();
+    REQUIRE(QMetaObject::invokeMethod(kcm, "previewTheme", Q_ARG(QQuickItem *, nullptr)));
+    deadline.restart();
+    while (kcm->property("previewRunning").toBool() && deadline.elapsed() < 10000) QTest::qWait(10);
+    REQUIRE(!kcm->property("previewRunning").toBool());
+    REQUIRE(kcm->property("previewError").toString().contains("/missing/screenbot-python"));
+    REQUIRE(kcm->property("previewError").toString().contains("SCREENBOT_PYTHON"));
+    std::cout << "PASS invalid saved interpreter reports an actionable KCM error\n";
     delete kcm;
     return 0;
 }

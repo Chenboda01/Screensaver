@@ -78,6 +78,14 @@ The full screensaver and KDE System Settings module are supported on **Linux wit
 
 The installer builds the KDE Settings module and installs it to your user account without `sudo`. It copies the screensaver to `~/ScreenBot/screensaver` and preserves a backup of an existing installation.
 
+The installer selects `SCREENBOT_PYTHON` when provided, otherwise `python3` on `PATH`, then `python` if it is Python 3. It checks that PyQt6 is installed for that interpreter and saves its path in `~/ScreenBot/screensaver/python-path`. Automatic launches, manual launches, and KDE previews all use that saved interpreter. For a virtual environment with PyQt6, install with:
+
+```bash
+SCREENBOT_PYTHON="/path/to/venv/bin/python" bash install.sh
+```
+
+Keep that environment available after installation. If you move or remove it, rerun the installer with its new path. You can also set `SCREENBOT_PYTHON` for an individual launch. The launcher requires Bash and, for automatic launches, `flock` from util-linux on `PATH`.
+
 ### Windows and macOS
 
 The full ScreenBot screensaver is not currently supported on Windows or macOS. There is no native installation guide for those systems: `install.sh` requires Linux, KDE Plasma 6, and Wayland, and the settings module integrates with KDE System Settings. Running the Python animation by itself would not install the screensaver or its KDE settings.

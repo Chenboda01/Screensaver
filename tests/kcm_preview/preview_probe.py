@@ -29,6 +29,7 @@ class Probe(screensaver.Saver):
         filename = 'kcm-bobos-preview.png' if self.preview_bobos else 'kcm-launched-preview.png'
         assert self.grab().save(str(evidence / filename))
         receipt = {
+            'executable': sys.executable,
             'config': dict(config['Screensaver']),
             'temporary_path': str(config_path),
             'theme': self.theme,

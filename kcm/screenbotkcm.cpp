@@ -518,10 +518,10 @@ void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *sour
     if (m_previewProcess) return;
     m_previewError.clear();
     Q_EMIT previewErrorChanged();
-    const QString script = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver/screensaver.py");
-    const QString python = QStandardPaths::findExecutable(QStringLiteral("python3"));
-    if (!QFile::exists(script) || python.isEmpty()) {
-        m_previewError = QStringLiteral("Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure Python 3 is available.");
+    const QString script = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver/start.sh");
+    const QString bash = QStandardPaths::findExecutable(QStringLiteral("bash"));
+    if (!QFile::exists(script) || bash.isEmpty()) {
+        m_previewError = QStringLiteral("Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure Bash is available on PATH.");
         Q_EMIT previewErrorChanged();
         return;
     }
@@ -560,9 +560,11 @@ void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *sour
         Q_EMIT previewErrorChanged();
         if (error == QProcess::FailedToStart) cleanup();
     });
-    connect(process, &QProcess::finished, this, [this, cleanup](int exitCode, QProcess::ExitStatus status) {
+    connect(process, &QProcess::finished, this, [this, process, cleanup](int exitCode, QProcess::ExitStatus status) {
         if (exitCode != 0 || status != QProcess::NormalExit) {
             m_previewError = QStringLiteral("The preview stopped unexpectedly. Check the ScreenBot installation and Python 3 dependencies.");
+            const QString detail = QString::fromUtf8(process->readAllStandardError()).trimmed();
+            if (!detail.isEmpty()) m_previewError += QStringLiteral("\n") + detail.left(1000);
             Q_EMIT previewErrorChanged();
         }
         cleanup();
@@ -570,7 +572,7 @@ void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *sour
     m_previewProcess = process;
     Q_EMIT previewRunningChanged();
     process->setWorkingDirectory(QDir::homePath() + QStringLiteral("/ScreenBot/screensaver"));
-    process->start(python, arguments);
+    process->start(bash, arguments);
 }
 
 #include "screenbotkcm.moc"
