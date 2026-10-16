@@ -420,6 +420,46 @@ KCMUtils.SimpleKCM {
                 opacity: enabled ? 1.0 : 0.4
                 onToggled: kcm.shootingStarsEnabled = checked
             }
+            Controls.Switch {
+                objectName: "ambientSoundEnabled"
+                Kirigami.FormData.label: i18nc("@label", "Ambient sound:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Off")
+                checked: kcm.ambientSoundEnabled
+                onToggled: kcm.ambientSoundEnabled = checked
+                Accessible.name: i18nc("@label", "Ambient sound")
+            }
+            Controls.Slider {
+                objectName: "ambientSoundVolume"
+                Kirigami.FormData.label: i18nc("@label", "Ambient volume:")
+                from: 0
+                to: 100
+                stepSize: 1
+                value: kcm.ambientSoundVolume
+                enabled: kcm.ambientSoundEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onValueChanged: kcm.ambientSoundVolume = Math.round(value)
+                Accessible.name: i18nc("@label", "Ambient sound volume")
+            }
+            Controls.ComboBox {
+                objectName: "ambientSoundMode"
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
+                Layout.maximumWidth: parent.width
+                Kirigami.FormData.label: i18nc("@label", "Sound conditions:")
+                model: [i18nc("@label", "Always match the scene"), i18nc("@label", "Only when Live Sky weather matches")]
+                currentIndex: kcm.ambientSoundMode === "live-sky" ? 1 : 0
+                enabled: kcm.ambientSoundEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onActivated: function(index) { kcm.ambientSoundMode = index === 1 ? "live-sky" : "always" }
+            }
+            Controls.Switch {
+                objectName: "ambientQuietHours"
+                Kirigami.FormData.label: i18nc("@label", "Quiet hours:")
+                text: checked ? i18nc("@label", "Muted 22:00–08:00") : i18nc("@label", "Off")
+                checked: kcm.ambientQuietHours
+                enabled: kcm.ambientSoundEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.ambientQuietHours = checked
+            }
         }
         CollapsibleSection {
             id: liveSkySection

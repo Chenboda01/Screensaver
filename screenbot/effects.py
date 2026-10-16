@@ -12,6 +12,7 @@ from PyQt6.QtGui import (
 
 from screenbot.runtime import particle_count
 from screenbot.themes import underwater
+from screenbot.ambient.lightning import is_lightning_visible
 
 
 class WeatherEffects:
@@ -98,6 +99,10 @@ class WeatherEffects:
         p.restore()
 
     def draw_thunderstorms(self, p: QPainter, w: int, h: int, t: float) -> None:
+        if hasattr(self, 'ambient_sound'):
+            self.ambient_sound.set_lightning_visible(
+                is_lightning_visible(t, self.lightning_events, reduce_motion=self.reduce_motion)
+            )
         flashes: list[tuple[float, float]] = []
         for index, (offset, period, x) in enumerate(self.lightning_events):
             if self.reduce_motion and index % 2:

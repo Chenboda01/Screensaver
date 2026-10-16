@@ -26,6 +26,11 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool factsEnabled READ factsEnabled WRITE setFactsEnabled NOTIFY factsEnabledChanged)
     Q_PROPERTY(int factsIntervalMinutes READ factsIntervalMinutes WRITE setFactsIntervalMinutes NOTIFY factsIntervalMinutesChanged)
     Q_PROPERTY(QString factsContentMode READ factsContentMode WRITE setFactsContentMode NOTIFY factsContentModeChanged)
+
+    Q_PROPERTY(bool ambientSoundEnabled READ ambientSoundEnabled WRITE setAmbientSoundEnabled NOTIFY ambientSoundEnabledChanged)
+    Q_PROPERTY(int ambientSoundVolume READ ambientSoundVolume WRITE setAmbientSoundVolume NOTIFY ambientSoundVolumeChanged)
+    Q_PROPERTY(QString ambientSoundMode READ ambientSoundMode WRITE setAmbientSoundMode NOTIFY ambientSoundModeChanged)
+    Q_PROPERTY(bool ambientQuietHours READ ambientQuietHours WRITE setAmbientQuietHours NOTIFY ambientQuietHoursChanged)
     Q_PROPERTY(bool clockVisible READ clockVisible WRITE setClockVisible NOTIFY clockVisibleChanged)
     Q_PROPERTY(QString clockFormat READ clockFormat WRITE setClockFormat NOTIFY clockFormatChanged)
     Q_PROPERTY(bool showDate READ showDate WRITE setShowDate NOTIFY showDateChanged)
@@ -92,6 +97,11 @@ public:
     bool factsEnabled() const { return m_factsEnabled; }
     int factsIntervalMinutes() const { return m_factsIntervalMinutes; }
     QString factsContentMode() const { return m_factsContentMode; }
+
+    bool ambientSoundEnabled() const { return m_ambientSoundEnabled; }
+    int ambientSoundVolume() const { return m_ambientSoundVolume; }
+    QString ambientSoundMode() const { return m_ambientSoundMode; }
+    bool ambientQuietHours() const { return m_ambientQuietHours; }
     bool clockVisible() const { return m_clockVisible; }
     QString clockFormat() const { return m_clockFormat; }
     bool showDate() const { return m_showDate; }
@@ -151,6 +161,11 @@ public:
     void setFactsEnabled(bool value);
     void setFactsIntervalMinutes(int value);
     void setFactsContentMode(const QString &value);
+
+    void setAmbientSoundEnabled(bool value);
+    void setAmbientSoundVolume(int value);
+    void setAmbientSoundMode(const QString &value);
+    void setAmbientQuietHours(bool value);
     void setClockFormat(const QString &value);
     void setShowDate(bool value);
     void setClockPosition(const QString &value);
@@ -213,6 +228,11 @@ Q_SIGNALS:
     void factsEnabledChanged();
     void factsIntervalMinutesChanged();
     void factsContentModeChanged();
+
+    void ambientSoundEnabledChanged();
+    void ambientSoundVolumeChanged();
+    void ambientSoundModeChanged();
+    void ambientQuietHoursChanged();
     void clockFormatChanged();
     void showDateChanged();
     void clockPositionChanged();
@@ -286,6 +306,15 @@ private:
     bool m_savedFactsEnabled = true;
     int m_savedFactsIntervalMinutes = 3;
     QString m_savedFactsContentMode = QStringLiteral("facts");
+
+    bool m_ambientSoundEnabled = false;
+    bool m_savedAmbientSoundEnabled = false;
+    int m_ambientSoundVolume = 25;
+    int m_savedAmbientSoundVolume = 25;
+    QString m_ambientSoundMode = QStringLiteral("always");
+    QString m_savedAmbientSoundMode = QStringLiteral("always");
+    bool m_ambientQuietHours = false;
+    bool m_savedAmbientQuietHours = false;
     QString m_clockFormat = QStringLiteral("12h");
     bool m_showDate = false;
     QString m_clockPosition = QStringLiteral("top-center");

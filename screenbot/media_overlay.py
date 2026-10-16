@@ -8,7 +8,7 @@ from PyQt6.QtCore import QRectF, QSizeF
 from PyQt6.QtGui import QPainter
 
 from screenbot.burnin import burn_in_clock_drift, burn_in_scene_scale, burn_in_scene_shift
-from screenbot.mpris import HIDDEN as NO_MEDIA, NowPlaying
+from screenbot.mpris import HIDDEN as NO_MEDIA, MprisWorker, NowPlaying
 from screenbot.now_playing import card_opacity, card_rect, paint_card
 
 
@@ -17,15 +17,39 @@ class MediaOverlayMixin:
 
     def set_now_playing(self, snapshot: NowPlaying) -> None:
         """Reject queued media after shutdown, or when privacy is not opted in."""
-        if self._closing or not self.now_playing_enabled or self.is_preview:
+        if self._closing or self.is_preview:
+            return
+        if not self.now_playing_enabled:
+            self._mpris_playing = snapshot.track is not None and snapshot.paused_at is None
+            self.update_ambient_sound()
             return
         self.now_playing = snapshot
+        self.update_ambient_sound()
         self.update()
+
+    def set_mpris_playing(self, playing: bool) -> None:
+        """Mute ambience from playback state without exposing track metadata."""
+        if self._closing or self.is_preview:
+            return
+        self._mpris_playing = playing
+        self.update_ambient_sound()
 
     def start_media_worker(self) -> None:
         """Only the primary real screensaver owns a media reader."""
         if self.media_worker is not None and not self.media_worker.isRunning() and not self._closing:
             self.media_worker.start()
+
+    def init_media_worker(self) -> None:
+        """Poll MPRIS only for the now-playing card or opted-in audio muting."""
+        if (self.now_playing_enabled or self.ambient_sound_enabled) and not self.is_preview:
+            self.media_worker = MprisWorker(
+                self, enabled=True, playing_only=not self.now_playing_enabled,
+                publish_playback=self.ambient_sound_enabled,
+            )
+            if self.now_playing_enabled:
+                self.media_worker.changed.connect(self.set_now_playing)
+            if self.ambient_sound_enabled:
+                self.media_worker.playing_changed.connect(self.set_mpris_playing)
 
     def stop_media_worker(self) -> None:
         """Join after the application loop has exited, leaving the desktop responsive."""
@@ -33,6 +57,13 @@ class MediaOverlayMixin:
         self.now_playing = NO_MEDIA
         if self.media_worker is not None:
             self.media_worker.stop()
+
+    def close_media_overlay(self) -> None:
+        """Reject queued media updates and request an immediate poller stop."""
+        self._closing = True
+        self.now_playing = NO_MEDIA
+        if self.media_worker is not None:
+            self.media_worker.request_stop()
 
     def media_card_rect(self) -> QRectF:
         """Place the card clear of the clock, Bob, captions, and exit hint."""

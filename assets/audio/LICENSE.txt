@@ -1,0 +1,5 @@
+SPDX-License-Identifier: CC0-1.0
+
+All Ogg Vorbis loops in this directory were generated specifically for the ScreenBot project using tools/generate_ambient_audio.py. No recordings, samples, or third-party source audio were incorporated. The generated audio files are dedicated to the public domain under CC0 1.0 Universal, to the fullest extent permitted by law.
+
+License text and legal code: https://creativecommons.org/publicdomain/zero/1.0/legalcode
