@@ -2,14 +2,15 @@ from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen
 import math
 from bobos import BobOSPhase
+from screenbot.phone.camera_pet import CameraPetRenderer
 
 
-class PhoneAppsRenderer:
+class PhoneAppsRenderer(CameraPetRenderer):
     def draw_home_screen(self, p: QPainter, t: float) -> None:
         p.setPen(QColor('#f0f8ff'))
         p.setFont(QFont('Sans Serif', 26, QFont.Weight.Bold))
-        p.drawText(QRectF(48, 65, 570, 45), Qt.AlignmentFlag.AlignVCenter, 'Good day, Bob!')
-        self.draw_phone_avatar(p, QRectF(795, 60, 54, 54), self.bob_mood(BobOSPhase.HOME, t))
+        p.drawText(QRectF(48, 65, 570, 45), Qt.AlignmentFlag.AlignVCenter, f'Good day, {self.bob_appearance.name}!')
+        self.draw_phone_avatar(p, QRectF(795, 60, 54, 54), self.bob_mood(BobOSPhase.HOME, t), self.bob_appearance.palette())
         p.setPen(QColor('#9eb8d6'))
         p.setFont(QFont('Sans Serif', 15))
         p.drawText(QRectF(50, 109, 600, 30), Qt.AlignmentFlag.AlignVCenter, 'BobOS 2.0  ·  Your tiny world is ready')
@@ -17,7 +18,7 @@ class PhoneAppsRenderer:
             ('Bob Browser', '#54c9ef', 'B'), ('Bob Files', '#f3bd5b', 'F'), ('Bob Terminal', '#8be58f', '>_'),
             ('Bob Games', '#e58bf0', '★'), ('Bob Settings', '#8c9fff', '⚙'), ('BobChat', '#ed91bc', '♡'),
             ('Bob Maps', '#62c89c', 'M'), ('Bob Weather', '#85b9ed', '☼'), ('Bob Calendar', '#d5a5f4', 'C'),
-            ('App Store', '#f2ad55', '↓'),
+            ('App Store', '#f2ad55', '↓'), ('Bob Camera', '#74ddd0', '◎'), ('Bob Pet', '#f2a889', 'P'),
         )
         for index, (name, color, icon) in enumerate(apps):
             column, row = index % 3, index // 3
@@ -91,7 +92,9 @@ class PhoneAppsRenderer:
     def draw_files(self, p: QPainter, elapsed: float, t: float) -> None:
         self.draw_phone_header(p, 'Bob Files', 'Everything here is make-believe')
         files = (
-            ('moon_photos.png', 'A picture of a moon waving', '#91b8ff'),
+            (('selfie.imaginary', 'One pretend photo · memory only', '#74ddd0')
+             if self.bobos_camera.photo is not None else
+             ('moon_photos.png', 'A picture of a moon waving', '#91b8ff')),
             ('snack_plan.txt', 'Three crumbs and a dream', '#ffd16e'),
             ('forest_map.fake', 'The tree with the friendly face', '#76e4a4'),
             ('important_notes.md', 'Do not feed the constellations', '#df9df0'),
@@ -112,6 +115,8 @@ class PhoneAppsRenderer:
             p.setPen(QColor('#9eb4d1'))
             p.setFont(QFont('Sans Serif', 12))
             p.drawText(QRectF(130, y+26, 570, 22), Qt.AlignmentFlag.AlignVCenter, detail)
+            if index == 0 and self.bobos_camera.photo is not None:
+                p.drawImage(QRectF(710, y+5, 116, 44), self.bobos_camera.photo)
         self.draw_bob_reaction(p, t, 'happy')
 
     def draw_terminal(self, p: QPainter, elapsed: float, t: float) -> None:
@@ -160,7 +165,7 @@ class PhoneAppsRenderer:
             p.drawText(QRectF(x-size, y-size, size*2, size*2), Qt.AlignmentFlag.AlignCenter, '★')
         avatar_x = field.x()+field.width()*.5 + math.sin(elapsed*1.2)*200
         avatar_y = field.y()+field.height()*.72 + math.sin(elapsed*3)*14
-        self.draw_phone_avatar(p, QRectF(avatar_x-24, avatar_y-24, 48, 48), self.bob_mood(BobOSPhase.GAMES, t))
+        self.draw_phone_avatar(p, QRectF(avatar_x-24, avatar_y-24, 48, 48), self.bob_mood(BobOSPhase.GAMES, t), self.bob_appearance.palette())
         self.draw_bob_reaction(p, t, 'surprised')
 
     def draw_phone_settings(self, p: QPainter, elapsed: float, t: float) -> None:

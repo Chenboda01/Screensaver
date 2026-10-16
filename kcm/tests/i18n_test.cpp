@@ -2,6 +2,7 @@
 #include <KQuickConfigModule>
 #include <KQuickConfigModuleLoader>
 #include <QApplication>
+#include <QAccessible>
 #include <QDir>
 #include <QFile>
 #include <QQuickItem>
@@ -30,6 +31,8 @@ private Q_SLOTS:
         const auto item = [&](const char *name) { return root->findChild<QQuickItem *>(QLatin1String(name)); };
         QCOMPARE(item("themeSection")->property("title").toString(), spanish ? QStringLiteral("Tema") : QStringLiteral("Theme"));
         QCOMPARE(item("clockSection")->property("title").toString(), spanish ? QStringLiteral("Reloj") : QStringLiteral("Clock"));
+        QCOMPARE(item("appearanceSection")->property("title").toString(),
+                 spanish ? QStringLiteral("Personalizar Bob") : QStringLiteral("Customize Bob"));
         QCOMPARE(item("themePreviewButton")->property("text").toString(), spanish ? QStringLiteral("Vista previa") : QStringLiteral("Preview"));
         auto *delay = item("bobosDelay");
         QVERIFY(delay);
@@ -40,10 +43,32 @@ private Q_SLOTS:
         kcm->save();
         const QString config = qEnvironmentVariable("XDG_CONFIG_HOME") + QStringLiteral("/screenbot-screensaver.ini");
         const auto saved = [&]() { QFile file(config); if (!file.open(QIODevice::ReadOnly)) return QByteArray(); return file.readAll(); };
+        auto *media = item("nowPlayingEnabled");
+        QVERIFY(media);
+        QCOMPARE(kcm->property("nowPlayingEnabled").toBool(), false);
+        const QByteArray mediaBefore = saved();
+        media->setProperty("checked", true);
+        QVERIFY(QMetaObject::invokeMethod(media, "toggled"));
+        QVERIFY(kcm->needsSave());
+        QVERIFY(kcm->property("modifiedSections").toStringList().contains(QStringLiteral("clock")));
+        QCOMPARE(saved(), mediaBefore);
+        QCOMPARE(media->property("text").toString(), spanish ? QStringLiteral("Mostrar el título y el artista") : QStringLiteral("Show media title and artist"));
+        kcm->load();
+        QVERIFY(!kcm->property("nowPlayingEnabled").toBool());
+        QVERIFY(!kcm->needsSave());
+        media->setProperty("checked", true);
+        QVERIFY(QMetaObject::invokeMethod(media, "toggled"));
+        kcm->save();
+        kcm->load();
+        QVERIFY(kcm->property("nowPlayingEnabled").toBool());
+        QVERIFY(!kcm->needsSave());
+        QSettings mediaSettings(config, QSettings::IniFormat);
+        QVERIFY(mediaSettings.value(QStringLiteral("Screensaver/now_playing_enabled")).toBool());
         const QByteArray before = saved();
         QVERIFY(!before.isEmpty());
         auto *theme = item("themeChoice");
         QVERIFY(theme);
+        QCOMPARE(theme->property("count").toInt(), 10);
         theme->setProperty("currentIndex", 4);
         QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, 4)));
         QVERIFY(kcm->needsSave());
@@ -58,7 +83,18 @@ private Q_SLOTS:
         QVERIFY(!kcm->needsSave());
         QSettings persisted(config, QSettings::IniFormat);
         QCOMPARE(persisted.value(QStringLiteral("Screensaver/theme")).toString(), QStringLiteral("forest"));
-        const QStringList keys{QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("lock")};
+        const QStringList newThemes{QStringLiteral("aurora"), QStringLiteral("ocean"), QStringLiteral("desert"), QStringLiteral("underwater")};
+        for (qsizetype index = 0; index < newThemes.size(); ++index) {
+            const int comboIndex = 6 + static_cast<int>(index);
+            theme->setProperty("currentIndex", comboIndex);
+            QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, comboIndex)));
+            QVERIFY(kcm->needsSave());
+            QCOMPARE(kcm->property("theme").toString(), newThemes.at(index));
+            kcm->load();
+            QCOMPARE(kcm->property("theme").toString(), QStringLiteral("forest"));
+            QVERIFY(!kcm->needsSave());
+        }
+        const QStringList keys{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock")};
         window.setColor(QApplication::palette().window().color());
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -72,6 +108,22 @@ private Q_SLOTS:
                 QVERIFY(flickable);
                 flickable->setProperty("contentY", 0);
                 QTest::qWait(300);
+                if (key == QLatin1String("clock")) {
+                    media->forceActiveFocus();
+                    QVERIFY(media->hasActiveFocus());
+                    auto *accessible = QAccessible::queryAccessibleInterface(media);
+                    QVERIFY(accessible);
+                    QCOMPARE(accessible->text(QAccessible::Name), spanish ? QStringLiteral("Mostrar lo que se está reproduciendo") : QStringLiteral("Show what's playing"));
+                    QTest::keyClick(&window, Qt::Key_Space);
+                    QVERIFY(!kcm->property("nowPlayingEnabled").toBool());
+                    QVERIFY(kcm->needsSave());
+                    QTest::qWait(50);
+                    QVERIFY(window.grabWindow().save(evidence + QStringLiteral("/clock-media-off-%1.png").arg(width)));
+                    QTest::keyClick(&window, Qt::Key_Space);
+                    QVERIFY(kcm->property("nowPlayingEnabled").toBool());
+                    QVERIFY(!kcm->needsSave());
+                    QTest::qWait(50);
+                }
                 QVERIFY(window.grabWindow().save(evidence + QStringLiteral("/%1-%2.png").arg(key).arg(width)));
                 flickable->setProperty("contentY", qMax(0.0, flickable->property("contentHeight").toDouble() - flickable->property("height").toDouble()));
                 QTest::qWait(100);

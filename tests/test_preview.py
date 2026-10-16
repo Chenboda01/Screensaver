@@ -99,7 +99,7 @@ def test_preview_closes_on_input_immediately(
     saver.close()
 
 
-@pytest.mark.parametrize('theme', ['space', 'mountains', 'snow', 'forest', 'city', 'random'])
+@pytest.mark.parametrize('theme', ['space', 'mountains', 'snow', 'forest', 'city', 'aurora', 'ocean', 'desert', 'underwater', 'random'])
 @pytest.mark.parametrize('live', [False, True])
 def test_preview_renders_selected_theme_with_live_sky(
         app: QApplication, preview_config: Path, theme: str, live: bool) -> None:

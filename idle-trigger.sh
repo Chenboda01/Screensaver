@@ -29,8 +29,8 @@ config_tools() {
  command -v kreadconfig6 >/dev/null && command -v kwriteconfig6 >/dev/null
 }
 reload_config() {
- if command -v qdbus6 >/dev/null && qdbus6 org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.reparseConfiguration >/dev/null 2>&1; then
-  echo 'PowerDevil reloaded its idle configuration.'
+ if command -v qdbus6 >/dev/null && qdbus6 org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1; then
+  echo 'PowerDevil refreshed its power profiles and idle timers.'
  else
   echo 'Log out and back in to reload PowerDevil; its session service is unavailable.'
  fi

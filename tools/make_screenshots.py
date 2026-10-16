@@ -94,8 +94,10 @@ def main() -> None:
     """Regenerate every README gallery image from the current source tree."""
     app = QApplication([])
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    for theme in ("space", "mountains", "snow", "forest", "city"):
+    for theme in ("space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"):
         saver = make_saver(theme)
+        if theme == "aurora":
+            set_sky(saver, "2024-03-10T03:00:00")
         capture(saver, 5).save(OUTPUT / f"{theme}.webp", lossless=True)
         saver.close()
 

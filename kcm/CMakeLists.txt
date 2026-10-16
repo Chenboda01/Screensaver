@@ -44,5 +44,6 @@ if(BUILD_TESTING)
     target_link_libraries(locationsearch_test PRIVATE Qt6::Test Qt6::Widgets Qt6::Quick Qt6::Network KF6::KCMUtils KF6::CoreAddons KF6::I18n)
     target_compile_definitions(locationsearch_test PRIVATE SCREENBOT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME locationsearch COMMAND locationsearch_test)
-    set_tests_properties(locationsearch PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    set_tests_properties(locationsearch PROPERTIES ENVIRONMENT
+        "QT_QPA_PLATFORM=offscreen;SCREENBOT_TEST_PLUGIN=$<TARGET_FILE:kcm_screenbot_screensaver>")
 endif()

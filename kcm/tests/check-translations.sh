@@ -14,6 +14,8 @@ cmake --install "$output/build" > "$output/install.log" 2>&1
 plugin=$(find "$output/install" -name kcm_screenbot_screensaver.so -print -quit)
 export QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
 export QT_QPA_PLATFORMTHEME=kde QT_QUICK_CONTROLS_STYLE=org.kde.desktop
+export XDG_DATA_HOME="$output/data"
+mkdir -p -- "$XDG_DATA_HOME"
 export XDG_DATA_DIRS="$output/install/share:/usr/share"
 export SCREENBOT_TEST_PLUGIN="$plugin"
 # LANGUAGE is KDE's ordered UI-language preference. C disables gettext translations.
@@ -26,5 +28,7 @@ for language in en_US es zz; do
     done
 done
 unset SCREENBOT_TEST_DARK
+export SCREENBOT_EVIDENCE_DIR="$output/ctest-evidence"
+mkdir -p -- "$SCREENBOT_EVIDENCE_DIR"
 LANGUAGE=en_US ctest --test-dir "$output/build" --exclude-regex '^i18n_' --output-on-failure > "$output/ctest.log" 2>&1
 printf 'Installed locale and Apply/Discard checks passed: %s\n' "$output"
