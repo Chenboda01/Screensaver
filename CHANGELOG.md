@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Split the screensaver and agent prompt runtimes into small entrypoints and focused settings, theme, weather, clock, BobOS, and terminal detection modules. Added exact offscreen image baselines to protect the five themes and BobOS home screen during future changes.
+- Added an optional primary-screen AI agent status badge with elapsed work time and confirmed completion time. Status polling runs in a background thread, uncertain states stay hidden, and Bob celebrates once after a confirmed finish without displaying agent content.
 - Added Off, Standard, and Strong OLED burn-in protection. Standard slowly shifts the scene and clock; Strong fades to black over 30–60 minutes, with input closing the screensaver.
 - Suppressed rain, snow, thunderstorms, fog, and shooting-star overlays in the Space theme; manual weather and shooting-star settings remain available on landscape themes.
 

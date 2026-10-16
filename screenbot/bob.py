@@ -5,9 +5,11 @@ from bobos import BobOSPhase, BobOSStatus
 
 
 class BobRenderer:
-    def bob(self, p: QPainter, w: int, h: int, t: float, status: BobOSStatus) -> None:
+    def bob(self, p: QPainter, w: int, h: int, t: float, status: BobOSStatus,
+            celebration_elapsed: float | None = None) -> None:
         """Paint Bob as a floating head with expressions driven by his phone use."""
-        mood = self.bob_mood(status.phase, t)
+        celebrating = celebration_elapsed is not None
+        mood = 'happy' if celebrating else self.bob_mood(status.phase, t)
         pose_time = t
         if mood == 'sleepy':
             pose_time = t - (t % 32.0 - 22.0)
@@ -18,7 +20,10 @@ class BobRenderer:
         p.save()
         p.translate(x, y)
         p.scale(scale, scale)
-        p.rotate(math.sin(pose_time*.72)*2.4)
+        rotation = math.sin(pose_time*.72)*2.4
+        if celebration_elapsed is not None:
+            rotation += math.sin(celebration_elapsed*math.tau*.72)*13
+        p.rotate(rotation)
         p.setPen(Qt.PenStyle.NoPen)
         halo = QRadialGradient(QPointF(0, 2), 185)
         halo.setColorAt(0, QColor(41, 212, 255, 78))
@@ -39,6 +44,15 @@ class BobRenderer:
         p.setPen(QPen(QColor('#73dcff'), 4))
         p.setBrush(QColor('#12355f'))
         p.drawRoundedRect(QRectF(-76, -96, 152, 144), 32, 32)
+        if celebrating and celebration_elapsed is not None:
+            confetti = ('#ffcf69', '#77e4a0', '#63d9ff', '#e89aff', '#ff8d88', '#fff1a6')
+            p.setPen(Qt.PenStyle.NoPen)
+            for index, color in enumerate(confetti):
+                angle = index * math.tau / len(confetti) + celebration_elapsed * 1.8
+                radius = 108 + 12 * math.sin(celebration_elapsed * 4.0 + index)
+                p.setBrush(QColor(color))
+                p.drawEllipse(QPointF(math.cos(angle) * radius,
+                                      -24 + math.sin(angle) * radius), 4, 5)
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QColor('#081b3c'))
         p.drawRoundedRect(QRectF(-63, -76, 126, 102), 24, 24)

@@ -139,6 +139,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - Individually enabled rain, snow, thunderstorms, and fog on landscape themes; optional shooting stars are limited to landscapes, and Space stays free of weather overlays
 - Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
+- Optional primary-screen AI agent status badge with elapsed work time, confirmed finish time, and one short Bob celebration; uncertain states remain hidden and no prompts, filenames, or output appear on screen
 - Manual launches remain available regardless of the automatic agent policy
 - Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, AI Wi-Fi, and an immediate preview
 - Configurable BobOS delay of 1–30 minutes from the first visible screensaver frame, plus a cooldown of at least five minutes
