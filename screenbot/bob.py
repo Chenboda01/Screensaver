@@ -9,6 +9,14 @@ from screenbot.seasonal_renderer import draw_seasonal_bob_hat
 
 
 class BobRenderer:
+    def bob_safe_bounds(self, w: int, h: int) -> QRectF:
+        """Conservative bounds for Bob's animated head and phone over a full sway."""
+        scale = min(w / 1250, h / 800, 1.35)
+        sway = min(w * .075, 85)
+        radius = 198 * scale
+        return QRectF(w * .5 - sway - radius, h * .56 - 9 - radius,
+                      2 * (sway + radius), 18 + 2 * radius)
+
     def bob(self, p: QPainter, w: int, h: int, t: float, status: BobOSStatus,
             celebration_elapsed: float | None = None) -> None:
         """Paint Bob as a floating head with expressions driven by his phone use."""

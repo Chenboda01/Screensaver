@@ -21,7 +21,7 @@
 
 class SectionsTest : public QObject {
     Q_OBJECT
-    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("seasonal"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock") };
+    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("seasonal"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock"), QStringLiteral("facts") };
     QString configPath() const { return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation); }
     QByteArray savedBytes() {
         QFile file(configPath() + QStringLiteral("/screenbot-screensaver.ini"));
@@ -58,7 +58,8 @@ private Q_SLOTS:
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
             {QStringLiteral("photoFolder"), QStringLiteral("/tmp/screenbot-photo-test")}, {QStringLiteral("photoIncludeSubfolders"), true},
             {QStringLiteral("photoInterval"), 45}, {QStringLiteral("photoOrder"), QStringLiteral("random")}, {QStringLiteral("photoFit"), QStringLiteral("fit-blur")},
-            {QStringLiteral("nowPlayingEnabled"), true}, {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
+            {QStringLiteral("nowPlayingEnabled"), true}, {QStringLiteral("factsEnabled"), false}, {QStringLiteral("factsIntervalMinutes"), 5}, {QStringLiteral("factsContentMode"), QStringLiteral("both")},
+            {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
             {QStringLiteral("bobWeatherEnabled"), false},
             {QStringLiteral("bobName"), QStringLiteral("Pixel👩‍🚀")},
@@ -120,6 +121,25 @@ private Q_SLOTS:
         QVERIFY(kcm.seasonalBirthdayName().size() < 200);
         kcm.save();
         QVERIFY(savedBytes().contains("seasonal_birthday_name=Pixel"));
+    }
+    void factPreferencesAreBoundedAndValidated() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        QCOMPARE(kcm.factsEnabled(), true);
+        QCOMPARE(kcm.factsIntervalMinutes(), 3);
+        QCOMPARE(kcm.factsContentMode(), QStringLiteral("facts"));
+        kcm.setFactsIntervalMinutes(-8);
+        QCOMPARE(kcm.factsIntervalMinutes(), 2);
+        kcm.setFactsIntervalMinutes(90);
+        QCOMPARE(kcm.factsIntervalMinutes(), 5);
+        kcm.setFactsContentMode(QStringLiteral("remote"));
+        QCOMPARE(kcm.factsContentMode(), QStringLiteral("facts"));
+        kcm.setFactsContentMode(QStringLiteral("quotes"));
+        QCOMPARE(kcm.factsContentMode(), QStringLiteral("quotes"));
+        QVERIFY(kcm.modifiedSections().contains(QStringLiteral("facts")));
+        kcm.load();
+        QCOMPARE(kcm.factsIntervalMinutes(), 3);
+        QCOMPARE(kcm.factsContentMode(), QStringLiteral("facts"));
+        QVERIFY(kcm.modifiedSections().isEmpty());
     }
     void bobosPreviewInsideSection() {
         const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
@@ -309,6 +329,10 @@ private Q_SLOTS:
         QVERIFY(seasonalMaster->property("checked").toBool());
         QVERIFY(halloweenSwitch->property("enabled").toBool());
         seasonalSection->setProperty("expanded", false);
+        QVERIFY(item(QStringLiteral("factsSection")));
+        QVERIFY(item(QStringLiteral("factsEnabledSwitch")));
+        QVERIFY(item(QStringLiteral("factsInterval")));
+        QVERIFY(item(QStringLiteral("factsContentMode")));
         QVERIFY(view.rootObject()->findChild<QObject *>(QStringLiteral("bobColorDialog")));
         for (const auto &key : keys) {
             auto *section = item(key + QStringLiteral("Section"));
@@ -335,7 +359,7 @@ private Q_SLOTS:
         QTest::keyClick(&view, Qt::Key_Left);
         QVERIFY(!clock->property("expanded").toBool());
         QTest::keyClick(&view, Qt::Key_Tab);
-        QVERIFY(item(QStringLiteral("weatherHeader"))->hasActiveFocus());
+        QVERIFY(item(QStringLiteral("factsHeader"))->hasActiveFocus());
         item(QStringLiteral("weatherSection"))->setProperty("expanded", true);
         QTest::qWait(300);
         auto *bobWeather = item(QStringLiteral("bobWeatherEnabledSwitch"));
@@ -371,6 +395,33 @@ private Q_SLOTS:
         QVERIFY(view.grabWindow().save(qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR") + QStringLiteral("/unapplied-clock.png")));
         kcm.load();
         QVERIFY(!clock->property("modified").toBool());
+        auto *facts = item(QStringLiteral("factsSection"));
+        auto *factsInterval = item(QStringLiteral("factsInterval"));
+        auto *factsContent = item(QStringLiteral("factsContentMode"));
+        auto *factsToggle = item(QStringLiteral("factsEnabledSwitch"));
+        QVERIFY(facts && factsInterval && factsContent && factsToggle);
+        facts->setProperty("expanded", true);
+        QCoreApplication::processEvents();
+        QVERIFY(factsInterval->property("enabled").toBool());
+        QVERIFY(factsContent->property("enabled").toBool());
+        kcm.setFactsIntervalMinutes(5);
+        kcm.setFactsContentMode(QStringLiteral("both"));
+        QVERIFY(facts->property("modified").toBool());
+        QVERIFY(!facts->property("summary").toString().isEmpty());
+        kcm.setFactsEnabled(false);
+        QCoreApplication::processEvents();
+        QVERIFY(!factsInterval->property("enabled").toBool());
+        QVERIFY(!factsContent->property("enabled").toBool());
+        QVERIFY(factsInterval->property("opacity").toReal() < 1.0);
+        QVERIFY(factsContent->property("opacity").toReal() < 1.0);
+        QTest::qWait(100);
+        QVERIFY(view.grabWindow().save(qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR") + QStringLiteral("/unapplied-facts.png")));
+        kcm.load();
+        QVERIFY(!facts->property("modified").toBool());
+        QCOMPARE(kcm.factsIntervalMinutes(), 3);
+        QCOMPARE(kcm.factsContentMode(), QStringLiteral("facts"));
+        QVERIFY(kcm.factsEnabled());
+        facts->setProperty("expanded", false);
         item(QStringLiteral("agentsSection"))->setProperty("expanded", true);
         kcm.setAgentDetectionMode(QStringLiteral("block"));
         QVERIFY(item(QStringLiteral("resetAgentChoiceButton"))->isEnabled());

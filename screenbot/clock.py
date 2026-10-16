@@ -6,6 +6,24 @@ from screenbot.burnin import burn_in_clock_drift
 
 
 class ClockRenderer:
+    def clock_bounds(self, w: int, h: int, protection: str = 'off',
+                     elapsed_seconds: float = 0.0,
+                     scene_offset: tuple[float, float] = (0.0, 0.0),
+                     scene_scale: float = 1.0) -> QRectF:
+        """Return the text regions used by clock(), including its full conditions stack."""
+        columns = {'left': w*.035, 'center': w*.29, 'right': w*.545}
+        rows = {'top': h*.08, 'center': h*.38, 'bottom': h*.65}
+        row, column = self.clock_position.split('-')
+        x = columns[column]
+        y = rows[row]
+        conditions = self.live_sky_enabled and self.live_sky_conditions and self.theme != 'space'
+        drift_x, drift_y = burn_in_clock_drift(
+            protection, elapsed_seconds, w, h, self.clock_position, self.clock_font_size,
+            self.show_date, conditions, scene_offset, scene_scale)
+        stack_height = self.clock_font_size * (
+            1.5 + .62 * (bool(self.show_date) + bool(conditions)))
+        return QRectF(x + drift_x, y + drift_y, w*.42, stack_height)
+
     def clock(self, p: QPainter, w: int, h: int, protection: str = 'off',
               elapsed_seconds: float = 0.0, scene_offset: tuple[float, float] = (0.0, 0.0),
               scene_scale: float = 1.0) -> None:

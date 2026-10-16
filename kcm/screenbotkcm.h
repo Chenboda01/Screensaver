@@ -23,6 +23,9 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(int lockMinutes READ lockMinutes WRITE setLockMinutes NOTIFY lockMinutesChanged)
     Q_PROPERTY(bool showTimer READ showTimer WRITE setShowTimer NOTIFY showTimerChanged)
     Q_PROPERTY(bool nowPlayingEnabled READ nowPlayingEnabled WRITE setNowPlayingEnabled NOTIFY nowPlayingEnabledChanged)
+    Q_PROPERTY(bool factsEnabled READ factsEnabled WRITE setFactsEnabled NOTIFY factsEnabledChanged)
+    Q_PROPERTY(int factsIntervalMinutes READ factsIntervalMinutes WRITE setFactsIntervalMinutes NOTIFY factsIntervalMinutesChanged)
+    Q_PROPERTY(QString factsContentMode READ factsContentMode WRITE setFactsContentMode NOTIFY factsContentModeChanged)
     Q_PROPERTY(bool clockVisible READ clockVisible WRITE setClockVisible NOTIFY clockVisibleChanged)
     Q_PROPERTY(QString clockFormat READ clockFormat WRITE setClockFormat NOTIFY clockFormatChanged)
     Q_PROPERTY(bool showDate READ showDate WRITE setShowDate NOTIFY showDateChanged)
@@ -86,6 +89,9 @@ public:
     int lockMinutes() const { return m_lockMinutes; }
     bool showTimer() const { return m_showTimer; }
     bool nowPlayingEnabled() const { return m_nowPlayingEnabled; }
+    bool factsEnabled() const { return m_factsEnabled; }
+    int factsIntervalMinutes() const { return m_factsIntervalMinutes; }
+    QString factsContentMode() const { return m_factsContentMode; }
     bool clockVisible() const { return m_clockVisible; }
     QString clockFormat() const { return m_clockFormat; }
     bool showDate() const { return m_showDate; }
@@ -142,6 +148,9 @@ public:
     void setShowTimer(bool value);
     void setClockVisible(bool value);
     void setNowPlayingEnabled(bool value);
+    void setFactsEnabled(bool value);
+    void setFactsIntervalMinutes(int value);
+    void setFactsContentMode(const QString &value);
     void setClockFormat(const QString &value);
     void setShowDate(bool value);
     void setClockPosition(const QString &value);
@@ -201,6 +210,9 @@ Q_SIGNALS:
     void showTimerChanged();
     void clockVisibleChanged();
     void nowPlayingEnabledChanged();
+    void factsEnabledChanged();
+    void factsIntervalMinutesChanged();
+    void factsContentModeChanged();
     void clockFormatChanged();
     void showDateChanged();
     void clockPositionChanged();
@@ -268,6 +280,12 @@ private:
     bool m_clockVisible = true;
     bool m_nowPlayingEnabled = false;
     bool m_savedNowPlayingEnabled = false;
+    bool m_factsEnabled = true;
+    int m_factsIntervalMinutes = 3;
+    QString m_factsContentMode = QStringLiteral("facts");
+    bool m_savedFactsEnabled = true;
+    int m_savedFactsIntervalMinutes = 3;
+    QString m_savedFactsContentMode = QStringLiteral("facts");
     QString m_clockFormat = QStringLiteral("12h");
     bool m_showDate = false;
     QString m_clockPosition = QStringLiteral("top-center");

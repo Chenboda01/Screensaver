@@ -128,6 +128,7 @@ def test_off_rendering_matches_the_unshifted_reference(app: QApplication, tmp_pa
         'theme': 'forest', 'burn_in_protection': 'off', 'show_clock': 'true',
         'show_date': 'true', 'clock_position': 'bottom-right', 'clock_font_size': '24',
         'bob_phone_enabled': 'false', 'bobos_enabled': 'false', 'live_sky_enabled': 'false',
+        'facts_enabled': 'false',
     }
     config_path = tmp_path / 'off.ini'
     with config_path.open('w', encoding='utf-8') as output:

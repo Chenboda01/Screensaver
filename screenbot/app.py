@@ -11,7 +11,7 @@ from PyQt6.QtGui import QColor, QCursor, QFont, QPainter, QPen, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
 from live_sky_render import SpaceSky
-from bobos import BobOSPhase, BobOSTimeline
+from bobos import BobOSPhase, BobOSStatus, BobOSTimeline
 from screenbot.appearance import BobAppearance
 from screenbot.bob import BobRenderer
 from screenbot.bobos_status import BobOSStatusMixin
@@ -20,6 +20,7 @@ from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_sce
 from screenbot.clock import ClockRenderer
 from screenbot.mpris import HIDDEN as NO_MEDIA, MprisWorker
 from screenbot.media_overlay import MediaOverlayMixin
+from screenbot.fact_overlay import FactOverlayMixin, FactPreferences
 from screenbot.effects import WeatherEffects
 from screenbot.phone.apps import PhoneAppsRenderer
 from screenbot.phone.camera_pet import CameraState
@@ -38,7 +39,7 @@ from screenbot.weather_accessories import WeatherPreview
 from screenbot.weather_accessory_renderer import WeatherAccessoryAnimator, WeatherAccessoryRenderer
 
 
-class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin, BobOSStatusMixin):
+class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin, BobOSStatusMixin, FactOverlayMixin):
     def __init__(self, *, preview: bool = False, config_path: Path | None = None,
                  preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
                  preview_weather: WeatherPreview | None = None,
@@ -52,6 +53,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.quick_preview, self.is_preview = preview, preview or preview_bobos
         settings = read_settings(config_path)
         self.seasonal_session = SeasonalSession.from_settings(settings, is_preview=self.is_preview, forced_preview_datetime=forced_preview_datetime)
+        self.init_fact_overlay(FactPreferences.from_settings(settings))
         self.bob_appearance = BobAppearance.from_settings(settings)
         self.bob_weather_enabled = settings.getboolean('Screensaver', 'bob_weather_enabled', fallback=True)
         self.preview_weather_override = preview_weather
@@ -61,9 +63,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.photo_slideshow = PhotoSlideshowRenderer.from_settings(self, settings, self.theme)
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
         self.now_playing_enabled = settings.getboolean('Screensaver', 'now_playing_enabled', fallback=False)
-        self.now_playing = NO_MEDIA
-        self.media_worker = None
-        self._closing = False
+        self.now_playing, self.media_worker, self._closing = NO_MEDIA, None, False
         if self.now_playing_enabled and not self.is_preview:
             self.media_worker = MprisWorker(self, enabled=True)
             self.media_worker.changed.connect(self.set_now_playing)
@@ -222,6 +222,11 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.timer.stop()
         super().hideEvent(event)
 
+    def bobos_status(self, elapsed_seconds: float) -> BobOSStatus:
+        """Pause hidden facts while preserving BobOS timing and KDE lock priority."""
+        status = BobOSStatusMixin.bobos_status(self, elapsed_seconds)
+        return self.pause_facts_for_bobos_status(status, elapsed_seconds)
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -245,6 +250,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             celebration_elapsed = self._agent_celebration_elapsed(phase)
             self.bob(p, w, h, t, bobos_status, celebration_elapsed=celebration_elapsed)
             self.caption(p, w, h, t, phase)
+            self.draw_fact_overlay(p, w, h, t, phase)
         if phase in PHONE_UI_PHASES:
             self.draw_phone_os(p, w, h, bobos_status, t)
         elif phase in (BobOSPhase.ZOOM_IN, BobOSPhase.ZOOM_OUT):
