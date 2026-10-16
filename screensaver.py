@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Final
 
 from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QDateTime, QPointF, QRect, QRectF, QSettings, Qt, QTimer
-from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
+from PyQt6.QtGui import QColor, QFont, QImage, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 from PyQt6.QtGui import QCursor, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 
@@ -51,6 +51,49 @@ PHONE_UI_PHASES: Final[frozenset[BobOSPhase]] = frozenset(
         BobOSPhase.SHUTDOWN,
     }
 )
+
+
+def battery_powered(root: Path = Path('/sys/class/power_supply')) -> bool:
+    """Return true when a battery exists and no online AC supply is detected."""
+    try:
+        supplies = [entry for entry in root.iterdir() if entry.is_dir()]
+    except OSError:
+        return False
+    has_battery = False
+    online_ac = False
+    for supply in supplies:
+        try:
+            kind = (supply / 'type').read_text(encoding='ascii').strip().lower()
+        except OSError:
+            kind = ''
+        if kind == 'battery':
+            has_battery = True
+        elif kind in ('mains', 'usb', 'usb_c'):
+            try:
+                online_ac = online_ac or (supply / 'online').read_text(encoding='ascii').strip() == '1'
+            except OSError:
+                pass
+    return has_battery and not online_ac
+
+
+def frame_interval_ms(mode: str, on_battery: bool, elapsed_seconds: float) -> int:
+    """Choose a bounded cadence for Smooth, Balanced, or Battery saver."""
+    if mode == 'smooth':
+        fps = 30
+    elif mode == 'battery-saver':
+        fps = 10
+    elif on_battery or elapsed_seconds >= 15 * 60:
+        fps = 15
+    else:
+        fps = 30
+    return round(1000 / fps)
+
+
+def particle_count(total: int, effect_scale: float) -> int:
+    """Apply an effect budget without mutating the stable random particle set."""
+    if total <= 0:
+        return 0
+    return max(1, min(total, round(total * max(0.0, min(1.0, effect_scale)))))
 
 
 def read_settings(config_path: Path | None = None) -> configparser.ConfigParser:
@@ -150,6 +193,17 @@ class Saver(QWidget):
             if preview_wifi_animation is not None
             else settings.getboolean('Screensaver', 'show_wifi_animation', fallback=True)
         )
+        self.performance_mode = settings.get('Screensaver', 'performance_mode', fallback='balanced').strip().lower()
+        if self.performance_mode not in ('smooth', 'balanced', 'battery-saver'):
+            self.performance_mode = 'balanced'
+        self.reduce_motion = settings.getboolean('Screensaver', 'reduce_motion', fallback=False)
+        self.on_battery = battery_powered()
+        self._last_power_check = time.monotonic()
+        self._scenery_cache = None
+        self._scenery_cache_key = None
+        self._scenery_cache_time = 0.0
+        self._space_foreground_cache = None
+        self._space_foreground_key = None
         schedule_random = random.Random()
         self.bobos_timeline = BobOSTimeline(
             activation_delay_seconds=self.bobos_activation_delay_seconds,
@@ -171,16 +225,51 @@ class Saver(QWidget):
         self.lightning_events = [(r.uniform(0, 20), r.uniform(12, 24), r.uniform(.15, .85)) for _ in range(4)]
         self.shooting_star_events = [(r.uniform(0, 24), r.uniform(10, 22), r.uniform(.1, .8), r.uniform(.08, .35)) for _ in range(5)]
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update)
-        self.timer.start(33)
+        self.timer.timeout.connect(self.animate)
+        self.lock_timer = QTimer(self)
+        self.lock_timer.setInterval(1000)
+        self.lock_timer.timeout.connect(self.check_password_lock)
+        if self.password_lock:
+            self.lock_timer.start()
+
+    def animate(self) -> None:
+        """Advance animation with power and unattended-time aware pacing."""
+        elapsed = max(0.0, time.monotonic() - self.start_time)
+        now = time.monotonic()
+        if now - self._last_power_check >= 30:
+            self.on_battery = battery_powered()
+            self._last_power_check = now
+        interval = frame_interval_ms(self.performance_mode, self.on_battery, elapsed)
+        if self.timer.interval() != interval:
+            self.timer.setInterval(interval)
+        self.update()
+
+    def check_password_lock(self) -> None:
+        """Keep KDE's real lock deadline independent of paint visibility/FPS."""
+        if not self.password_lock:
+            return
+        elapsed = max(0.0, time.monotonic() - self.start_time)
+        if elapsed >= self.lock_seconds and elapsed >= self.next_lock_attempt:
+            self.next_lock_attempt = elapsed + 5
+            QTimer.singleShot(0, self.request_kde_lock)
 
     def showEvent(self, event: QShowEvent) -> None:
         """Start all screensaver-relative timers when Bob first becomes visible."""
         if not self.session_started:
             self.start_time = time.monotonic()
             self.session_started = True
+        if not self.timer.isActive():
+            self.timer.start(frame_interval_ms(self.performance_mode, self.on_battery,
+                                                time.monotonic() - self.start_time))
+        if self.password_lock and not self.lock_timer.isActive():
+            self.lock_timer.start()
         self.preview_mouse_origin = QCursor.pos()
         super().showEvent(event)
+
+    def hideEvent(self, event) -> None:
+        """Pause animated painting while retaining the independent lock guard."""
+        self.timer.stop()
+        super().hideEvent(event)
 
     def bobos_status(self, elapsed_seconds: float) -> BobOSStatus:
         """Keep BobOS out of disabled states and yield before the real KDE lock."""
@@ -215,25 +304,187 @@ class Saver(QWidget):
         if self.quick_preview:
             self.preview_hint(p, w, h, t)
         p.end()
-        if self.password_lock and t >= self.lock_seconds and t >= self.next_lock_attempt:
-            self.next_lock_attempt = t + 5
-            QTimer.singleShot(0, self.request_kde_lock)
 
     def draw_scenery(self, p: QPainter, w: int, h: int, t: float) -> None:
-        """Render shared scenery at each display's own logical size."""
+        """Render a cached static scene beneath the live weather/effect layers."""
+        cache_key = (self.theme, w, h, self.live_sky_enabled,
+                     self.live_weather.weather.category if self.live_sky_enabled else '',
+                     math.floor(time.time() / 60) if self.live_sky_enabled else 0)
+        now = time.monotonic()
+        # Live-Sky clouds and wind-affected trees move, so refresh their static
+        # atmosphere once a second while retaining the expensive frame cache.
+        cache_lifetime = 1.0 if self.live_sky_enabled or self.theme == 'city' else float('inf')
+        if (self._scenery_cache is None or self._scenery_cache_key != cache_key
+                or now - self._scenery_cache_time >= cache_lifetime):
+            image = QImage(w, h, QImage.Format.Format_ARGB32_Premultiplied)
+            image.fill(Qt.GlobalColor.transparent)
+            layer = QPainter(image)
+            layer.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+            self._draw_static_scenery(layer, w, h, t)
+            layer.end()
+            self._scenery_cache = image
+            self._scenery_cache_key = cache_key
+            self._scenery_cache_time = now
+        p.drawImage(0, 0, self._scenery_cache)
+        self._draw_scenery_motion(p, w, h, t)
         if self.theme == 'space':
-            self.space(p, w, h, t)
-        elif self.theme == 'mountains':
-            self.mountains(p, w, h, t)
-        elif self.theme == 'snow':
-            self.snow(p, w, h, t)
-        elif self.theme == 'forest':
-            self.forest(p, w, h, t)
-        else:
-            self.city(p, w, h, t)
+            self._draw_space_foreground(p, w, h)
+            if self.live_sky_enabled:
+                coordinates = (self.live_weather.latitude, self.live_weather.longitude) if self.live_weather.located else None
+                self.space_sky.draw(p, w, h, time.time(), coordinates)
         if self.live_sky_enabled and self.theme != 'space' and self.live_sky_position is not None:
             self.live_landscape_light(p, w, h, t)
         self.weather(p, w, h, t)
+
+    def _draw_static_scenery(self, p: QPainter, w: int, h: int, t: float) -> None:
+        """Render theme geometry and sky once; animated foregrounds stay live."""
+        if self.theme == 'space':
+            self.space_background(p, w, h)
+        elif self.theme == 'mountains':
+            self.mountains_background(p, w, h, t)
+        elif self.theme == 'snow':
+            self.snow_background(p, w, h, t)
+        elif self.theme == 'forest':
+            self.forest_background(p, w, h, t)
+        else:
+            self.city(p, w, h, t)
+
+    def space_background(self, p: QPainter, w: int, h: int) -> None:
+        bg = QLinearGradient(0, 0, w, h)
+        bg.setColorAt(0, QColor('#030817'))
+        bg.setColorAt(.55, QColor('#141b45'))
+        bg.setColorAt(1, QColor('#050a1d'))
+        p.fillRect(QRect(0, 0, w, h), bg)
+        haze = QRadialGradient(QPointF(w*.51, h*.58), max(w, h)*.43)
+        haze.setColorAt(0, QColor(51, 90, 209, 75))
+        haze.setColorAt(1, QColor(51, 90, 209, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(haze)
+        p.drawRect(QRect(0, 0, w, h))
+
+    def _draw_space_foreground(self, p: QPainter, w: int, h: int) -> None:
+        """Reuse costly planetary gradients, painted above the moving starfield."""
+        key = (w, h, self.live_sky_enabled)
+        if self._space_foreground_cache is None or self._space_foreground_key != key:
+            image = QImage(w, h, QImage.Format.Format_ARGB32_Premultiplied)
+            image.fill(Qt.GlobalColor.transparent)
+            layer = QPainter(image)
+            layer.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+            unit = min(w, h)
+            self.planet(layer, w*.77, h*.31, unit*.105, '#d78350', '#f6c678', '#56385a', ring=True)
+            if not self.live_sky_enabled:
+                self.planet(layer, w*.19, h*.43, unit*.047, '#347cbe', '#92e4f4', '#253e85')
+            self.planet(layer, w*.81, h*.68, unit*.032, '#a85576', '#f3a3b2', '#4c397f')
+            layer.end()
+            self._space_foreground_cache = image
+            self._space_foreground_key = key
+        p.drawImage(0, 0, self._space_foreground_cache)
+
+    def mountains_background(self, p: QPainter, w: int, h: int, t: float) -> None:
+        if self.live_sky_enabled:
+            self.live_background(p, w, h, t)
+        else:
+            gradient = QLinearGradient(0, 0, 0, h)
+            gradient.setColorAt(0, QColor('#102048'))
+            gradient.setColorAt(.58, QColor('#846d9a'))
+            gradient.setColorAt(1, QColor('#0d1d35'))
+            p.fillRect(QRect(0, 0, w, h), gradient)
+            p.setPen(Qt.PenStyle.NoPen)
+            moon = QPointF(w*.79, h*.22)
+            for radius, alpha in [(80, 17), (58, 28), (34, 48)]:
+                p.setBrush(QColor(255, 235, 196, alpha))
+                p.drawEllipse(moon, radius, radius)
+            p.setBrush(QColor('#fff0ce'))
+            p.drawEllipse(moon, 22, 22)
+        for color, coords in [
+            ('#566c91', [(0, .75), (.12, .58), (.25, .73), (.4, .49), (.55, .76), (.7, .58), (.82, .73), (1, .53)]),
+            ('#2b476b', [(0, .88), (.15, .68), (.28, .86), (.48, .63), (.62, .83), (.77, .64), (1, .8)]),
+            ('#132e4c', [(0, .95), (.17, .81), (.34, .95), (.53, .78), (.72, .96), (.87, .79), (1, .91)]),
+        ]:
+            polygon = QPolygonF([QPointF(x*w, y*h) for x, y in coords] + [QPointF(w, h), QPointF(0, h)])
+            p.setBrush(QColor(color))
+            p.drawPolygon(polygon)
+
+    def snow_background(self, p: QPainter, w: int, h: int, t: float) -> None:
+        if self.live_sky_enabled:
+            self.live_background(p, w, h, t)
+        else:
+            sky = QLinearGradient(0, 0, 0, h)
+            sky.setColorAt(0, QColor('#101b39'))
+            sky.setColorAt(.6, QColor('#416d9f'))
+            sky.setColorAt(1, QColor('#cee8f4'))
+            p.fillRect(QRect(0, 0, w, h), sky)
+            p.setPen(Qt.PenStyle.NoPen)
+            moon = QPointF(.79*w, .19*h)
+            glow = QRadialGradient(moon, h*.18)
+            glow.setColorAt(0, QColor(231,245,255,110))
+            glow.setColorAt(1, QColor(231,245,255,0))
+            p.setBrush(glow)
+            p.drawEllipse(moon, h*.18, h*.18)
+            p.setBrush(QColor('#f6fbff'))
+            p.drawEllipse(moon, 24, 24)
+        for color, coords in [
+            ('#9ab9d1', [(0,.77),(.13,.59),(.25,.74),(.4,.45),(.54,.73),(.7,.53),(.84,.74),(1,.55)]),
+            ('#dae9f2', [(0,.87),(.16,.69),(.29,.84),(.46,.59),(.64,.87),(.81,.64),(1,.82)]),
+            ('#6d95b1', [(0,.96),(.19,.79),(.34,.96),(.52,.74),(.74,.96),(.9,.83),(1,.94)]),
+        ]:
+            p.setBrush(QColor(color))
+            p.drawPolygon(QPolygonF([QPointF(x*w,y*h) for x,y in coords]+[QPointF(w,h),QPointF(0,h)]))
+
+    def forest_background(self, p: QPainter, w: int, h: int, t: float) -> None:
+        if self.live_sky_enabled:
+            self.live_background(p, w, h, t)
+            p.fillRect(QRectF(0, h*.79, w, h*.21), QColor('#082b2b'))
+        else:
+            sky=QLinearGradient(0,0,0,h)
+            sky.setColorAt(0,QColor('#081a24'))
+            sky.setColorAt(.6,QColor('#19564e'))
+            sky.setColorAt(1,QColor('#0b2b2a'))
+            p.fillRect(QRect(0, 0, w, h),sky)
+            p.setPen(Qt.PenStyle.NoPen)
+            moon=QPointF(w*.82,h*.2)
+            p.setBrush(QColor(216,246,207,55))
+            p.drawEllipse(moon,60,60)
+            p.setBrush(QColor('#e0f7cb'))
+            p.drawEllipse(moon,22,22)
+        for layer,color,height_scale in [(0,QColor('#1b544c'),.64),(1,QColor('#103b38'),.73),(2,QColor('#082b2b'),.83)]:
+            p.setBrush(color)
+            count=15
+            for i in range(count+1):
+                cx=((i+(.45 if layer%2 else 0))/count)*w
+                trunk_y=h*(height_scale+.16)
+                tree_h=h*(.17+.06*math.sin(i*2.1+layer))
+                sway = math.sin(t*1.4+i)*min(12., self.live_weather.weather.wind*.2) if self.live_sky_enabled else 0
+                p.drawPolygon(QPolygonF([QPointF(cx-tree_h*.28,trunk_y),QPointF(cx+sway,trunk_y-tree_h),QPointF(cx+tree_h*.28,trunk_y)]))
+                p.drawRect(QRectF(cx-3,trunk_y-2,6,h-trunk_y))
+
+    def _draw_scenery_motion(self, p: QPainter, w: int, h: int, t: float) -> None:
+        """Draw foreground motion over the cached static theme layer."""
+        scale = 0.3 if self.reduce_motion else (0.5 if self.performance_mode == 'battery-saver' else 1.0)
+        p.setPen(Qt.PenStyle.NoPen)
+        if self.theme == 'space':
+            for x, y, size, phase in self.particles[:particle_count(len(self.particles), scale)]:
+                brightness = int(110 + 120*(.5 + .5*math.sin(t*1.4 + phase)))
+                p.setBrush(QColor(177, 212, 255, brightness))
+                p.drawEllipse(QPointF((x*w + t*size*1.3) % max(w, 1), y*h), size, size)
+        elif self.theme == 'mountains':
+            for x, y, radius, phase in self.particles[:particle_count(40, scale)]:
+                p.setBrush(QColor(255, 231, 168, int(70 + 100*(.5 + .5*math.sin(t + phase)))))
+                p.drawEllipse(QPointF(x*w, h*(.67 + y*.31)), radius, radius)
+        elif self.theme == 'snow':
+            if not self.live_sky_enabled:
+                for x, y, size, phase in self.particles[:particle_count(len(self.particles), scale)]:
+                    px=(x*w+math.sin(t*.7+phase)*14+t*(5+size*8))%max(1,w)
+                    py=(y*h+t*(15+size*10))%max(1,h)
+                    p.setBrush(QColor(245,251,255,165))
+                    p.drawEllipse(QPointF(px,py),size+0.5,size+0.5)
+        elif self.theme == 'forest':
+            for x,y,size,phase in self.particles[:particle_count(75, scale)]:
+                cx=x*w+math.sin(t*.6+phase)*12
+                cy=(.18+y*.73)*h+math.cos(t*.55+phase)*8
+                alpha=int((80+150*(.5+.5*math.sin(t*2+phase))) * (0.45 if self.reduce_motion else 1))
+                p.setBrush(QColor(210,255,145,alpha))
+                p.drawEllipse(QPointF(cx,cy),size+1,size+1)
 
     def preview_hint(self, painter: QPainter, width: int, height: int, elapsed: float) -> None:
         """Explain the temporary view, including missing Live Sky data, independently of the clock."""
@@ -427,7 +678,8 @@ class Saver(QWidget):
             sky.setColorAt(1,QColor('#090c25'))
             p.fillRect(QRect(0, 0, w, h),sky)
             p.setPen(Qt.PenStyle.NoPen)
-            for x,y,size,phase in self.particles[:55]:
+            city_star_count = particle_count(55, .3 if self.reduce_motion else (.5 if self.performance_mode == 'battery-saver' else 1.0))
+            for x,y,size,phase in self.particles[:city_star_count]:
                 p.setBrush(QColor(177,192,255,170))
                 p.drawEllipse(QPointF(x*w,y*h*.6),size*.7,size*.7)
         # Deterministic skyline; each building has a unique height and window grid.
@@ -445,7 +697,7 @@ class Saver(QWidget):
             for col in range(2):
                 for row in range(max(1,int(bh/24))):
                     if (i*17+col*5+row*3)%5==0: continue
-                    flicker=math.sin(t*.8+i+row)> .95
+                    flicker=not self.reduce_motion and math.sin(t*.8+i+row)> .95
                     p.setBrush(QColor('#ff65c5') if (i+row)%4==0 else QColor('#61e4ff') if not flicker else QColor('#293958'))
                     p.drawRect(QRectF(x0+7+col*(bw*.35),top+10+row*23, max(3,bw*.13),8))
         p.setBrush(QColor('#070f24'))
@@ -567,6 +819,9 @@ class Saver(QWidget):
         p.setPen(QPen(QColor(171, 218, 255, 125), max(1, scale*1.5)))
         weather = self.live_weather.weather
         drops = self.rain_drops[:max(1, round(len(self.rain_drops)*weather.intensity))] if self.live_sky_enabled else self.rain_drops
+        if self.reduce_motion or self.performance_mode == 'battery-saver':
+            effect_scale = .3 if self.reduce_motion else .5
+            drops = drops[:particle_count(len(drops), effect_scale)]
         wind = weather.wind*.15 if self.live_sky_enabled else 0
         for x, y, speed, phase in drops:
             drop_x = (x*w + t*wind*scale + math.sin(t*.7 + phase)*12*scale) % w
@@ -579,6 +834,9 @@ class Saver(QWidget):
         p.save()
         p.setPen(Qt.PenStyle.NoPen)
         flakes = self.snowflakes[:max(1, round(len(self.snowflakes)*self.live_weather.weather.intensity))] if self.live_sky_enabled else self.snowflakes
+        if self.reduce_motion or self.performance_mode == 'battery-saver':
+            effect_scale = .3 if self.reduce_motion else .5
+            flakes = flakes[:particle_count(len(flakes), effect_scale)]
         for x, y, size, speed, phase in flakes:
             flake_x = (x*w + math.sin(t*.55 + phase)*24*scale) % w
             flake_y = (y*h + t*(18 + speed*17)*scale) % h
@@ -608,16 +866,18 @@ class Saver(QWidget):
 
     def draw_thunderstorms(self, p: QPainter, w: int, h: int, t: float) -> None:
         flashes: list[tuple[float, float]] = []
-        for offset, period, x in self.lightning_events:
+        for index, (offset, period, x) in enumerate(self.lightning_events):
+            if self.reduce_motion and index % 2:
+                continue
             phase = (t + offset) % period
-            if phase < .2:
+            if phase < (.12 if self.reduce_motion else .2):
                 flashes.append((x, 1 - phase/.2))
         if not flashes:
             return
         p.save()
         p.setPen(Qt.PenStyle.NoPen)
         for x, intensity in flashes:
-            alpha = round(72*intensity)
+            alpha = round((30 if self.reduce_motion else 72)*intensity)
             p.fillRect(QRect(0, 0, w, h), QColor(207, 224, 255, alpha))
             points = [
                 QPointF(w*x, 0),
@@ -628,14 +888,17 @@ class Saver(QWidget):
                 QPointF(w*(x-.012), h*.28),
                 QPointF(w*x, 0),
             ]
-            p.setBrush(QColor(231, 241, 255, round(230*intensity)))
+            p.setBrush(QColor(231, 241, 255, round((110 if self.reduce_motion else 230)*intensity)))
             p.drawPolygon(QPolygonF(points))
         p.restore()
 
     def draw_shooting_stars(self, p: QPainter, w: int, h: int, t: float) -> None:
         scale = min(w, h) / 900
         p.save()
-        for offset, period, x, y in self.shooting_star_events:
+        events = self.shooting_star_events
+        if self.reduce_motion:
+            events = events[::3]
+        for offset, period, x, y in events:
             phase = (t + offset) % period
             if phase >= 1.15:
                 continue
