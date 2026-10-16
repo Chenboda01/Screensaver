@@ -9,7 +9,7 @@ import pytest
 
 from screenbot.ambient.engine import AmbientSoundEngine, _is_quiet_now
 from screenbot.ambient.policy import SceneSound, SceneTheme, WeatherCategory, choose_loop, parse_theme, parse_weather, volume_scale
-from screenbot.ambient.lightning import is_lightning_visible
+from screenbot.ambient.lightning import is_lightning_visible, is_owl_event
 
 
 def _scene() -> SceneSound:
@@ -85,6 +85,30 @@ def test_visual_and_audio_share_the_same_lightning_event_phase() -> None:
     assert is_lightning_visible(11.0, events)  # first event wraps to phase 0
     assert not is_lightning_visible(0.0, events, reduce_motion=True)
     assert is_lightning_visible(11.0, events, reduce_motion=True)
+
+
+def test_forest_night_owl_events_are_occasional_and_deterministic() -> None:
+    assert not is_owl_event(34.9)
+    assert is_owl_event(35.0)
+    assert is_owl_event(36.9)
+    assert not is_owl_event(37.0)
+    assert is_owl_event(108.0)
+
+
+def test_one_shot_audio_contains_its_scene_bed() -> None:
+    from tools.generate_ambient_audio import sample
+
+    # A positive low rumble is layered over the rain noise during the thunder cue.
+    time_index = round(.866 * 22_050)
+    previous, noise = .7, .5
+    rain = .12 * (noise * .38 + previous * .62)
+    thunder = sample('thunder', time_index, previous, noise)
+    assert thunder > rain
+    # Owl hoots share the cricket bed instead of replacing it with silence.
+    owl_index = round(.36 * 22_050)
+    background = .015 * (.4 * .12 + .5 * .88)
+    owl = sample('owl', owl_index, .5, .4)
+    assert owl > background
 
 
 @pytest.mark.parametrize(('hour', 'quiet'), [(0, True), (7, True), (8, False), (21, False), (22, True), (23, True)])
@@ -177,7 +201,7 @@ def test_engine_fades_mutes_resumes_changes_scene_handles_errors_and_closes(monk
             return self.state
 
     monkeypatch.setitem(sys.modules, 'PyQt6.QtMultimedia', types.SimpleNamespace(QAudioOutput=Output, QMediaPlayer=Player))
-    for asset in ('forest', 'city', 'rain', 'thunder'):
+    for asset in ('forest', 'city', 'rain', 'thunder', 'crickets', 'owl'):
         (tmp_path / f'{asset}.ogg').touch()
     engine = AmbientSoundEngine(app, enabled=True, volume_percent=80, live_sky_only=False,
                                 quiet_hours=False, asset_directory=tmp_path)
@@ -196,6 +220,17 @@ def test_engine_fades_mutes_resumes_changes_scene_handles_errors_and_closes(monk
     engine.update_scene(scene, playing_media=False)
     engine._advance_fade()
     assert output.volume() > 0.0 and player.playbackState() == Player.PlaybackState.PlayingState
+    night = replace(scene, elapsed_hours=22.0, elapsed_seconds=35.0)
+    engine.update_scene(night, playing_media=False)
+    deadline = time.monotonic() + 4.0
+    while not player.sources[-1].toLocalFile().endswith('/owl.ogg') and time.monotonic() < deadline:
+        app.processEvents()
+        time.sleep(.01)
+    assert player.sources[-1].toLocalFile().endswith('/owl.ogg')
+    assert player.loops == Player.Loops.Once
+    player.mediaStatusChanged.emit(Player.MediaStatus.EndOfMedia)
+    assert player.sources[-1].toLocalFile().endswith('/crickets.ogg')
+    assert player.loops == Player.Loops.Infinite
     storm = replace(scene, weather=WeatherCategory.THUNDERSTORM, live_sky_enabled=True, live_sky_fresh=True)
     engine.update_scene(storm, playing_media=False)
     engine.set_lightning_visible(True)

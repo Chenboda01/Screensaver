@@ -46,6 +46,7 @@ class SceneSound:
     thunder_enabled: bool
     elapsed_hours: float
     rain_intensity: float = 0.5
+    elapsed_seconds: float = 0.0
 
 
 AMBIENT_THEMES: Final[frozenset[SceneTheme]] = frozenset({

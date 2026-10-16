@@ -3,7 +3,7 @@
 # ///
 # ─── How to run ───
 # uv run tools/generate_ambient_audio.py [output-directory]
-"""Reproduce ScreenBot's original CC0 ambience loops using Python and ffmpeg."""
+"""Reproduce ScreenBot's original CC0 ambience assets using Python and ffmpeg."""
 from __future__ import annotations
 
 import math
@@ -17,7 +17,8 @@ import wave
 RATE = 22_050
 DURATION = 8
 THUNDER_DURATION = 2
-LOOPS = ('rain', 'wind', 'waves', 'forest', 'crickets', 'city', 'space', 'thunder')
+OWL_DURATION = 3
+ASSETS = ('rain', 'wind', 'waves', 'forest', 'crickets', 'city', 'space', 'thunder', 'owl')
 
 
 def sample(kind: str, index: int, previous: float, noise: float) -> float:
@@ -33,11 +34,23 @@ def sample(kind: str, index: int, previous: float, noise: float) -> float:
         drone = .04 * math.sin(math.tau * 55 * time) + .025 * math.sin(math.tau * 82 * time)
         return drone + .08 * (noise * .08 + previous * .92)
     if kind == 'thunder':
-        # Delayed one-shot rumble: scene code starts this after the visible flash.
+        # Rain continues underneath the delayed distant rumble one-shot.
+        rain = .12 * (noise * .38 + previous * .62)
         envelope = math.exp(-max(0.0, time - .85) * 2.1) if time >= .85 else 0.0
         onset = min(1.0, max(0.0, (time - .85) * 7))
         rumble = math.sin(math.tau * (38 + 2 * math.sin(time * .9)) * time) * envelope * onset * .13
-        return rumble + .008 * (noise * .3 + previous * .7)
+        return rain + rumble
+    if kind == 'owl':
+        # Cricket ambience stays beneath two soft, descending synthetic hoots.
+        crickets = .015 * (noise * .12 + previous * .88)
+        hoot = 0.0
+        for start in (.35, 1.55):
+            phase = time - start
+            if 0.0 <= phase < .82:
+                envelope = math.sin(math.pi * phase / .82) ** 1.4
+                frequency = 520 - 150 * phase
+                hoot += math.sin(math.tau * frequency * phase) * envelope * .105
+        return crickets + hoot
     if kind == 'space':
         fade = .5 + .5 * math.sin(math.tau * time / DURATION)
         return .028 * fade * (math.sin(math.tau * 48 * time) + .4 * math.sin(math.tau * 72 * time))
@@ -50,9 +63,9 @@ def sample(kind: str, index: int, previous: float, noise: float) -> float:
     return base + math.sin(math.tau * 3100 * time) * pulse * .028
 
 
-def write_loop(kind: str, destination: Path, rng: random.Random) -> None:
-    """Write a deterministic temporary PCM loop and encode it as compact Ogg."""
-    duration = THUNDER_DURATION if kind == 'thunder' else DURATION
+def write_asset(kind: str, destination: Path, rng: random.Random) -> None:
+    """Write deterministic temporary PCM audio and encode it as compact Ogg."""
+    duration = THUNDER_DURATION if kind == 'thunder' else OWL_DURATION if kind == 'owl' else DURATION
     temporary = destination.with_suffix('.wav')
     previous = 0.0
     frames = bytearray()
@@ -74,12 +87,12 @@ def write_loop(kind: str, destination: Path, rng: random.Random) -> None:
 
 
 def main() -> None:
-    """Regenerate all seven project-owned audio loops."""
+    """Regenerate the continuous scene beds and one-shot weather/wildlife cues."""
     target = Path(sys.argv[1]) if len(sys.argv) > 1 else Path('assets/audio')
     target.mkdir(parents=True, exist_ok=True)
     rng = random.Random(26026)
-    for loop in LOOPS:
-        write_loop(loop, target / f'{loop}.ogg', rng)
+    for asset in ASSETS:
+        write_asset(asset, target / f'{asset}.ogg', rng)
 
 
 if __name__ == '__main__':

@@ -7,7 +7,8 @@ import sys
 
 from PyQt6.QtCore import QObject, QTimer, QUrl
 
-from screenbot.ambient.policy import SceneSound, choose_loop, volume_scale
+from screenbot.ambient.lightning import is_owl_event
+from screenbot.ambient.policy import SceneSound, SceneTheme, choose_loop, volume_scale
 
 
 class AmbientSoundEngine(QObject):
@@ -30,7 +31,9 @@ class AmbientSoundEngine(QObject):
         self._gain = 1.0
         self._lightning_visible = False
         self._thunder_pending = False
-        self._thunder_active = False
+        self._owl_pending = False
+        self._owl_event_active = False
+        self._one_shot_active = False
         self._current_asset: Path | None = None
         self._fade_step = 0
         self._player = None
@@ -77,8 +80,9 @@ class AmbientSoundEngine(QObject):
         self._gain = volume_scale(scene)
         if loop != self.selected_loop:
             self.selected_loop = loop
-            self._thunder_active = False
+            self._one_shot_active = False
             self._thunder_pending = False
+            self._owl_pending = False
             self._player.stop()
             self._player.setLoops(self._infinite_loops())
             if loop is not None:
@@ -96,6 +100,17 @@ class AmbientSoundEngine(QObject):
                 self._current_asset = source
                 self._player.play()
                 self._begin_fade()
+        owl_due = loop == 'crickets' and scene.theme is SceneTheme.FOREST \
+            and (scene.elapsed_hours >= 19.0 or scene.elapsed_hours < 6.0) \
+            and is_owl_event(scene.elapsed_seconds)
+        if owl_due and not self._owl_event_active:
+            self._owl_pending = True
+            self._ensure_owl_timer().start()
+        elif not owl_due:
+            self._owl_pending = False
+            if hasattr(self, '_owl_timer'):
+                self._owl_timer.stop()
+        self._owl_event_active = owl_due
         self._apply_policy()
 
     def close(self) -> None:
@@ -109,6 +124,8 @@ class AmbientSoundEngine(QObject):
         if self._player is not None:
             if hasattr(self, '_thunder_timer'):
                 self._thunder_timer.stop()
+            if hasattr(self, '_owl_timer'):
+                self._owl_timer.stop()
             self._player.stop()
             self._player.setSource(QUrl())
         if self._output is not None:
@@ -140,6 +157,13 @@ class AmbientSoundEngine(QObject):
         if abs(self._output.volume() - output_volume) > .005:
             self._output.setVolume(output_volume)
         if muted:
+            if self._one_shot_active:
+                self._one_shot_active = False
+                if self.selected_loop is not None:
+                    base = self.asset_directory / f'{self.selected_loop}.ogg'
+                    self._current_asset = base
+                    self._player.setLoops(self._infinite_loops())
+                    self._player.setSource(QUrl.fromLocalFile(str(base)))
             if self._player.playbackState() != self._player.PlaybackState.StoppedState:
                 self._player.stop()
         elif self._player.playbackState() != self._player.PlaybackState.PlayingState:
@@ -185,7 +209,31 @@ class AmbientSoundEngine(QObject):
             self._thunder_pending = False
             return
         self._thunder_pending = False
-        self._thunder_active = True
+        self._play_one_shot(source)
+
+    def _ensure_owl_timer(self) -> QTimer:
+        if not hasattr(self, '_owl_timer'):
+            self._owl_timer = QTimer(self)
+            self._owl_timer.setSingleShot(True)
+            self._owl_timer.setInterval(300)
+            self._owl_timer.timeout.connect(self._play_owl)
+        return self._owl_timer
+
+    def _play_owl(self) -> None:
+        if (self._player is None or self._closed or not self._owl_pending or self._playing_media or self._was_muted
+                or self.selected_loop != 'crickets'):
+            self._owl_pending = False
+            return
+        self._owl_pending = False
+        self._play_one_shot(self.asset_directory / 'owl.ogg')
+
+    def _play_one_shot(self, source: Path) -> None:
+        if source in self._failed_assets or not source.is_file():
+            if source not in self._failed_assets:
+                self._cache_failure(source, missing=True)
+                print(f'ScreenBot: ambient asset is missing: {source}', file=sys.stderr)
+            return
+        self._one_shot_active = True
         self._current_asset = source
         from PyQt6.QtMultimedia import QMediaPlayer
         self._player.setLoops(QMediaPlayer.Loops.Once)
@@ -222,7 +270,7 @@ class AmbientSoundEngine(QObject):
 
     def _on_media_status(self, status: object) -> None:
         """Restore the selected continuous loop after a thunderclap or silence on failure."""
-        if self._player is None or not self._thunder_active:
+        if self._player is None or not self._one_shot_active:
             return
         try:
             from PyQt6.QtMultimedia import QMediaPlayer
@@ -231,7 +279,7 @@ class AmbientSoundEngine(QObject):
             ended = False
         if not ended:
             return
-        self._thunder_active = False
+        self._one_shot_active = False
         if self.selected_loop is None or self._closed or self._playing_media:
             return
         base = self.asset_directory / f'{self.selected_loop}.ogg'

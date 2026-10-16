@@ -4,6 +4,7 @@ from __future__ import annotations
 from configparser import ConfigParser
 from datetime import datetime
 from pathlib import Path
+import time
 
 from live_sky_network import LiveWeather
 from screenbot.ambient.engine import AmbientSoundEngine
@@ -58,6 +59,7 @@ class AmbientSoundMixin:
             thunder_enabled=self.thunderstorms_enabled,
             elapsed_hours=now.hour + now.minute / 60,
             rain_intensity=self.live_weather.weather.intensity,
+            elapsed_seconds=max(0.0, time.monotonic() - self.start_time),
         )
         self.ambient_sound.update_scene(scene, playing_media=self._mpris_playing)
 
