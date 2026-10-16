@@ -8,10 +8,18 @@ import os
 import unicodedata
 from urllib.parse import urlencode
 
-from PyQt6.QtCore import QObject, QTimer, QUrl
+from PyQt6.QtCore import QObject, QSettings, QTimer, QUrl
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 
 from live_sky import Weather, parse_weather
+
+
+def read_location_setting(config: QSettings) -> str:
+    """Read Qt-quoted strings and legacy unquoted comma-separated INI values."""
+    value = config.value('Screensaver/live_sky_location', '')
+    if isinstance(value, list):
+        return ', '.join(str(part).strip() for part in value)
+    return str(value).strip()
 
 
 def location_options() -> frozenset[str]:
@@ -64,7 +72,9 @@ class LiveWeather(QObject):
     """Mutable Qt controller; owns replies and caches successful observations."""
     def __init__(self, parent: QObject, *, enabled: bool,
                  interval: int = 30,
-                 location: str = '', cache_path: Path | None = None):
+                 location: str = '', cache_path: Path | None = None,
+                 coordinates: tuple[float, float] | None = None,
+                 timezone_name: str = '', config_path: Path | None = None):
         super().__init__(parent)
         self.enabled = enabled
         self.location = location.strip()
@@ -72,9 +82,18 @@ class LiveWeather(QObject):
         self.longitude = 0.
         self.valid_location = bool(self.location) and self.location in location_options()
         self.located = False
+        self.timezone_name = timezone_name
+        self.config_path = config_path
+        if coordinates is not None:
+            lat, lon = coordinates
+            if self.location and math.isfinite(lat) and math.isfinite(lon) and -90 <= lat <= 90 and -180 <= lon <= 180:
+                self.latitude, self.longitude = lat, lon
+                self.located = self.valid_location = True
         self.interval = interval if interval in (15, 30, 60) else 30
         self.cache_path = cache_path or Path.home()/'.cache/screenbot/live-sky.json'
         self.key = f'city:{self.location}' if self.location else 'city:unset'
+        if self.located:
+            self.key = f'coordinates:{self.latitude},{self.longitude}'
         self.observation = Weather()
         self.observed_at = 0.
         self.attempted_at = 0.
@@ -111,10 +130,15 @@ class LiveWeather(QObject):
             if weather:
                 self.observation = parse_weather({'current': weather})
                 self.observed_at = observed
-            if self.location and data.get('located'):
+            if not self.located and self.location and data.get('located'):
                 lat, lon = float(data['latitude']), float(data['longitude'])
                 if math.isfinite(lat) and math.isfinite(lon) and -90 <= lat <= 90 and -180 <= lon <= 180:
                     self.latitude, self.longitude, self.located = lat, lon, True
+                    self.timezone_name = str(data.get('timezone', ''))
+                    if self.config_path is not None and not self.timezone_name:
+                        self.located = False
+                    else:
+                        self._persist_coordinates()
         except (OSError, ValueError, TypeError, KeyError):
             self.observed_at = 0.
 
@@ -122,7 +146,7 @@ class LiveWeather(QObject):
         weather = self.observation
         data = {'key': self.key, 'attempted_at': self.attempted_at,
                 'observed_at': self.observed_at, 'located': self.located,
-                'latitude': self.latitude, 'longitude': self.longitude,
+                'latitude': self.latitude, 'longitude': self.longitude, 'timezone': self.timezone_name,
                 'weather': {'weather_code': weather.code, 'cloud_cover': weather.cloud,
                             'precipitation': weather.precipitation, 'wind_speed_10m': weather.wind,
                             'temperature_2m': weather.temperature} if self.observed_at else None}
@@ -141,6 +165,20 @@ class LiveWeather(QObject):
         except OSError:
             # Read-only cache directories must not prevent the decorative sky.
             self.cache_error = True
+
+    def _persist_coordinates(self) -> None:
+        """Migrate only the still-selected legacy location, leaving other settings intact."""
+        if self.config_path is None:
+            return
+        config = QSettings(str(self.config_path), QSettings.Format.IniFormat)
+        if read_location_setting(config) != self.location:
+            return
+        if config.contains('Screensaver/live_sky_latitude') or config.contains('Screensaver/live_sky_longitude'):
+            return
+        config.setValue('Screensaver/live_sky_latitude', self.latitude)
+        config.setValue('Screensaver/live_sky_longitude', self.longitude)
+        config.setValue('Screensaver/live_sky_timezone', self.timezone_name)
+        config.sync()
 
     def refresh(self) -> None:
         elapsed = time.time()-self.attempted_at
@@ -181,6 +219,11 @@ class LiveWeather(QObject):
                 if coordinates is None: return
                 self.latitude, self.longitude = coordinates
                 self.located = True
+                for result in payload.get('results', []):
+                    if isinstance(result, dict) and (result.get('latitude'), result.get('longitude')) == coordinates:
+                        self.timezone_name = str(result.get('timezone', ''))
+                        break
+                self._persist_coordinates()
                 self._save()
                 self._forecast()
             else:

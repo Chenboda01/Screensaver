@@ -1,6 +1,7 @@
 #pragma once
 #include <KQuickConfigModule>
 #include <QString>
+#include "locationsearch.h"
 
 class ScreenBotKcm : public KQuickConfigModule {
     Q_OBJECT
@@ -21,6 +22,8 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool liveSkyEnabled READ liveSkyEnabled WRITE setLiveSkyEnabled NOTIFY liveSkyEnabledChanged)
     Q_PROPERTY(QStringList liveSkyLocations READ liveSkyLocations CONSTANT)
     Q_PROPERTY(QString liveSkyLocation READ liveSkyLocation WRITE setLiveSkyLocation NOTIFY liveSkyLocationChanged)
+    Q_PROPERTY(LocationSearch *locationSearch READ locationSearch CONSTANT)
+    Q_PROPERTY(QVariantMap liveSkyPlace READ liveSkyPlace NOTIFY liveSkyLocationChanged)
     Q_PROPERTY(QString liveSkyUnits READ liveSkyUnits WRITE setLiveSkyUnits NOTIFY liveSkyUnitsChanged)
     Q_PROPERTY(int liveSkyInterval READ liveSkyInterval WRITE setLiveSkyInterval NOTIFY liveSkyIntervalChanged)
     Q_PROPERTY(bool liveSkyConditions READ liveSkyConditions WRITE setLiveSkyConditions NOTIFY liveSkyConditionsChanged)
@@ -48,6 +51,9 @@ public:
     bool liveSkyEnabled() const { return m_liveSkyEnabled; }
     QStringList liveSkyLocations() const { return m_liveSkyLocations; }
     QString liveSkyLocation() const { return m_liveSkyLocation; }
+    LocationSearch *locationSearch() { return &m_locationSearch; }
+    QVariantMap liveSkyPlace() const { return m_liveSkyPlace; }
+    Q_INVOKABLE void selectLiveSkyPlace(int index);
     QString liveSkyUnits() const { return m_liveSkyUnits; }
     int liveSkyInterval() const { return m_liveSkyInterval; }
     bool liveSkyConditions() const { return m_liveSkyConditions; }
@@ -132,6 +138,9 @@ private:
     bool m_liveSkyEnabled = false;
     QStringList m_liveSkyLocations;
     QString m_liveSkyLocation;
+    LocationSearch m_locationSearch;
+    QVariantMap m_liveSkyPlace;
+    QVariantMap m_savedLiveSkyPlace;
     QString m_liveSkyUnits = QStringLiteral("c");
     int m_liveSkyInterval = 30;
     bool m_liveSkyConditions = true;
