@@ -43,6 +43,7 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool showWifiAnimation READ showWifiAnimation WRITE setShowWifiAnimation NOTIFY showWifiAnimationChanged)
     Q_PROPERTY(QString performanceMode READ performanceMode WRITE setPerformanceMode NOTIFY performanceModeChanged)
     Q_PROPERTY(bool reduceMotion READ reduceMotion WRITE setReduceMotion NOTIFY reduceMotionChanged)
+    Q_PROPERTY(QString burnInProtection READ burnInProtection WRITE setBurnInProtection NOTIFY burnInProtectionChanged)
 public:
     ScreenBotKcm(QObject *parent, const KPluginMetaData &data);
     QStringList modifiedSections() const;
@@ -83,6 +84,7 @@ public:
     bool showWifiAnimation() const { return m_showWifiAnimation; }
     QString performanceMode() const { return m_performanceMode; }
     bool reduceMotion() const { return m_reduceMotion; }
+    QString burnInProtection() const { return m_burnInProtection; }
     void setTheme(const QString &value);
     void setPasswordLock(bool value);
     void setLockMinutes(int value);
@@ -113,6 +115,7 @@ public:
     void setShowWifiAnimation(bool value);
     void setPerformanceMode(const QString &value);
     void setReduceMotion(bool value);
+    void setBurnInProtection(const QString &value);
     void load() override;
     void save() override;
 Q_SIGNALS:
@@ -147,6 +150,7 @@ Q_SIGNALS:
     void showWifiAnimationChanged();
     void performanceModeChanged();
     void reduceMotionChanged();
+    void burnInProtectionChanged();
 private:
     void writeSettings(QSettings &cfg) const;
     void startPreview(bool bobos, bool wifiAnimation, QQuickItem *source = nullptr);
@@ -207,10 +211,12 @@ private:
     bool m_showWifiAnimation = true;
     QString m_performanceMode = QStringLiteral("balanced");
     bool m_reduceMotion = false;
+    QString m_burnInProtection = QStringLiteral("standard");
     bool m_savedPhoneEnabled = true;
     bool m_savedBobosEnabled = true;
     int m_savedBobosActivationDelay = 3;
     bool m_savedShowWifiAnimation = true;
     QString m_savedPerformanceMode = QStringLiteral("balanced");
     bool m_savedReduceMotion = false;
+    QString m_savedBurnInProtection = QStringLiteral("standard");
 };

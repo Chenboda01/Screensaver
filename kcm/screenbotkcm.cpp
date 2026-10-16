@@ -69,7 +69,8 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_bobosEnabled != m_savedBobosEnabled
         || m_bobosActivationDelay != m_savedBobosActivationDelay
         || m_showWifiAnimation != m_savedShowWifiAnimation) sections.append(QStringLiteral("bobos"));
-    if (m_performanceMode != m_savedPerformanceMode || m_reduceMotion != m_savedReduceMotion)
+    if (m_performanceMode != m_savedPerformanceMode || m_reduceMotion != m_savedReduceMotion
+        || m_burnInProtection != m_savedBurnInProtection)
         sections.append(QStringLiteral("performance"));
     if (m_passwordLock != m_savedPasswordLock
         || m_lockMinutes != m_savedLockMinutes
@@ -167,6 +168,10 @@ void ScreenBotKcm::load() {
         || requestedPerformanceMode == QLatin1String("battery-saver")
         ? requestedPerformanceMode : QStringLiteral("balanced");
     const bool reduceMotion = cfg.value(QStringLiteral("Screensaver/reduce_motion"), false).toBool();
+    const QString requestedBurnInProtection = cfg.value(QStringLiteral("Screensaver/burn_in_protection"), QStringLiteral("standard")).toString();
+    const QString burnInProtection = requestedBurnInProtection == QLatin1String("off")
+        || requestedBurnInProtection == QLatin1String("strong")
+        ? requestedBurnInProtection : QStringLiteral("standard");
     if (m_theme != validTheme) { m_theme = validTheme; Q_EMIT themeChanged(); }
     if (m_passwordLock != lock) { m_passwordLock = lock; Q_EMIT passwordLockChanged(); }
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
@@ -196,6 +201,7 @@ void ScreenBotKcm::load() {
     if (m_showWifiAnimation != wifiAnimation) { m_showWifiAnimation = wifiAnimation; Q_EMIT showWifiAnimationChanged(); }
     if (m_performanceMode != performanceMode) { m_performanceMode = performanceMode; Q_EMIT performanceModeChanged(); }
     if (m_reduceMotion != reduceMotion) { m_reduceMotion = reduceMotion; Q_EMIT reduceMotionChanged(); }
+    if (m_burnInProtection != burnInProtection) { m_burnInProtection = burnInProtection; Q_EMIT burnInProtectionChanged(); }
     m_savedTheme = m_theme;
     m_savedPasswordLock = m_passwordLock;
     m_savedLockMinutes = m_lockMinutes;
@@ -225,6 +231,7 @@ void ScreenBotKcm::load() {
     m_savedShowWifiAnimation = m_showWifiAnimation;
     m_savedPerformanceMode = m_performanceMode;
     m_savedReduceMotion = m_reduceMotion;
+    m_savedBurnInProtection = m_burnInProtection;
     checkModified();
 }
 
@@ -262,6 +269,7 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/show_wifi_animation"), m_showWifiAnimation);
     cfg.setValue(QStringLiteral("Screensaver/performance_mode"), m_performanceMode);
     cfg.setValue(QStringLiteral("Screensaver/reduce_motion"), m_reduceMotion);
+    cfg.setValue(QStringLiteral("Screensaver/burn_in_protection"), m_burnInProtection);
 }
 
 void ScreenBotKcm::save() {
@@ -301,6 +309,7 @@ void ScreenBotKcm::save() {
     m_savedShowWifiAnimation = m_showWifiAnimation;
     m_savedPerformanceMode = m_performanceMode;
     m_savedReduceMotion = m_reduceMotion;
+    m_savedBurnInProtection = m_burnInProtection;
     checkModified();
 }
 
@@ -536,6 +545,15 @@ void ScreenBotKcm::setReduceMotion(bool value) {
     if (value == m_reduceMotion) return;
     m_reduceMotion = value;
     Q_EMIT reduceMotionChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setBurnInProtection(const QString &value) {
+    if (value != QLatin1String("off") && value != QLatin1String("standard")
+        && value != QLatin1String("strong")) return;
+    if (value == m_burnInProtection) return;
+    m_burnInProtection = value;
+    Q_EMIT burnInProtectionChanged();
     checkModified();
 }
 

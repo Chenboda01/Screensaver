@@ -386,6 +386,26 @@ KCMUtils.SimpleKCM {
                 checked: kcm.reduceMotion
                 onToggled: kcm.reduceMotion = checked
             }
+            Controls.ComboBox {
+                objectName: "burnInProtection"
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
+                Layout.maximumWidth: parent.width
+                Kirigami.FormData.label: i18nc("@label", "Burn-in protection:")
+                model: [i18nc("@label Burn-in protection", "Off"), i18nc("@label Burn-in protection", "Standard"), i18nc("@label Burn-in protection", "Strong")]
+                currentIndex: ["off", "standard", "strong"].indexOf(kcm.burnInProtection)
+                onActivated: function(index) { kcm.burnInProtection = ["off", "standard", "strong"][index] }
+            }
+            Controls.Label {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
+                text: kcm.burnInProtection === "strong"
+                    ? i18nc("@info Burn-in protection", "Moves the scene and clock, then fades to black between 30 and 60 minutes. Any input closes the screensaver and cancels the fade.")
+                    : kcm.burnInProtection === "standard"
+                        ? i18nc("@info Burn-in protection", "Moves the scene slowly and lets the clock drift within its selected area.")
+                        : i18nc("@info Burn-in protection", "Off preserves the original fixed layout and brightness.")
+                wrapMode: Text.WordWrap
+            }
         }
         CollapsibleSection {
             id: lockSection
