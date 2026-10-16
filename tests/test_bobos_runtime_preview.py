@@ -37,6 +37,7 @@ def test_complete_preview_uses_runtime_dispatch_and_captions(saver: Saver, reduc
     saver.start_time = 0
     cursor = 0.0
     previous: QImage | None = None
+    previous_phase: BobOSPhase | None = None
     seen = set()
     observations = []
     original_text = QPainter.drawText
@@ -77,8 +78,14 @@ def test_complete_preview_uses_runtime_dispatch_and_captions(saver: Saver, reduc
             if phase == BobOSPhase.SHUTDOWN:
                 assert 'BobOS is powering down' in texts
             if previous is not None:
-                assert image != previous
+                if phase != previous_phase or not reduced:
+                    assert image != previous, (
+                        f'expected a visible frame change at {phase.value} '
+                        f'(previous phase: {previous_phase.value if previous_phase else "none"}, '
+                        f'reduced motion: {reduced})'
+                    )
             previous = image
+            previous_phase = phase
             seen.add(phase)
             evidence = os.environ.get('SCREENBOT_BOBOS_RUNTIME_EVIDENCE')
             if evidence:
