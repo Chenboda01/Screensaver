@@ -6,7 +6,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from PyQt6.QtCore import QRectF, QSizeF, Qt, QTimer
+from PyQt6.QtCore import QRectF, Qt, QTimer
 from PyQt6.QtGui import QColor, QCursor, QFont, QPainter, QPen, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
@@ -15,10 +15,10 @@ from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
 from screenbot.appearance import BobAppearance
 from screenbot.bob import BobRenderer
 from screenbot.agent_status import AgentBadgePhase, AgentStatusSnapshot, AgentStatusWorker, HIDDEN_SNAPSHOT
-from screenbot.burnin import burn_in_clock_drift, burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
+from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
 from screenbot.clock import ClockRenderer
-from screenbot.mpris import HIDDEN as NO_MEDIA, MprisWorker, NowPlaying
-from screenbot.now_playing import card_opacity, card_rect, paint_card
+from screenbot.mpris import HIDDEN as NO_MEDIA, MprisWorker
+from screenbot.media_overlay import MediaOverlayMixin
 from screenbot.effects import WeatherEffects
 from screenbot.phone.apps import PhoneAppsRenderer
 from screenbot.phone.frame import PhoneFrameRenderer
@@ -34,7 +34,7 @@ from screenbot.weather_accessories import WeatherPreview
 from screenbot.weather_accessory_renderer import WeatherAccessoryAnimator, WeatherAccessoryRenderer
 
 
-class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer):
+class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin):
     def __init__(self, *, preview: bool = False, config_path: Path | None = None,
                  preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
                  preview_weather: WeatherPreview | None = None):
@@ -264,63 +264,6 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         if dim_alpha:
             p.fillRect(QRectF(0, 0, w, h), QColor(0, 0, 0, dim_alpha))
         p.end()
-
-    def set_now_playing(self, snapshot: NowPlaying) -> None:
-        """Reject queued media after shutdown, or when privacy is not opted in."""
-        if self._closing or not self.now_playing_enabled or self.is_preview:
-            return
-        self.now_playing = snapshot
-        self.update()
-
-    def start_media_worker(self) -> None:
-        """Only the primary real screensaver owns a media reader."""
-        if self.media_worker is not None and not self.media_worker.isRunning() and not self._closing:
-            self.media_worker.start()
-
-    def stop_media_worker(self) -> None:
-        """Join after the application loop has exited, leaving the desktop responsive."""
-        self._closing = True
-        self.now_playing = NO_MEDIA
-        if self.media_worker is not None:
-            self.media_worker.stop()
-
-    def media_card_rect(self) -> QRectF:
-        """Use the clock's text block as the placement anchor, including date/weather."""
-        anchor = None
-        column = 'center'
-        if self.show_clock:
-            row, column = self.clock_position.split('-')
-            x = {'left': .035, 'center': .29, 'right': .545}[column] * self.width()
-            y = {'top': .08, 'center': .38, 'bottom': .65}[row] * self.height()
-            conditions = self.live_sky_enabled and self.live_sky_conditions and self.theme != 'space'
-            height = self.clock_font_size * (1.5 + .62 * (self.show_date + conditions))
-            elapsed = time.monotonic() - self.start_time
-            scene_offset = burn_in_scene_shift(self.burn_in_protection, elapsed)
-            scene_scale = burn_in_scene_scale(self.width(), self.height()) if self.burn_in_protection != 'off' else 1.0
-            drift_x, drift_y = burn_in_clock_drift(
-                self.burn_in_protection, elapsed, self.width(), self.height(), self.clock_position,
-                self.clock_font_size, self.show_date, conditions, scene_offset, scene_scale)
-            anchor = QRectF(x + drift_x, y + drift_y, self.width() * .42, height)
-        scale = min(self.width() / 1250, self.height() / 800, 1.35)
-        sway = min(self.width() * .075, 85)
-        bob_bounds = QRectF(self.width() * .5 - sway - 210 * scale,
-                            self.height() * .56 - 9 - 200 * scale,
-                            2 * sway + 420 * scale, 18 + 320 * scale)
-        captions_top = min(self.height() * .79, self.height() - 55)
-        captions = QRectF(0, captions_top, self.width(), self.height() - captions_top)
-        return card_rect(QSizeF(self.size()), anchor, column, (bob_bounds, captions))
-
-    def draw_now_playing(self, painter: QPainter) -> None:
-        """Paint the already-cached snapshot, with no D-Bus work on the frame thread."""
-        if not self.now_playing_enabled or self.is_preview or self._closing:
-            return
-        opacity = card_opacity(self.now_playing, time.monotonic(), self.reduce_motion)
-        if opacity <= 0:
-            return
-        painter.save()
-        painter.setOpacity(opacity)
-        paint_card(painter, self.media_card_rect(), self.now_playing)
-        painter.restore()
 
     def set_agent_status(self, snapshot: AgentStatusSnapshot) -> None:
         """Accept only the status worker's privacy-safe state and clock values."""
