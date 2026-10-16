@@ -25,6 +25,33 @@ class AgentPolicyTests(unittest.TestCase):
         with patch.object(agent_prompt, "_read_processes", return_value=None):
             self.assertEqual(agent_prompt.terminal_agent_status(), agent_prompt.DetectionResult.UNKNOWN)
 
+    def test_idle_agent_with_no_work_or_cpu_growth_is_inactive(self) -> None:
+        agent = agent_prompt.Process(10, 1, "pts/0", "S", 600, "codex", "codex")
+        with patch.object(agent_prompt, "_read_processes", return_value=[agent]), \
+             patch.object(agent_prompt, "_is_agent_process", return_value=True), \
+             patch.object(agent_prompt, "_codex_turn_is_active", return_value=False), \
+             patch.object(agent_prompt, "_cpu_ticks", return_value=100), \
+             patch.object(agent_prompt.time, "sleep"):
+            self.assertEqual(agent_prompt.terminal_agent_status(), agent_prompt.DetectionResult.INACTIVE)
+
+    def test_agent_cpu_growth_is_active(self) -> None:
+        agent = agent_prompt.Process(10, 1, "pts/0", "S", 600, "codex", "codex")
+        with patch.object(agent_prompt, "_read_processes", return_value=[agent]), \
+             patch.object(agent_prompt, "_is_agent_process", return_value=True), \
+             patch.object(agent_prompt, "_codex_turn_is_active", return_value=False), \
+             patch.object(agent_prompt, "_cpu_ticks", side_effect=[100, 10_000]), \
+             patch.object(agent_prompt.time, "sleep"):
+            self.assertEqual(agent_prompt.terminal_agent_status(), agent_prompt.DetectionResult.ACTIVE)
+
+    def test_agent_cpu_read_failure_remains_uncertain(self) -> None:
+        agent = agent_prompt.Process(10, 1, "pts/0", "S", 600, "codex", "codex")
+        with patch.object(agent_prompt, "_read_processes", return_value=[agent]), \
+             patch.object(agent_prompt, "_is_agent_process", return_value=True), \
+             patch.object(agent_prompt, "_codex_turn_is_active", return_value=False), \
+             patch.object(agent_prompt, "_cpu_ticks", return_value=None), \
+             patch.object(agent_prompt.time, "sleep"):
+            self.assertEqual(agent_prompt.terminal_agent_status(), agent_prompt.DetectionResult.UNKNOWN)
+
     def test_empty_process_scan_is_reported_as_inactive(self) -> None:
         with patch.object(agent_prompt, "_read_processes", return_value=[]):
             self.assertEqual(agent_prompt.terminal_agent_status(), agent_prompt.DetectionResult.INACTIVE)

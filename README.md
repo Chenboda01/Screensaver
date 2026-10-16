@@ -13,7 +13,7 @@
 
 ScreenBot follows Bob, a floating robot, as he explores themed worlds and fictional BobOS phone adventures. Customize the clock, weather, and optional Live Sky in KDE System Settings.
 
-The Python runtime is split into the `screenbot/` package: theme painters, weather effects, overlays, BobOS phone screens, settings, and lifecycle code are tested as separate modules. The top-level `screensaver.py` remains the launcher and compatibility entry point.
+The Python runtime is split into the `screenbot/` package: theme painters, weather effects, overlays, BobOS phone screens, settings, lifecycle code, and terminal agent detection are tested as separate modules. The top-level `screensaver.py` and `agent_prompt.py` remain compatibility and command-line entry points.
 
 The Performance settings also include **Burn-in protection** for OLED displays, enabled in Standard mode by default. Standard mode slowly shifts the scene and drifts the clock within its selected area. Strong mode adds a gradual fade to black after 30 minutes, reaching black at 60 minutes; any keyboard or mouse input closes the screensaver and cancels the fade. Off retains the original fixed layout and brightness.
 
