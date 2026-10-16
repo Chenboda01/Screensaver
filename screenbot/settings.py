@@ -31,6 +31,6 @@ PHONE_UI_PHASES: Final[frozenset[BobOSPhase]] = frozenset({
     BobOSPhase.HOME, BobOSPhase.BROWSER, BobOSPhase.NOTIFICATION,
     BobOSPhase.FILES, BobOSPhase.TERMINAL, BobOSPhase.GAMES,
     BobOSPhase.SETTINGS, BobOSPhase.CHAT, BobOSPhase.MAPS,
-    BobOSPhase.WEATHER, BobOSPhase.CALENDAR, BobOSPhase.APP_STORE,
+    BobOSPhase.WEATHER, BobOSPhase.CALENDAR, BobOSPhase.APP_STORE, BobOSPhase.CAMERA, BobOSPhase.PET,
     BobOSPhase.SHUTDOWN,
 })

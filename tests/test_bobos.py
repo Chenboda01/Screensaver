@@ -13,6 +13,7 @@ from PyQt6.QtGui import QImage, QPainter
 from PyQt6.QtWidgets import QApplication
 
 from bobos import (
+    APP_PHASES,
     MIN_COOLDOWN_SECONDS,
     NORMAL_SEQUENCE,
     PREVIEW_SEQUENCE,
@@ -55,15 +56,15 @@ class BobOSTimelineTests(unittest.TestCase):
         self.assertEqual(timeline.phase_at(149.999), BobOSPhase.EXPLORING)
         self.assertEqual(timeline.phase_at(150), BobOSPhase.CURIOUS)
 
-    def test_app_sequence_includes_all_fictional_app_interactions(self) -> None:
-        timeline = BobOSTimeline(activation_delay_seconds=0, show_connection_animation=True)
+    def test_app_sequence_selects_four_to_six_fictional_apps(self) -> None:
+        timeline = BobOSTimeline(activation_delay_seconds=0, show_connection_animation=True, random_seed=28)
         phases = tuple(phase for phase, _ in timeline.adventure_sequence)
 
-        self.assertEqual(phases, tuple(phase for phase, _ in NORMAL_SEQUENCE))
-        self.assertTrue({BobOSPhase.HOME, BobOSPhase.BROWSER, BobOSPhase.FILES,
-                         BobOSPhase.TERMINAL, BobOSPhase.GAMES, BobOSPhase.SETTINGS,
-                         BobOSPhase.CHAT, BobOSPhase.MAPS, BobOSPhase.WEATHER,
-                         BobOSPhase.CALENDAR, BobOSPhase.APP_STORE}.issubset(phases))
+        apps = [phase for phase in phases if phase in APP_PHASES]
+        self.assertIn(len(apps), (4, 5, 6))
+        self.assertEqual(len(apps), len(set(apps)))
+        self.assertEqual(phases[:6], tuple(phase for phase, _ in NORMAL_SEQUENCE[:6]))
+        self.assertEqual(phases[-3:], tuple(phase for phase, _ in NORMAL_SEQUENCE[-3:]))
 
     def test_adventure_shuts_down_returns_to_exploring_then_waits_full_cooldown(self) -> None:
         timeline = BobOSTimeline(activation_delay_seconds=30, show_connection_animation=True)
