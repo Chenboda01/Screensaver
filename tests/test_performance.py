@@ -78,6 +78,39 @@ def test_static_scene_layer_is_cached_until_theme_dimensions_change(tmp_path):
     app.processEvents()
 
 
+def test_new_theme_backgrounds_are_cached_while_motion_changes(tmp_path):
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QImage, QPainter
+    from PyQt6.QtWidgets import QApplication
+    from screensaver import Saver
+
+    app = QApplication.instance() or QApplication([])
+    config = tmp_path / 'settings.ini'
+    config.write_text('[Screensaver]\ntheme=aurora\nperformance_mode=smooth\n')
+    saver = Saver(preview=True, config_path=config)
+    width, height = 360, 240
+
+    def draw(elapsed: float) -> QImage:
+        image = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
+        image.fill(Qt.GlobalColor.black)
+        painter = QPainter(image)
+        saver.draw_scenery(painter, width, height, elapsed)
+        painter.end()
+        return image
+
+    for theme in ('aurora', 'ocean', 'desert', 'underwater'):
+        saver.theme = theme
+        saver._scenery_cache = None
+        saver._scenery_cache_key = None
+        with patch.object(saver, '_draw_static_scenery', wraps=saver._draw_static_scenery) as static_layer:
+            first = draw(1.0)
+            later = draw(9.0)
+            assert static_layer.call_count == 1, f'{theme} static layer was not cached'
+            assert first != later, f'{theme} has no visible motion'
+    saver.close()
+    app.processEvents()
+
+
 def test_smooth_cached_scenes_match_v22_theme_frames(tmp_path):
     from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QImage, QPainter

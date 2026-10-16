@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+### Added
 - Added an opt-in primary-screen Now playing card with background MPRIS metadata updates, pause fade-out, safe title shortening, and a translated KDE Clock setting that respects Apply/Discard. Media stays hidden in previews and when the session bus is unavailable.
 
+- Added selectable Aurora, Ocean / Beach, Desert, and Underwater adventures, available individually or through Random.
+- Added Live Sky-aware Aurora visibility, underwater surface ripples for rain and snow, and Bob's scene-matched diving helmet.
 - Split the screensaver and agent prompt runtimes into small entrypoints and focused settings, theme, weather, clock, BobOS, and terminal detection modules. Added exact offscreen image baselines to protect the five themes and BobOS home screen during future changes.
 - Added an optional primary-screen AI agent status badge with elapsed work time and confirmed completion time. Status polling runs in a background thread, uncertain states stay hidden, and Bob celebrates once after a confirmed finish without displaying agent content.
 - Added Off, Standard, and Strong OLED burn-in protection. Standard slowly shifts the scene and clock; Strong fades to black over 30–60 minutes, with input closing the screensaver.

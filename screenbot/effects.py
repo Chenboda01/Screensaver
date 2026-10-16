@@ -1,7 +1,17 @@
-from PyQt6.QtCore import QPointF, QRect, QRectF, Qt
-from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 import math
+
+from PyQt6.QtCore import QPointF, QRect, QRectF, Qt
+from PyQt6.QtGui import (
+    QColor,
+    QLinearGradient,
+    QPainter,
+    QPen,
+    QPolygonF,
+    QRadialGradient,
+)
+
 from screenbot.runtime import particle_count
+from screenbot.themes import underwater
 
 
 class WeatherEffects:
@@ -9,6 +19,9 @@ class WeatherEffects:
         # Space uses a dry, atmosphere-free backdrop. Keep this guard before
         # both the Live Sky and manual-effect paths so saved toggles cannot leak in.
         if self.theme == 'space':
+            return
+        if self.theme == 'underwater':
+            underwater.draw_surface_ripples(p, self.theme_frame(w, h, t))
             return
         if self.live_sky_enabled:
             category = self.live_weather.weather.category

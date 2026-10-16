@@ -141,6 +141,30 @@ msgctxt "@item:inlistbox Theme"
 msgid "Futuristic City"
 msgstr "Ciudad futurista"
 
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Aurora"
+msgstr "Aurora"
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Ocean / Beach"
+msgstr "Océano / Playa"
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Desert"
+msgstr "Desierto"
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Underwater"
+msgstr "Bajo el agua"
+
 #: ui/main.qml:45
 #, kde-format
 msgctxt "@label"
@@ -182,6 +206,30 @@ msgstr "Bosque"
 msgctxt "@label"
 msgid "Futuristic City"
 msgstr "Ciudad futurista"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Aurora"
+msgstr "Aurora"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Ocean / Beach"
+msgstr "Océano / Playa"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Desert"
+msgstr "Desierto"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Underwater"
+msgstr "Bajo el agua"
 
 #: ui/main.qml:55
 #, kde-format

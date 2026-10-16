@@ -158,7 +158,7 @@ void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
 void ScreenBotKcm::load() {
     QSettings cfg(configFile(), QSettings::IniFormat);
     const QString theme = cfg.value(QStringLiteral("Screensaver/theme"), QStringLiteral("random")).toString();
-    const QString validTheme = (theme == QLatin1String("space") || theme == QLatin1String("mountains") || theme == QLatin1String("random") || theme == QLatin1String("snow") || theme == QLatin1String("forest") || theme == QLatin1String("city")) ? theme : QStringLiteral("random");
+    const QString validTheme = (theme == QLatin1String("space") || theme == QLatin1String("mountains") || theme == QLatin1String("random") || theme == QLatin1String("snow") || theme == QLatin1String("forest") || theme == QLatin1String("city") || theme == QLatin1String("aurora") || theme == QLatin1String("ocean") || theme == QLatin1String("desert") || theme == QLatin1String("underwater")) ? theme : QStringLiteral("random");
     const bool lock = cfg.value(QStringLiteral("Screensaver/password_lock"), false).toBool();
     const int mins = qBound(1, cfg.value(QStringLiteral("Screensaver/lock_minutes"), 2).toInt(), 60);
     const bool show = cfg.value(QStringLiteral("Screensaver/show_timer"), false).toBool();
@@ -410,7 +410,7 @@ void ScreenBotKcm::save() {
 }
 
 void ScreenBotKcm::setTheme(const QString &value) {
-    if (value != QLatin1String("space") && value != QLatin1String("mountains") && value != QLatin1String("random") && value != QLatin1String("snow") && value != QLatin1String("forest") && value != QLatin1String("city")) return;
+    if (value != QLatin1String("space") && value != QLatin1String("mountains") && value != QLatin1String("random") && value != QLatin1String("snow") && value != QLatin1String("forest") && value != QLatin1String("city") && value != QLatin1String("aurora") && value != QLatin1String("ocean") && value != QLatin1String("desert") && value != QLatin1String("underwater")) return;
     if (value == m_theme) return;
     m_theme = value;
     Q_EMIT themeChanged();
