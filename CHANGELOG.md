@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added optional scene-matched ambient audio, off by default, with a staged 0–100% volume control, Live Sky matching mode, quiet hours, a gentle fade-in, immediate shutdown, and automatic muting while MPRIS reports active playback. Eight compact project-generated CC0 loops cover rain, thunder, wind, Forest day/night, City, Ocean/Underwater, and Space; missing QtMultimedia remains silent.
 - Added an opt-in primary-screen Now playing card with background MPRIS metadata updates, pause fade-out, safe title shortening, and a translated KDE Clock setting that respects Apply/Discard. Media stays hidden in previews and when the session bus is unavailable.
 - Added Bob Camera with a bounded, in-memory selfie of the current theme and Live Sky, plus Bob Pet with animated snack and play scenes. Both apps respect Reduce motion and flashes. Camera photos appear in fictional Bob Files; neither app accesses devices, personal files, or external services.
 - BobOS now selects 4–6 apps per adventure without repeating the same selection consecutively. Seeded schedules keep timing reproducible, the complete preview includes every app, and an adventure starts only if its full selected duration fits before KDE locks.

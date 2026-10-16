@@ -52,6 +52,10 @@ class MetadataReader(Protocol):
         """Return bounded, sanitized samples; absence or failure returns empty."""
         ...
 
+    def is_playing(self) -> bool:
+        """Return only playback state without reading track metadata."""
+        ...
+
 
 class NowPlayingTracker:
     """Mutable in-memory recency and pause tracking, with no persistence."""
@@ -95,12 +99,15 @@ class MprisWorker(QThread):
     """Poll only after explicit opt-in; never query the bus from paintEvent."""
 
     changed = pyqtSignal(object)
+    playing_changed = pyqtSignal(bool)
 
     def __init__(self, parent: QObject | None = None, *, enabled: bool = False,
-                 reader_factory: Callable[[], MetadataReader] = _session_reader) -> None:
+                 reader_factory: Callable[[], MetadataReader] = _session_reader,
+                 playing_only: bool = False) -> None:
         super().__init__(parent)
         self._enabled = enabled
         self._reader_factory = reader_factory
+        self._playing_only = playing_only
         self._stop = Event()
         self._publication_lock = RLock()
 
@@ -110,6 +117,7 @@ class MprisWorker(QThread):
             self._stop.set()
             self.requestInterruption()
             self.changed.emit(HIDDEN)
+            self.playing_changed.emit(False)
 
     def stop(self) -> None:
         """Join this worker after its view has closed; never terminate a thread."""
@@ -122,6 +130,19 @@ class MprisWorker(QThread):
             self.changed.emit(HIDDEN)
             return
         reader = self._reader_factory()
+        if self._playing_only:
+            previous_playing: bool | None = None
+            while not self._stop.is_set() and not self.isInterruptionRequested():
+                started = time.monotonic()
+                playing = reader.is_playing()
+                with self._publication_lock:
+                    if self._stop.is_set() or self.isInterruptionRequested():
+                        break
+                    if playing != previous_playing:
+                        self.playing_changed.emit(playing)
+                        previous_playing = playing
+                self._stop.wait(max(0.0, POLL_SECONDS - (time.monotonic() - started)))
+            return
         tracker = NowPlayingTracker()
         previous = HIDDEN
         while not self._stop.is_set() and not self.isInterruptionRequested():

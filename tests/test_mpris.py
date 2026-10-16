@@ -66,6 +66,18 @@ def test_reader_returns_only_permitted_media_fields() -> None:
     assert all(0 < timeout <= CALL_MILLISECONDS for _, _, _, timeout in bus.calls)
 
 
+def test_playback_only_reader_never_requests_track_metadata() -> None:
+    bus = FakeBus()
+    reader = SessionBusReader(enabled=True, transport_factory=lambda: bus)
+    assert reader.is_playing()
+    assert {(interface, name) for _, interface, name, _ in bus.calls[1:]} == {
+        (PLAYER_INTERFACE, 'PlaybackStatus'),
+    }
+    bus.values['PlaybackStatus'] = 'Paused'
+    bus.calls.clear()
+    assert not reader.is_playing()
+
+
 @pytest.mark.parametrize('title', ['', ' \n\t', '\x00\u202e', 42, ['wrong']])
 def test_empty_or_malformed_titles_hide(title: str | int | list[str]) -> None:
     bus = FakeBus()
@@ -178,6 +190,9 @@ def test_blocked_reader_never_blocks_ui_and_stop_discards_result() -> None:
             assert release.wait(2.0)
             return (sample(),)
 
+        def is_playing(self) -> bool:
+            return True
+
     worker = MprisWorker(enabled=True, reader_factory=SlowReader)
     worker.changed.connect(snapshots.append, Qt.ConnectionType.DirectConnection)
     worker.start()
@@ -212,6 +227,9 @@ def test_enabled_worker_publishes_metadata_then_clears_on_stop() -> None:
         def read(self) -> tuple[PlayerSample, ...]:
             return (sample(),)
 
+        def is_playing(self) -> bool:
+            return True
+
     worker = MprisWorker(enabled=True, reader_factory=Reader)
 
     def receive(snapshot: NowPlaying) -> None:
@@ -227,6 +245,28 @@ def test_enabled_worker_publishes_metadata_then_clears_on_stop() -> None:
         worker.stop()
     assert snapshots[0].track == sample().track
     assert snapshots[-1] == HIDDEN
+    assert app is not None
+
+
+def test_playback_only_worker_publishes_status_without_metadata() -> None:
+    app = QCoreApplication.instance() or QCoreApplication([])
+    published = Event()
+    states: list[bool] = []
+
+    class Reader:
+        def read(self) -> tuple[PlayerSample, ...]:
+            pytest.fail('playback-only worker read track metadata')
+
+        def is_playing(self) -> bool:
+            return True
+
+    worker = MprisWorker(enabled=True, reader_factory=Reader, playing_only=True)
+    worker.playing_changed.connect(lambda playing: (states.append(playing), published.set()),
+                                   Qt.ConnectionType.DirectConnection)
+    worker.start()
+    assert published.wait(1.0)
+    worker.stop()
+    assert states == [True, False]
     assert app is not None
 
 

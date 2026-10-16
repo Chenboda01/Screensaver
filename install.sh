@@ -58,6 +58,9 @@ install -m 644 "$ROOT/bobos.py" "$DEST/bobos.py"
 install -m 644 "$ROOT/live_sky.py" "$DEST/live_sky.py"
 install -m 644 "$ROOT/live_sky_network.py" "$DEST/live_sky_network.py"
 install -m 644 "$ROOT/live_sky_render.py" "$DEST/live_sky_render.py"
+while IFS= read -r -d '' AUDIO_ASSET; do
+ install -D -m 644 "$AUDIO_ASSET" "$DEST/${AUDIO_ASSET#"$ROOT"/}"
+done < <(find "$ROOT/assets/audio" -maxdepth 1 -type f -name '*.ogg' -print0)
 while IFS= read -r -d '' MODULE; do
  RELATIVE_PATH="${MODULE#"$ROOT"/}"
  install -D -m 644 "$MODULE" "$DEST/$RELATIVE_PATH"

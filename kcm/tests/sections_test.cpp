@@ -54,6 +54,7 @@ private Q_SLOTS:
         const QVariantMap changes{
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
             {QStringLiteral("nowPlayingEnabled"), true}, {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
+            {QStringLiteral("ambientSoundEnabled"), true}, {QStringLiteral("ambientSoundVolume"), 73}, {QStringLiteral("ambientSoundMode"), QStringLiteral("live-sky")}, {QStringLiteral("ambientQuietHours"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
             {QStringLiteral("bobWeatherEnabled"), false},
             {QStringLiteral("bobName"), QStringLiteral("Pixel👩‍🚀")},
@@ -166,6 +167,31 @@ private Q_SLOTS:
         QVERIFY(item(QStringLiteral("bobColorPreset")));
         QVERIFY(item(QStringLiteral("bobCustomColorButton")));
         QVERIFY(item(QStringLiteral("bobAccessory")));
+        auto *ambientToggle = item(QStringLiteral("ambientSoundEnabled"));
+        auto *ambientVolume = item(QStringLiteral("ambientSoundVolume"));
+        auto *ambientMode = item(QStringLiteral("ambientSoundMode"));
+        auto *quietHours = item(QStringLiteral("ambientQuietHours"));
+        QVERIFY(ambientToggle);
+        QVERIFY(ambientVolume);
+        QVERIFY(ambientMode);
+        QVERIFY(quietHours);
+        QVERIFY(!ambientVolume->isEnabled());
+        QVERIFY(!ambientMode->isEnabled());
+        QVERIFY(!quietHours->isEnabled());
+        auto *weatherSection = item(QStringLiteral("weatherSection"));
+        QVERIFY(weatherSection);
+        weatherSection->setProperty("expanded", true);
+        QTest::qWait(300);
+        kcm.setAmbientSoundEnabled(true);
+        QTRY_VERIFY(ambientVolume->isEnabled());
+        QTRY_VERIFY(ambientMode->isEnabled());
+        QTRY_VERIFY(quietHours->isEnabled());
+        ambientVolume->setProperty("value", 64.0);
+        QCOMPARE(kcm.ambientSoundVolume(), 64);
+        kcm.setAmbientSoundEnabled(false);
+        QTRY_VERIFY(!ambientVolume->isEnabled());
+        QCOMPARE(kcm.ambientSoundVolume(), 64);
+        weatherSection->setProperty("expanded", false);
         QVERIFY(view.rootObject()->findChild<QObject *>(QStringLiteral("bobColorDialog")));
         for (const auto &key : keys) {
             auto *section = item(key + QStringLiteral("Section"));

@@ -131,3 +131,25 @@ class SessionBusReader:
                 clean_text(album) if type(album) is str else '',
             )))
         return tuple(samples)
+
+    def is_playing(self) -> bool:
+        """Check only PlaybackStatus to mute ambience without reading titles."""
+        if not self._enabled:
+            return False
+        try:
+            transport = self._factory()
+        except (ImportError, RuntimeError):
+            return False
+        deadline = self._clock() + SCAN_SECONDS
+        names_timeout = max(0, min(CALL_MILLISECONDS, int((deadline - self._clock()) * 1000)))
+        if not names_timeout:
+            return False
+        names = sorted(name for name in transport.names(names_timeout) if name.startswith(BUS_PREFIX))
+        for service in names[:MAX_PLAYERS]:
+            remaining = max(0, min(CALL_MILLISECONDS, int((deadline - self._clock()) * 1000)))
+            if not remaining:
+                break
+            status = transport.get(service, PLAYER_INTERFACE, 'PlaybackStatus', remaining)
+            if status == Playback.PLAYING.value:
+                return True
+        return False

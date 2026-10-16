@@ -16,8 +16,9 @@ from screenbot.appearance import BobAppearance
 from screenbot.bob import BobRenderer
 from screenbot.agent_status import AgentBadgePhase, AgentStatusSnapshot, AgentStatusWorker, HIDDEN_SNAPSHOT
 from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
+from screenbot.ambient.mixin import AmbientSoundMixin
 from screenbot.clock import ClockRenderer
-from screenbot.mpris import HIDDEN as NO_MEDIA, MprisWorker
+from screenbot.mpris import HIDDEN as NO_MEDIA
 from screenbot.media_overlay import MediaOverlayMixin
 from screenbot.effects import WeatherEffects
 from screenbot.phone.apps import PhoneAppsRenderer
@@ -34,8 +35,7 @@ from screenbot.themes.space import SpaceTheme
 from screenbot.weather_accessories import WeatherPreview
 from screenbot.weather_accessory_renderer import WeatherAccessoryAnimator, WeatherAccessoryRenderer
 
-
-class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin):
+class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin, AmbientSoundMixin):
     def __init__(self, *, preview: bool = False, config_path: Path | None = None,
                  preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
                  preview_weather: WeatherPreview | None = None):
@@ -56,12 +56,12 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
         self.now_playing_enabled = settings.getboolean('Screensaver', 'now_playing_enabled', fallback=False)
+        self.init_ambient_sound(settings)
         self.now_playing = NO_MEDIA
         self.media_worker = None
+        self._mpris_playing = False
         self._closing = False
-        if self.now_playing_enabled and not self.is_preview:
-            self.media_worker = MprisWorker(self, enabled=True)
-            self.media_worker.changed.connect(self.set_now_playing)
+        self.init_media_worker()
         self.clock_format = settings.get('Screensaver', 'clock_format', fallback='12h').strip()
         if self.clock_format not in ('12h', '24h'):
             self.clock_format = '12h'
@@ -186,6 +186,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             self.on_battery = battery_powered()
             self._last_power_check = now
         interval = frame_interval_ms(self.performance_mode, self.on_battery, elapsed)
+        self.update_ambient_sound()
         if self.timer.interval() != interval:
             self.timer.setInterval(interval)
         self.update()
@@ -354,10 +355,8 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
 
     def closeEvent(self, event) -> None:
         """Request polling shutdown without delaying the screensaver close animation."""
-        self._closing = True
-        self.now_playing = NO_MEDIA
-        if self.media_worker is not None:
-            self.media_worker.request_stop()
+        self.close_media_overlay()
+        self.stop_ambient_sound()
         if self.agent_status_worker is not None and self.agent_status_worker.isRunning():
             self.agent_status_worker.request_stop()
         super().closeEvent(event)

@@ -15,7 +15,7 @@ ScreenBot follows Bob, a floating robot, as he explores themed worlds and fictio
 
 The **Customize Bob** section lets you choose Bob's display name, a cyan/green/purple/orange/pink/gold palette or any custom color, and an optional cap, bow tie, headphones, flower, crown, or antenna ball. Names support emoji and other languages and are capped at 16 visible characters. Your selected accessory stays in settings when weather gear appears; headwear that would overlap the Live Sky layer takes precedence.
 
-The Python runtime is split into the `screenbot/` package: theme painters, weather effects, overlays, BobOS phone screens, settings, lifecycle code, and terminal agent detection are tested as separate modules. The top-level `screensaver.py` and `agent_prompt.py` remain compatibility and command-line entry points.
+The Python runtime is split into the `screenbot/` package: theme painters, weather effects, overlays, BobOS phone screens, settings, lifecycle code, optional ambient audio, and terminal agent detection are tested as separate modules. The top-level `screensaver.py` and `agent_prompt.py` remain compatibility and command-line entry points.
 
 The Performance settings also include **Burn-in protection** for OLED displays, enabled in Standard mode by default. Standard mode slowly shifts the scene and drifts the clock within its selected area. Strong mode adds a gradual fade to black after 30 minutes, reaching black at 60 minutes; any keyboard or mouse input closes the screensaver and cancels the fade. Off retains the original fixed layout and brightness.
 
@@ -146,6 +146,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 
 - Random, Space, Mountains, Snow, Forest, Futuristic City, Aurora, Ocean / Beach, Desert, and Underwater themes
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
+- Optional scene-matched ambience, off by default, with adjustable volume, Live Sky-only matching, quiet hours (22:00–08:00 local time), and automatic muting while music is playing
 - Individually enabled rain, snow, thunderstorms, and fog on landscape themes; Underwater turns rain, snow, and thunderstorms into surface ripples, optional shooting stars are limited to landscapes, and Space stays free of weather overlays
 - Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
 - Optional head-local Bob weather reactions while Live Sky is on: a rain umbrella, snow hat and scarf, strong-sun sunglasses, fog squint, lightning surprise, wind response, moon glances, and a deep-night sleepy expression. Use `--preview-weather rain`, `snow`, or `clear-noon` with a quick preview to see the accessories without waiting for live conditions
@@ -163,6 +164,8 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 Live Sky is off by default and makes no network requests while disabled. When enabled, choose a country and city from `countries_and_cities.txt` in KDE Settings. Only that selected place is sent to Open-Meteo to resolve coordinates and request current weather; the app does not send your public IP to a location provider. Weather observations and resolved coordinates are cached locally in `~/.cache/screenbot/live-sky.json`; weather is ignored after three hours. If weather is unavailable, the screensaver keeps rendering from its local sky calculations and the last resolved coordinates; on a first offline run with no cached coordinates it uses a neutral fallback sky. Solar and lunar positions are approximate visual calculations, not navigation-grade astronomy.
 
 Bob's weather accessories are enabled by default and can be turned off in KDE Settings → Weather. The toggle only becomes available when Live Sky is enabled and a non-Space theme is selected. Force an accessory for a quick local preview with, for example, `bash ~/ScreenBot/screensaver/start.sh --preview --preview-weather snow`; the supported preview values are `rain`, `snow`, `thunderstorm`, `fog`, `clear-noon`, and `unknown`. Preview overrides do not request network data, and Space always suppresses weather accessories.
+
+Ambient sound is off by default. Enable it under KDE Settings → Weather to hear one compact loop matched to the current theme or fresh Live Sky conditions; adjust the 0–100% level and choose whether it may play any time or only with fresh Live Sky weather. Optional quiet hours mute playback from 22:00 to 08:00 in local time, and the sound pauses while MPRIS reports playing media. When the Now Playing card is off, this check reads only playback status and does not request track titles. ScreenBot fades the loop in and stops it when the screensaver closes. QtMultimedia is optional: if PyQt6 lacks that module, the visual screensaver continues silently. Eight original synthesized loops dedicated under CC0 1.0 cover rain, thunder, wind, Forest, City, Ocean/Underwater, and Space; their recipe and file-by-file details are in [`assets/audio/README.md`](assets/audio/README.md).
 
 ## Requirements
 

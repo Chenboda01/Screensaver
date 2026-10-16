@@ -1,0 +1,5 @@
+# ScreenBot ambient audio assets
+
+The eight short Ogg Vorbis loops in this directory were created specifically for ScreenBot using the reproducible synthesis recipe in [`tools/generate_ambient_audio.py`](../../tools/generate_ambient_audio.py). They use locally generated filtered noise, oscillators, and envelopes; no third-party recordings or samples are incorporated. The original generated recordings and their Vorbis encodings are dedicated to the public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), as declared in [`LICENSE.txt`](LICENSE.txt).
+
+The loops are mono, 22.05 kHz, eight seconds long, and approximately 17–42 KB each. `rain.ogg` covers rain, `thunder.ogg` covers thunderstorms with rain and a distant synthesized rumble, `wind.ogg` covers snow and fog, `forest.ogg` and `crickets.ogg` cover Forest by day and night, `waves.ogg` covers Ocean and Underwater, `city.ogg` covers Futuristic City, and `space.ogg` provides a quiet synthetic hum. Playback uses a single optional QtMultimedia stream. Ambient audio is off by default.

@@ -106,6 +106,10 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_thunderstormsEnabled != m_savedThunderstormsEnabled
         || m_fogEnabled != m_savedFogEnabled
         || m_shootingStarsEnabled != m_savedShootingStarsEnabled
+        || m_ambientSoundEnabled != m_savedAmbientSoundEnabled
+        || m_ambientSoundVolume != m_savedAmbientSoundVolume
+        || m_ambientSoundMode != m_savedAmbientSoundMode
+        || m_ambientQuietHours != m_savedAmbientQuietHours
         || m_bobWeatherEnabled != m_savedBobWeatherEnabled) sections.append(QStringLiteral("weather"));
     if (m_liveSkyEnabled != m_savedLiveSkyEnabled
         || m_liveSkyLocation != m_savedLiveSkyLocation
@@ -163,6 +167,11 @@ void ScreenBotKcm::load() {
     const int mins = qBound(1, cfg.value(QStringLiteral("Screensaver/lock_minutes"), 2).toInt(), 60);
     const bool show = cfg.value(QStringLiteral("Screensaver/show_timer"), false).toBool();
     const bool nowPlayingEnabled = cfg.value(QStringLiteral("Screensaver/now_playing_enabled"), false).toBool();
+    const bool ambientSoundEnabled = cfg.value(QStringLiteral("Screensaver/ambient_sound_enabled"), false).toBool();
+    const int ambientSoundVolume = qBound(0, cfg.value(QStringLiteral("Screensaver/ambient_sound_volume"), 25).toInt(), 100);
+    const QString requestedAmbientSoundMode = cfg.value(QStringLiteral("Screensaver/ambient_sound_mode"), QStringLiteral("always")).toString();
+    const QString ambientSoundMode = requestedAmbientSoundMode == QLatin1String("live-sky") ? requestedAmbientSoundMode : QStringLiteral("always");
+    const bool ambientQuietHours = cfg.value(QStringLiteral("Screensaver/ambient_quiet_hours"), false).toBool();
     const bool clockVisible = cfg.value(QStringLiteral("Screensaver/show_clock"), true).toBool();
     const QString clockFormat = cfg.value(QStringLiteral("Screensaver/clock_format"), QStringLiteral("12h")).toString();
     const QString validClockFormat = clockFormat == QLatin1String("24h") ? clockFormat : QStringLiteral("12h");
@@ -245,6 +254,11 @@ void ScreenBotKcm::load() {
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
     if (m_showTimer != show) { m_showTimer = show; Q_EMIT showTimerChanged(); }
     if (m_nowPlayingEnabled != nowPlayingEnabled) { m_nowPlayingEnabled = nowPlayingEnabled; Q_EMIT nowPlayingEnabledChanged(); }
+    if (m_ambientSoundEnabled != ambientSoundEnabled) { m_ambientSoundEnabled = ambientSoundEnabled; Q_EMIT ambientSoundEnabledChanged(); }
+    if (m_ambientSoundVolume != ambientSoundVolume) { m_ambientSoundVolume = ambientSoundVolume; Q_EMIT ambientSoundVolumeChanged(); }
+    if (m_ambientSoundMode != ambientSoundMode) { m_ambientSoundMode = ambientSoundMode; Q_EMIT ambientSoundModeChanged(); }
+    if (m_ambientQuietHours != ambientQuietHours) { m_ambientQuietHours = ambientQuietHours; Q_EMIT ambientQuietHoursChanged(); }
+    if (m_ambientQuietHours != ambientQuietHours) { m_ambientQuietHours = ambientQuietHours; Q_EMIT ambientQuietHoursChanged(); }
     if (m_clockVisible != clockVisible) { m_clockVisible = clockVisible; Q_EMIT clockVisibleChanged(); }
     if (m_clockFormat != validClockFormat) { m_clockFormat = validClockFormat; Q_EMIT clockFormatChanged(); }
     if (m_showDate != showDate) { m_showDate = showDate; Q_EMIT showDateChanged(); }
@@ -283,6 +297,10 @@ void ScreenBotKcm::load() {
     m_savedShowTimer = m_showTimer;
     m_savedClockVisible = m_clockVisible;
     m_savedNowPlayingEnabled = m_nowPlayingEnabled;
+    m_savedAmbientSoundEnabled = m_ambientSoundEnabled;
+    m_savedAmbientSoundVolume = m_ambientSoundVolume;
+    m_savedAmbientSoundMode = m_ambientSoundMode;
+    m_savedAmbientQuietHours = m_ambientQuietHours;
     m_savedClockFormat = m_clockFormat;
     m_savedShowDate = m_showDate;
     m_savedClockPosition = m_clockPosition;
@@ -324,6 +342,10 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/show_timer"), m_showTimer);
     cfg.setValue(QStringLiteral("Screensaver/show_clock"), m_clockVisible);
     cfg.setValue(QStringLiteral("Screensaver/now_playing_enabled"), m_nowPlayingEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/ambient_sound_enabled"), m_ambientSoundEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/ambient_sound_volume"), m_ambientSoundVolume);
+    cfg.setValue(QStringLiteral("Screensaver/ambient_sound_mode"), m_ambientSoundMode);
+    cfg.setValue(QStringLiteral("Screensaver/ambient_quiet_hours"), m_ambientQuietHours);
     cfg.setValue(QStringLiteral("Screensaver/clock_format"), m_clockFormat);
     cfg.setValue(QStringLiteral("Screensaver/show_date"), m_showDate);
     cfg.setValue(QStringLiteral("Screensaver/clock_position"), m_clockPosition);
@@ -375,6 +397,10 @@ void ScreenBotKcm::save() {
     m_savedShowTimer = m_showTimer;
     m_savedClockVisible = m_clockVisible;
     m_savedNowPlayingEnabled = m_nowPlayingEnabled;
+    m_savedAmbientSoundEnabled = m_ambientSoundEnabled;
+    m_savedAmbientSoundVolume = m_ambientSoundVolume;
+    m_savedAmbientSoundMode = m_ambientSoundMode;
+    m_savedAmbientQuietHours = m_ambientQuietHours;
     m_savedClockFormat = m_clockFormat;
     m_savedShowDate = m_showDate;
     m_savedClockPosition = m_clockPosition;
@@ -443,6 +469,36 @@ void ScreenBotKcm::setNowPlayingEnabled(bool value) {
     if (value == m_nowPlayingEnabled) return;
     m_nowPlayingEnabled = value;
     Q_EMIT nowPlayingEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setAmbientSoundEnabled(bool value) {
+    if (value == m_ambientSoundEnabled) return;
+    m_ambientSoundEnabled = value;
+    Q_EMIT ambientSoundEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setAmbientSoundVolume(int value) {
+    const int bounded = qBound(0, value, 100);
+    if (bounded == m_ambientSoundVolume) return;
+    m_ambientSoundVolume = bounded;
+    Q_EMIT ambientSoundVolumeChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setAmbientSoundMode(const QString &value) {
+    if (value != QLatin1String("always") && value != QLatin1String("live-sky")) return;
+    if (value == m_ambientSoundMode) return;
+    m_ambientSoundMode = value;
+    Q_EMIT ambientSoundModeChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setAmbientQuietHours(bool value) {
+    if (value == m_ambientQuietHours) return;
+    m_ambientQuietHours = value;
+    Q_EMIT ambientQuietHoursChanged();
     checkModified();
 }
 

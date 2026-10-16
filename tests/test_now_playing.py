@@ -29,7 +29,7 @@ def configured_saver(tmp_path: Path, *, enabled: bool = True, preview: bool = Fa
 def test_default_off_and_preview_never_construct_media_reader(app: QApplication, tmp_path: Path) -> None:
     config = tmp_path / 'default.ini'
     config.write_text('[Screensaver]\nagent_status_enabled=false\n')
-    with patch('screenbot.app.MprisWorker', side_effect=AssertionError('privacy boundary crossed')):
+    with patch('screenbot.media_overlay.MprisWorker', side_effect=AssertionError('privacy boundary crossed')):
         default = Saver(config_path=config)
         preview = configured_saver(tmp_path, preview=True)
     assert not default.now_playing_enabled

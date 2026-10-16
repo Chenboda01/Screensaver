@@ -17,6 +17,10 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(int lockMinutes READ lockMinutes WRITE setLockMinutes NOTIFY lockMinutesChanged)
     Q_PROPERTY(bool showTimer READ showTimer WRITE setShowTimer NOTIFY showTimerChanged)
     Q_PROPERTY(bool nowPlayingEnabled READ nowPlayingEnabled WRITE setNowPlayingEnabled NOTIFY nowPlayingEnabledChanged)
+    Q_PROPERTY(bool ambientSoundEnabled READ ambientSoundEnabled WRITE setAmbientSoundEnabled NOTIFY ambientSoundEnabledChanged)
+    Q_PROPERTY(int ambientSoundVolume READ ambientSoundVolume WRITE setAmbientSoundVolume NOTIFY ambientSoundVolumeChanged)
+    Q_PROPERTY(QString ambientSoundMode READ ambientSoundMode WRITE setAmbientSoundMode NOTIFY ambientSoundModeChanged)
+    Q_PROPERTY(bool ambientQuietHours READ ambientQuietHours WRITE setAmbientQuietHours NOTIFY ambientQuietHoursChanged)
     Q_PROPERTY(bool clockVisible READ clockVisible WRITE setClockVisible NOTIFY clockVisibleChanged)
     Q_PROPERTY(QString clockFormat READ clockFormat WRITE setClockFormat NOTIFY clockFormatChanged)
     Q_PROPERTY(bool showDate READ showDate WRITE setShowDate NOTIFY showDateChanged)
@@ -64,6 +68,10 @@ public:
     int lockMinutes() const { return m_lockMinutes; }
     bool showTimer() const { return m_showTimer; }
     bool nowPlayingEnabled() const { return m_nowPlayingEnabled; }
+    bool ambientSoundEnabled() const { return m_ambientSoundEnabled; }
+    int ambientSoundVolume() const { return m_ambientSoundVolume; }
+    QString ambientSoundMode() const { return m_ambientSoundMode; }
+    bool ambientQuietHours() const { return m_ambientQuietHours; }
     bool clockVisible() const { return m_clockVisible; }
     QString clockFormat() const { return m_clockFormat; }
     bool showDate() const { return m_showDate; }
@@ -105,6 +113,10 @@ public:
     void setShowTimer(bool value);
     void setClockVisible(bool value);
     void setNowPlayingEnabled(bool value);
+    void setAmbientSoundEnabled(bool value);
+    void setAmbientSoundVolume(int value);
+    void setAmbientSoundMode(const QString &value);
+    void setAmbientQuietHours(bool value);
     void setClockFormat(const QString &value);
     void setShowDate(bool value);
     void setClockPosition(const QString &value);
@@ -149,6 +161,10 @@ Q_SIGNALS:
     void showTimerChanged();
     void clockVisibleChanged();
     void nowPlayingEnabledChanged();
+    void ambientSoundEnabledChanged();
+    void ambientSoundVolumeChanged();
+    void ambientSoundModeChanged();
+    void ambientQuietHoursChanged();
     void clockFormatChanged();
     void showDateChanged();
     void clockPositionChanged();
@@ -196,6 +212,14 @@ private:
     bool m_clockVisible = true;
     bool m_nowPlayingEnabled = false;
     bool m_savedNowPlayingEnabled = false;
+    bool m_ambientSoundEnabled = false;
+    bool m_savedAmbientSoundEnabled = false;
+    int m_ambientSoundVolume = 25;
+    int m_savedAmbientSoundVolume = 25;
+    QString m_ambientSoundMode = QStringLiteral("always");
+    QString m_savedAmbientSoundMode = QStringLiteral("always");
+    bool m_ambientQuietHours = false;
+    bool m_savedAmbientQuietHours = false;
     QString m_clockFormat = QStringLiteral("12h");
     bool m_showDate = false;
     QString m_clockPosition = QStringLiteral("top-center");
