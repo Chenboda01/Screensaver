@@ -10,6 +10,7 @@
 #include <QQmlContext>
 #include <QQuickItem>
 #include <QQuickView>
+#include <KLocalizedContext>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -88,6 +89,9 @@ private Q_SLOTS:
         QVERIFY(QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/python-runtime.sh"), install + QStringLiteral("/python-runtime.sh")));
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
         QQuickView view;
+        auto *translations = new KLocalizedContext(&view);
+        translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
+        view.rootContext()->setContextObject(translations);
         view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
         view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/ui/main.qml")));
         QCOMPARE(view.status(), QQuickView::Ready);
@@ -117,6 +121,9 @@ private Q_SLOTS:
     void nativeUiKeyboardAccessibilityAndCaptures() {
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
         QQuickView view;
+        auto *translations = new KLocalizedContext(&view);
+        translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
+        view.rootContext()->setContextObject(translations);
         view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
         view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/ui/main.qml")));
         QCOMPARE(view.status(), QQuickView::Ready);

@@ -1,0 +1,913 @@
+# Spanish translation for ScreenBot settings.
+# Copyright (C) 2026 ScreenBot contributors
+# This file is distributed under the same license as the ScreenBot package.
+# ScreenBot contributors, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ScreenBot 22\n"
+"Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
+"POT-Creation-Date: 2026-10-16 13:23-0400\n"
+"PO-Revision-Date: 2026-10-16 13:20-0400\n"
+"Last-Translator: ScreenBot contributors\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ui/CitySearch.qml:8
+#, kde-format
+msgctxt "@label"
+msgid "City:"
+msgstr "Ciudad:"
+
+#: ui/CitySearch.qml:17
+#, kde-format
+msgctxt "@info:placeholder"
+msgid "Type your city…"
+msgstr "Escriba su ciudad…"
+
+#: ui/CitySearch.qml:18
+#, kde-format
+msgctxt "@label"
+msgid "Search city"
+msgstr "Buscar ciudad"
+
+#: ui/CitySearch.qml:57
+#, kde-format
+msgctxt "@info"
+msgid "No location selected."
+msgstr "No se ha seleccionado ninguna ubicación."
+
+#: ui/CitySearch.qml:59
+#, kde-format
+msgctxt "@info Selected city, latitude, longitude"
+msgid "Selected: %1 (%2, %3)"
+msgstr "Selección: %1 (%2, %3)"
+
+#: ui/CitySearch.qml:61
+#, kde-format
+msgctxt "@info Selected city without coordinates"
+msgid "Selected: %1 — coordinates will be resolved when online"
+msgstr "Selección: %1 — las coordenadas se obtendrán al conectarse"
+
+#: ui/CollapsibleSection.qml:35 ui/CollapsibleSection.qml:36
+#, kde-format
+msgctxt "@info:accessible"
+msgid "Expanded"
+msgstr "Expandido"
+
+#: ui/CollapsibleSection.qml:35 ui/CollapsibleSection.qml:36
+#, kde-format
+msgctxt "@info:accessible"
+msgid "Collapsed"
+msgstr "Contraído"
+
+#: ui/CollapsibleSection.qml:35
+#, kde-format
+msgctxt "@info:accessible Section state, summary"
+msgid "%1. %2. Unapplied changes"
+msgstr "%1. %2. Cambios sin aplicar"
+
+#: ui/CollapsibleSection.qml:36
+#, kde-format
+msgctxt "@info:accessible Section state, summary"
+msgid "%1. %2"
+msgstr "%1. %2"
+
+#: ui/main.qml:13
+#, kde-format
+msgctxt "@label"
+msgid "Choose how Bob appears and when KDE locks your screen."
+msgstr "Elija cómo aparece Bob y cuándo bloquea KDE la pantalla."
+
+#: ui/main.qml:18
+#, kde-format
+msgctxt "@label"
+msgid "Preview"
+msgstr "Vista previa"
+
+#: ui/main.qml:22
+#, kde-format
+msgctxt "@label"
+msgid "Preview current settings without applying them. Move the mouse or press any key to close."
+msgstr "Vea la configuración actual sin aplicarla. Mueva el ratón o pulse cualquier tecla para cerrar."
+
+#: ui/main.qml:37
+#, kde-format
+msgctxt "@label"
+msgid "Theme"
+msgstr "Tema"
+
+#: ui/main.qml:38
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Random"
+msgstr "Aleatorio"
+
+#: ui/main.qml:38
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Space"
+msgstr "Espacio"
+
+#: ui/main.qml:38
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Mountains"
+msgstr "Montañas"
+
+#: ui/main.qml:38
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Snow"
+msgstr "Nieve"
+
+#: ui/main.qml:38
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Forest"
+msgstr "Bosque"
+
+#: ui/main.qml:38
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Futuristic City"
+msgstr "Ciudad futurista"
+
+#: ui/main.qml:44
+#, kde-format
+msgctxt "@label"
+msgid "Theme:"
+msgstr "Tema:"
+
+#: ui/main.qml:45
+#, kde-format
+msgctxt "@label"
+msgid "Random"
+msgstr "Aleatorio"
+
+#: ui/main.qml:45
+#, kde-format
+msgctxt "@label"
+msgid "Space"
+msgstr "Espacio"
+
+#: ui/main.qml:45
+#, kde-format
+msgctxt "@label"
+msgid "Mountains"
+msgstr "Montañas"
+
+#: ui/main.qml:45
+#, kde-format
+msgctxt "@label"
+msgid "Snow"
+msgstr "Nieve"
+
+#: ui/main.qml:45
+#, kde-format
+msgctxt "@label"
+msgid "Forest"
+msgstr "Bosque"
+
+#: ui/main.qml:45
+#, kde-format
+msgctxt "@label"
+msgid "Futuristic City"
+msgstr "Ciudad futurista"
+
+#: ui/main.qml:54
+#, kde-format
+msgctxt "@label"
+msgid "Clock"
+msgstr "Reloj"
+
+#: ui/main.qml:55 ui/main.qml:67
+#, kde-format
+msgctxt "@label"
+msgid "24-hour"
+msgstr "24 horas"
+
+#: ui/main.qml:55 ui/main.qml:67
+#, kde-format
+msgctxt "@label"
+msgid "12-hour"
+msgstr "12 horas"
+
+#: ui/main.qml:55
+#, kde-format
+msgctxt "@info Clock summary: format, position"
+msgid "On · %1 · %2"
+msgstr "Activado · %1 · %2"
+
+#: ui/main.qml:55 ui/main.qml:112 ui/main.qml:168
+#, kde-format
+msgctxt "@label Feature state"
+msgid "Off"
+msgstr "Desactivado"
+
+#: ui/main.qml:58
+#, kde-format
+msgctxt "@label"
+msgid "Clock:"
+msgstr "Reloj:"
+
+#: ui/main.qml:59
+#, kde-format
+msgctxt "@label"
+msgid "Visible"
+msgstr "Visible"
+
+#: ui/main.qml:59
+#, kde-format
+msgctxt "@label"
+msgid "Hidden"
+msgstr "Oculto"
+
+#: ui/main.qml:66
+#, kde-format
+msgctxt "@label"
+msgid "Time format:"
+msgstr "Formato de hora:"
+
+#: ui/main.qml:73
+#, kde-format
+msgctxt "@label"
+msgid "Date:"
+msgstr "Fecha:"
+
+#: ui/main.qml:74
+#, kde-format
+msgctxt "@label"
+msgid "Show date below the time"
+msgstr "Mostrar la fecha debajo de la hora"
+
+#: ui/main.qml:74
+#, kde-format
+msgctxt "@label"
+msgid "Hide date"
+msgstr "Ocultar la fecha"
+
+#: ui/main.qml:83
+#, kde-format
+msgctxt "@label"
+msgid "Clock position:"
+msgstr "Posición del reloj:"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Top left"
+msgstr "Arriba a la izquierda"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Top center"
+msgstr "Arriba en el centro"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Top right"
+msgstr "Arriba a la derecha"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Center left"
+msgstr "Centro a la izquierda"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Center"
+msgstr "Centro"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Center right"
+msgstr "Centro a la derecha"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Bottom left"
+msgstr "Abajo a la izquierda"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Bottom center"
+msgstr "Abajo en el centro"
+
+#: ui/main.qml:84
+#, kde-format
+msgctxt "@label"
+msgid "Bottom right"
+msgstr "Abajo a la derecha"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "top left"
+msgstr "arriba a la izquierda"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "top center"
+msgstr "arriba en el centro"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "top right"
+msgstr "arriba a la derecha"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "center left"
+msgstr "centro a la izquierda"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "center center"
+msgstr "centro"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "center right"
+msgstr "centro a la derecha"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "bottom left"
+msgstr "abajo a la izquierda"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "bottom center"
+msgstr "abajo en el centro"
+
+#: ui/main.qml:85
+#, kde-format
+msgctxt "@label Clock position summary"
+msgid "bottom right"
+msgstr "abajo a la derecha"
+
+#: ui/main.qml:92
+#, kde-format
+msgctxt "@label"
+msgid "Clock font size:"
+msgstr "Tamaño de letra del reloj:"
+
+#: ui/main.qml:100
+#, kde-format
+msgctxt "@label Font size in points"
+msgid "%1 pt"
+msgstr "%1 pt"
+
+#: ui/main.qml:111
+#, kde-format
+msgctxt "@label"
+msgid "Weather"
+msgstr "Tiempo"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "@info"
+msgid "No weather effects in Space"
+msgstr "Sin efectos meteorológicos en Espacio"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "@info"
+msgid "Managed by Live Sky"
+msgstr "Gestionado por Cielo en vivo"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "@label Weather"
+msgid "Rain"
+msgstr "Lluvia"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "@label Weather"
+msgid "Snow"
+msgstr "Nieve"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "@label Weather"
+msgid "Thunderstorms"
+msgstr "Tormentas"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "@label Weather"
+msgid "Fog"
+msgstr "Niebla"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "@label Weather"
+msgid "Shooting stars"
+msgstr "Estrellas fugaces"
+
+#: ui/main.qml:112
+#, kde-format
+msgctxt "Separator between enabled weather effects"
+msgid " · "
+msgstr " · "
+
+#: ui/main.qml:118
+#, kde-format
+msgctxt "@label"
+msgid "Animated weather:"
+msgstr "Tiempo animado:"
+
+#: ui/main.qml:119
+#, kde-format
+msgctxt "@label"
+msgid "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes."
+msgstr "Los efectos meteorológicos y las estrellas fugaces están desactivados en Espacio. Las estrellas fugaces están disponibles en los temas de paisajes."
+
+#: ui/main.qml:123
+#, kde-format
+msgctxt "@label"
+msgid "Rain:"
+msgstr "Lluvia:"
+
+#: ui/main.qml:124 ui/main.qml:132 ui/main.qml:140 ui/main.qml:148
+#: ui/main.qml:156 ui/main.qml:312 ui/main.qml:318
+#, kde-format
+msgctxt "@label"
+msgid "Enabled"
+msgstr "Activado"
+
+#: ui/main.qml:124 ui/main.qml:132 ui/main.qml:140 ui/main.qml:148
+#: ui/main.qml:156 ui/main.qml:312 ui/main.qml:318
+#, kde-format
+msgctxt "@label"
+msgid "Disabled"
+msgstr "Desactivado"
+
+#: ui/main.qml:131
+#, kde-format
+msgctxt "@label"
+msgid "Snowfall:"
+msgstr "Nevadas:"
+
+#: ui/main.qml:139
+#, kde-format
+msgctxt "@label"
+msgid "Thunderstorms:"
+msgstr "Tormentas:"
+
+#: ui/main.qml:147
+#, kde-format
+msgctxt "@label"
+msgid "Fog:"
+msgstr "Niebla:"
+
+#: ui/main.qml:155
+#, kde-format
+msgctxt "@label"
+msgid "Shooting stars (landscapes):"
+msgstr "Estrellas fugaces (paisajes):"
+
+#: ui/main.qml:167
+#, kde-format
+msgctxt "@label"
+msgid "Live Sky"
+msgstr "Cielo en vivo"
+
+#: ui/main.qml:168
+#, kde-format
+msgctxt "@info"
+msgid "No location selected"
+msgstr "Sin ubicación seleccionada"
+
+#: ui/main.qml:168
+#, kde-format
+msgctxt "@info Live Sky summary: location, temperature unit"
+msgid "On · %1 · °%2"
+msgstr "Activado · %1 · °%2"
+
+#: ui/main.qml:174
+#, kde-format
+msgctxt "@label"
+msgid "Live Sky:"
+msgstr "Cielo en vivo:"
+
+#: ui/main.qml:175
+#, kde-format
+msgctxt "@label"
+msgid "Adapt landscape skies and weather to local conditions. In Space, Live Sky shows Earth’s day/night and the Moon phase, without weather effects or shooting stars. Manual weather effects are dimmed while Live Sky is enabled."
+msgstr "Adapte el cielo y el tiempo de los paisajes a las condiciones locales. En Espacio, Cielo en vivo muestra el día y la noche de la Tierra y la fase lunar, sin efectos meteorológicos ni estrellas fugaces. Los efectos manuales se desactivan mientras Cielo en vivo está activo."
+
+#: ui/main.qml:179
+#, kde-format
+msgctxt "@label"
+msgid "Enable Live Sky:"
+msgstr "Activar Cielo en vivo:"
+
+#: ui/main.qml:180 ui/main.qml:368
+#, kde-format
+msgctxt "@label"
+msgid "On"
+msgstr "Activado"
+
+#: ui/main.qml:180 ui/main.qml:368
+#, kde-format
+msgctxt "@label"
+msgid "Off"
+msgstr "Desactivado"
+
+#: ui/main.qml:193
+#, kde-format
+msgctxt "@label"
+msgid "Typed searches are sent to Open-Meteo only while Live Sky is enabled. Choose a suggestion to set your location; Apply saves it. Offline search uses the bundled city catalog. No IP-based lookup is used."
+msgstr "Las búsquedas se envían a Open-Meteo solo cuando Cielo en vivo está activo. Elija una sugerencia para establecer su ubicación y pulse Aplicar para guardarla. La búsqueda sin conexión usa el catálogo de ciudades incluido. No se busca por dirección IP."
+
+#: ui/main.qml:199
+#, kde-format
+msgctxt "@label"
+msgid "Temperature units:"
+msgstr "Unidades de temperatura:"
+
+#: ui/main.qml:200
+#, kde-format
+msgctxt "@label"
+msgid "Celsius"
+msgstr "Celsius"
+
+#: ui/main.qml:200
+#, kde-format
+msgctxt "@label"
+msgid "Fahrenheit"
+msgstr "Fahrenheit"
+
+#: ui/main.qml:209
+#, kde-format
+msgctxt "@label"
+msgid "Weather refresh:"
+msgstr "Actualizar el tiempo:"
+
+#: ui/main.qml:210
+#, kde-format
+msgctxt "@item:inlistbox Weather refresh interval"
+msgid "Every %1 minute"
+msgid_plural "Every %1 minutes"
+msgstr[0] "Cada %1 minuto"
+msgstr[1] "Cada %1 minutos"
+
+#: ui/main.qml:217
+#, kde-format
+msgctxt "@label"
+msgid "Current conditions:"
+msgstr "Condiciones actuales:"
+
+#: ui/main.qml:218
+#, kde-format
+msgctxt "@label"
+msgid "Show weather under the clock"
+msgstr "Mostrar el tiempo debajo del reloj"
+
+#: ui/main.qml:218
+#, kde-format
+msgctxt "@label"
+msgid "Hide weather text"
+msgstr "Ocultar el texto del tiempo"
+
+#: ui/main.qml:229
+#, kde-format
+msgctxt "@label"
+msgid "AI Agents"
+msgstr "Agentes de IA"
+
+#: ui/main.qml:230 ui/main.qml:244
+#, kde-format
+msgctxt "@label"
+msgid "Always ask"
+msgstr "Preguntar siempre"
+
+#: ui/main.qml:230 ui/main.qml:244
+#, kde-format
+msgctxt "@label"
+msgid "Always start screensaver"
+msgstr "Iniciar siempre el salvapantallas"
+
+#: ui/main.qml:230
+#, kde-format
+msgctxt "@label"
+msgid "Do not start while agents are running"
+msgstr "No iniciar mientras haya agentes activos"
+
+#: ui/main.qml:236
+#, kde-format
+msgctxt "@label"
+msgid "AI Agent Detection:"
+msgstr "Detección de agentes de IA:"
+
+#: ui/main.qml:237
+#, kde-format
+msgctxt "@label"
+msgid "Choose what happens when an active terminal agent is detected. Manual launches always remain available."
+msgstr "Elija qué ocurre cuando se detecta un agente activo en la terminal. Siempre podrá iniciar el salvapantallas manualmente."
+
+#: ui/main.qml:243
+#, kde-format
+msgctxt "@label"
+msgid "When an agent is active:"
+msgstr "Cuando hay un agente activo:"
+
+#: ui/main.qml:244
+#, kde-format
+msgctxt "@label"
+msgid "Don't start screensaver while agents are running"
+msgstr "No iniciar el salvapantallas mientras haya agentes activos"
+
+#: ui/main.qml:250
+#, kde-format
+msgctxt "@label"
+msgid "Automatic answer:"
+msgstr "Respuesta automática:"
+
+#: ui/main.qml:251
+#, kde-format
+msgctxt "@label"
+msgid "Never (wait for me)"
+msgstr "Nunca (esperar mi respuesta)"
+
+#: ui/main.qml:258
+#, kde-format
+msgctxt "@label"
+msgid "Answer automatically after (s):"
+msgstr "Responder automáticamente después de (s):"
+
+#: ui/main.qml:259
+#, kde-format
+msgctxt "@label"
+msgid "Answer automatically after, in seconds"
+msgstr "Responder automáticamente después de, en segundos"
+
+#: ui/main.qml:272
+#, kde-format
+msgctxt "@label"
+msgid "When time runs out:"
+msgstr "Cuando se agota el tiempo:"
+
+#: ui/main.qml:275
+#, kde-format
+msgctxt "@label"
+msgid "Start screensaver (Yes)"
+msgstr "Iniciar el salvapantallas (Sí)"
+
+#: ui/main.qml:275
+#, kde-format
+msgctxt "@label"
+msgid "Keep desktop visible (No)"
+msgstr "Mantener el escritorio visible (No)"
+
+#: ui/main.qml:284
+#, kde-format
+msgctxt "@label"
+msgid "Interacting with the prompt pauses its countdown. Automatic answers never remember a choice."
+msgstr "Interactuar con el aviso pausa la cuenta atrás. Las respuestas automáticas nunca guardan una preferencia."
+
+#: ui/main.qml:289
+#, kde-format
+msgctxt "@label"
+msgid "Remembered choice:"
+msgstr "Preferencia guardada:"
+
+#: ui/main.qml:290
+#, kde-format
+msgctxt "@label"
+msgid "Reset to Always ask"
+msgstr "Restablecer a Preguntar siempre"
+
+#: ui/main.qml:299
+#, kde-format
+msgctxt "@label"
+msgid "BobOS"
+msgstr "BobOS"
+
+#: ui/main.qml:300
+#, kde-format
+msgctxt "@info"
+msgid "Phone off"
+msgstr "Teléfono desactivado"
+
+#: ui/main.qml:300
+#, kde-format
+msgctxt "@info"
+msgid "Phone on · BobOS off"
+msgstr "Teléfono activado · BobOS desactivado"
+
+#: ui/main.qml:300
+#, kde-format
+msgctxt "@info BobOS delay summary"
+msgid "On · After %1 min"
+msgid_plural "On · After %1 min"
+msgstr[0] "Activado · Tras %1 min"
+msgstr[1] "Activado · Tras %1 min"
+
+#: ui/main.qml:306
+#, kde-format
+msgctxt "@label"
+msgid "Bob's Phone & BobOS 2.0"
+msgstr "El teléfono de Bob y BobOS 2.0"
+
+#: ui/main.qml:307
+#, kde-format
+msgctxt "@label"
+msgid "Bob's Phone contains a fictional mobile operating system. Its apps, messages, places, and games are animated drawings only."
+msgstr "El teléfono de Bob contiene un sistema operativo móvil ficticio. Sus aplicaciones, mensajes, lugares y juegos son solo dibujos animados."
+
+#: ui/main.qml:311
+#, kde-format
+msgctxt "@label"
+msgid "Enable Bob's Phone:"
+msgstr "Activar el teléfono de Bob:"
+
+#: ui/main.qml:317
+#, kde-format
+msgctxt "@label"
+msgid "Enable BobOS:"
+msgstr "Activar BobOS:"
+
+#: ui/main.qml:326
+#, kde-format
+msgctxt "@label"
+msgid "BobOS Activation Delay:"
+msgstr "Espera antes de activar BobOS:"
+
+#: ui/main.qml:335 ui/main.qml:382
+#, kde-format
+msgctxt "@label Duration"
+msgid "%1 minute"
+msgid_plural "%1 minutes"
+msgstr[0] "%1 minuto"
+msgstr[1] "%1 minutos"
+
+#: ui/main.qml:342
+#, kde-format
+msgctxt "@label"
+msgid "AI Wi-Fi animation:"
+msgstr "Animación de wifi de IA:"
+
+#: ui/main.qml:343
+#, kde-format
+msgctxt "@label"
+msgid "Shown before BobOS opens"
+msgstr "Mostrar antes de abrir BobOS"
+
+#: ui/main.qml:343
+#, kde-format
+msgctxt "@label"
+msgid "Skipped"
+msgstr "Omitida"
+
+#: ui/main.qml:351
+#, kde-format
+msgctxt "@label"
+msgid "BobOS preview:"
+msgstr "Vista previa de BobOS:"
+
+#: ui/main.qml:352
+#, kde-format
+msgctxt "@label"
+msgid "Preview full adventure"
+msgstr "Ver la aventura completa"
+
+#: ui/main.qml:362
+#, kde-format
+msgctxt "@label"
+msgid "Lock"
+msgstr "Bloqueo"
+
+#: ui/main.qml:363
+#, kde-format
+msgctxt "@info Lock delay summary"
+msgid "Password after %1 min"
+msgid_plural "Password after %1 min"
+msgstr[0] "Contraseña tras %1 min"
+msgstr[1] "Contraseña tras %1 min"
+
+#: ui/main.qml:363
+#, kde-format
+msgctxt "@info"
+msgid "Screensaver password countdown off"
+msgstr "Cuenta atrás de contraseña desactivada"
+
+#: ui/main.qml:367
+#, kde-format
+msgctxt "@label"
+msgid "Password unlock:"
+msgstr "Desbloqueo con contraseña:"
+
+#: ui/main.qml:373
+#, kde-format
+msgctxt "@label"
+msgid "Require password after:"
+msgstr "Pedir contraseña después de:"
+
+#: ui/main.qml:389
+#, kde-format
+msgctxt "@label"
+msgid "Show countdown:"
+msgstr "Mostrar cuenta atrás:"
+
+#: ui/main.qml:390
+#, kde-format
+msgctxt "@label"
+msgid "Display time until password is required"
+msgstr "Mostrar el tiempo restante hasta pedir contraseña"
+
+#: ui/main.qml:400
+#, kde-format
+msgctxt "@label"
+msgid "Countdown color preview (elapsed time)"
+msgstr "Vista previa del color de la cuenta atrás (tiempo transcurrido)"
+
+#: ui/main.qml:401
+#, kde-format
+msgctxt "@label"
+msgid "Color transition:"
+msgstr "Transición de color:"
+
+#: ui/main.qml:420
+#, kde-format
+msgctxt "@label"
+msgid "The countdown begins when Bob appears. Its color smoothly changes green → yellow → orange → red as time runs out. KDE handles the actual password lock."
+msgstr "La cuenta atrás comienza cuando aparece Bob. Su color cambia suavemente de verde a amarillo, naranja y rojo al agotarse el tiempo. KDE se encarga del bloqueo real con contraseña."
+
+#: ui/main.qml:427
+#, kde-format
+msgctxt "@label"
+msgid "For password protection, configure KDE Screen Locking to require the password immediately and disable any unlock grace period. Disabling this option does not disable KDE's separate automatic locking or suspend locks."
+msgstr "Para proteger la sesión con contraseña, configure el bloqueo de pantalla de KDE para pedirla inmediatamente y desactive el periodo de gracia. Desactivar esta opción no desactiva el bloqueo automático de KDE ni el bloqueo al suspender."
+
+#: ui/main.qml:433
+#, kde-format
+msgctxt "@label"
+msgid "Press Apply to save your changes. Changes take effect the next time Bob starts."
+msgstr "Pulse Aplicar para guardar los cambios. Se harán efectivos la próxima vez que se inicie Bob."
+
+#: locationsearch.cpp:127
+#, kde-format
+msgid "Searching online…"
+msgstr "Buscando en línea…"
+
+#: locationsearch.cpp:163
+#, kde-format
+msgid "Additional online matches unavailable. Showing the results already received."
+msgstr "No hay más resultados en línea disponibles. Se muestran los resultados ya recibidos."
+
+#: locationsearch.cpp:166
+#, kde-format
+msgid "Online search unavailable. Showing offline catalog matches."
+msgstr "La búsqueda en línea no está disponible. Se muestran las coincidencias del catálogo local."
+
+#: locationsearch.cpp:183
+#, kde-format
+msgid "No matches. Check the spelling, or try a nearby larger town."
+msgstr "Sin coincidencias. Revise la ortografía o pruebe con una ciudad cercana más grande."
+
+#: screenbotkcm.cpp:525
+#, kde-format
+msgid "Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure Bash is available on PATH."
+msgstr "Vista previa no disponible. Instale ScreenBot en ~/ScreenBot/screensaver y compruebe que Bash esté disponible en PATH."
+
+#: screenbotkcm.cpp:532
+#, kde-format
+msgid "Could not create temporary preview settings."
+msgstr "No se pudo crear la configuración temporal de la vista previa."
+
+#: screenbotkcm.cpp:543
+#, kde-format
+msgid "Could not write temporary preview settings."
+msgstr "No se pudo escribir la configuración temporal de la vista previa."
+
+#: screenbotkcm.cpp:560
+#, kde-format
+msgid "Could not start the preview. Check the ScreenBot installation and Python 3 dependencies."
+msgstr "No se pudo iniciar la vista previa. Revise la instalación de ScreenBot y las dependencias de Python 3."
+
+#: screenbotkcm.cpp:566
+#, kde-format
+msgid "The preview stopped unexpectedly. Check the ScreenBot installation and Python 3 dependencies."
+msgstr "La vista previa se detuvo inesperadamente. Revise la instalación de ScreenBot y las dependencias de Python 3."

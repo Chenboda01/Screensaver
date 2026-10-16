@@ -31,8 +31,9 @@ ColumnLayout {
             Layout.fillWidth: true
             focusPolicy: Qt.StrongFocus
             Accessible.name: section.title
-            Accessible.description: (section.expanded ? "Expanded" : "Collapsed")
-                + ". " + section.summary + (section.modified ? ". Unapplied changes" : "")
+            Accessible.description: section.modified
+                ? i18nc("@info:accessible Section state, summary", "%1. %2. Unapplied changes", section.expanded ? i18nc("@info:accessible", "Expanded") : i18nc("@info:accessible", "Collapsed"), section.summary)
+                : i18nc("@info:accessible Section state, summary", "%1. %2", section.expanded ? i18nc("@info:accessible", "Expanded") : i18nc("@info:accessible", "Collapsed"), section.summary)
             Accessible.expandable: true
             Accessible.expanded: section.expanded
             onClicked: section.expanded = !section.expanded

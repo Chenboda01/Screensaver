@@ -7,6 +7,7 @@
 #include <QQmlContext>
 #include <QQuickItem>
 #include <QQuickView>
+#include <KLocalizedContext>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -105,6 +106,9 @@ private Q_SLOTS:
         kcm.setSectionExpanded(QStringLiteral("theme"), false);
         kcm.setSectionExpanded(QStringLiteral("agents"), true);
         QQuickView view;
+        auto *translations = new KLocalizedContext(&view);
+        translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
+        view.rootContext()->setContextObject(translations);
         view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
         view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/ui/main.qml")));
         QCOMPARE(view.status(), QQuickView::Ready);

@@ -5,7 +5,7 @@ import org.kde.kirigami as Kirigami
 
 ColumnLayout {
     property var settings
-    Kirigami.FormData.label: "City:"
+    Kirigami.FormData.label: i18nc("@label", "City:")
             Layout.fillWidth: true
             enabled: settings.liveSkyEnabled
             opacity: enabled ? 1.0 : 0.4
@@ -14,8 +14,8 @@ ColumnLayout {
                 id: citySearch
                 objectName: "citySearch"
                 Layout.fillWidth: true
-                placeholderText: "Type your city…"
-                Accessible.name: "Search city"
+                placeholderText: i18nc("@info:placeholder", "Type your city…")
+                Accessible.name: i18nc("@label", "Search city")
                 onTextEdited: { suggestions.visible = true; settings.locationSearch.search(text) }
                 Keys.onDownPressed: suggestions.currentIndex = Math.min(suggestions.count - 1, suggestions.currentIndex + 1)
                 Keys.onUpPressed: suggestions.currentIndex = Math.max(0, suggestions.currentIndex - 1)
@@ -54,9 +54,11 @@ ColumnLayout {
             }
             Controls.Label {
                 Layout.fillWidth: true
-                text: settings.liveSkyLocation.length === 0 ? "No location selected." : "Selected: " + settings.liveSkyLocation
-                    + (settings.liveSkyPlace.latitude !== undefined ? " (" + Number(settings.liveSkyPlace.latitude).toFixed(2)
-                        + ", " + Number(settings.liveSkyPlace.longitude).toFixed(2) + ")" : " — coordinates will be resolved when online")
+                text: settings.liveSkyLocation.length === 0 ? i18nc("@info", "No location selected.")
+                    : settings.liveSkyPlace.latitude !== undefined
+                        ? i18nc("@info Selected city, latitude, longitude", "Selected: %1 (%2, %3)", settings.liveSkyLocation,
+                            Number(settings.liveSkyPlace.latitude).toFixed(2), Number(settings.liveSkyPlace.longitude).toFixed(2))
+                        : i18nc("@info Selected city without coordinates", "Selected: %1 — coordinates will be resolved when online", settings.liveSkyLocation)
                 wrapMode: Text.WordWrap
             }
             Connections {

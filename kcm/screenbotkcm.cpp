@@ -1,5 +1,6 @@
 #include "screenbotkcm.h"
 #include <KPluginFactory>
+#include <KLocalizedString>
 #include <QSettings>
 #include <QProcess>
 #include <QDir>
@@ -521,14 +522,14 @@ void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *sour
     const QString script = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver/start.sh");
     const QString bash = QStandardPaths::findExecutable(QStringLiteral("bash"));
     if (!QFile::exists(script) || bash.isEmpty()) {
-        m_previewError = QStringLiteral("Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure Bash is available on PATH.");
+        m_previewError = i18n("Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure Bash is available on PATH.");
         Q_EMIT previewErrorChanged();
         return;
     }
     auto *process = new QProcess(this);
     auto *temporary = new QTemporaryFile(QDir::tempPath() + QStringLiteral("/screenbot-preview-XXXXXX.ini"), process);
     if (!temporary->open()) {
-        m_previewError = QStringLiteral("Could not create temporary preview settings.");
+        m_previewError = i18n("Could not create temporary preview settings.");
         Q_EMIT previewErrorChanged();
         delete process;
         return;
@@ -539,7 +540,7 @@ void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *sour
     writeSettings(cfg);
     cfg.sync();
     if (cfg.status() != QSettings::NoError) {
-        m_previewError = QStringLiteral("Could not write temporary preview settings.");
+        m_previewError = i18n("Could not write temporary preview settings.");
         Q_EMIT previewErrorChanged();
         delete process;
         return;
@@ -556,13 +557,13 @@ void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *sour
         process->deleteLater();
     };
     connect(process, &QProcess::errorOccurred, this, [this, cleanup](QProcess::ProcessError error) {
-        m_previewError = QStringLiteral("Could not start the preview. Check the ScreenBot installation and Python 3 dependencies.");
+        m_previewError = i18n("Could not start the preview. Check the ScreenBot installation and Python 3 dependencies.");
         Q_EMIT previewErrorChanged();
         if (error == QProcess::FailedToStart) cleanup();
     });
     connect(process, &QProcess::finished, this, [this, process, cleanup](int exitCode, QProcess::ExitStatus status) {
         if (exitCode != 0 || status != QProcess::NormalExit) {
-            m_previewError = QStringLiteral("The preview stopped unexpectedly. Check the ScreenBot installation and Python 3 dependencies.");
+            m_previewError = i18n("The preview stopped unexpectedly. Check the ScreenBot installation and Python 3 dependencies.");
             const QString detail = QString::fromUtf8(process->readAllStandardError()).trimmed();
             if (!detail.isEmpty()) m_previewError += QStringLiteral("\n") + detail.left(1000);
             Q_EMIT previewErrorChanged();
