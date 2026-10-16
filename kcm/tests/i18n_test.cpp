@@ -46,6 +46,7 @@ private Q_SLOTS:
         QVERIFY(!before.isEmpty());
         auto *theme = item("themeChoice");
         QVERIFY(theme);
+        QCOMPARE(theme->property("count").toInt(), 10);
         theme->setProperty("currentIndex", 4);
         QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, 4)));
         QVERIFY(kcm->needsSave());
@@ -60,6 +61,17 @@ private Q_SLOTS:
         QVERIFY(!kcm->needsSave());
         QSettings persisted(config, QSettings::IniFormat);
         QCOMPARE(persisted.value(QStringLiteral("Screensaver/theme")).toString(), QStringLiteral("forest"));
+        const QStringList newThemes{QStringLiteral("aurora"), QStringLiteral("ocean"), QStringLiteral("desert"), QStringLiteral("underwater")};
+        for (qsizetype index = 0; index < newThemes.size(); ++index) {
+            const int comboIndex = 6 + static_cast<int>(index);
+            theme->setProperty("currentIndex", comboIndex);
+            QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, comboIndex)));
+            QVERIFY(kcm->needsSave());
+            QCOMPARE(kcm->property("theme").toString(), newThemes.at(index));
+            kcm->load();
+            QCOMPARE(kcm->property("theme").toString(), QStringLiteral("forest"));
+            QVERIFY(!kcm->needsSave());
+        }
         const QStringList keys{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock")};
         window.setColor(QApplication::palette().window().color());
         window.show();

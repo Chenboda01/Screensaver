@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 15:05-0400\n"
+"POT-Creation-Date: 2026-10-16 15:58-0400\n"
 "PO-Revision-Date: 2026-10-16 13:20-0400\n"
 "Last-Translator: ScreenBot contributors\n"
 "Language-Team: Spanish\n"
@@ -141,6 +141,30 @@ msgctxt "@item:inlistbox Theme"
 msgid "Futuristic City"
 msgstr "Ciudad futurista"
 
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Aurora"
+msgstr "Aurora"
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Ocean / Beach"
+msgstr "Océano / Playa"
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Desert"
+msgstr "Desierto"
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Underwater"
+msgstr "Bajo el agua"
+
 #: ui/main.qml:45
 #, kde-format
 msgctxt "@label"
@@ -182,6 +206,30 @@ msgstr "Bosque"
 msgctxt "@label"
 msgid "Futuristic City"
 msgstr "Ciudad futurista"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Aurora"
+msgstr "Aurora"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Ocean / Beach"
+msgstr "Océano / Playa"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Desert"
+msgstr "Desierto"
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Underwater"
+msgstr "Bajo el agua"
 
 #: ui/main.qml:55
 #, kde-format
@@ -372,8 +420,8 @@ msgid ""
 "gear would overlap."
 msgstr ""
 "Usa la vista previa de arriba para ver a Bob con estos ajustes pendientes. "
-"Los accesorios del tiempo pueden combinarse con tu elección; el accesorio "
-"de cabeza elegido se mantiene visible cuando ambos se superponen."
+"Los accesorios del tiempo pueden combinarse con tu elección; el accesorio de "
+"cabeza elegido se mantiene visible cuando ambos se superponen."
 
 #: ui/main.qml:127
 #, kde-format
@@ -1249,7 +1297,7 @@ msgstr ""
 "Pulse Aplicar para guardar los cambios. Se harán efectivos la próxima vez "
 "que se inicie Bob."
 
-#: ui/main.qml:582
+#: ui/main.qml:583
 #, kde-format
 msgctxt "@title:window"
 msgid "Choose Bob's color"

@@ -12,10 +12,10 @@ These are actual `Saver` widget renders through its production `paintEvent`, inc
 
 Reproducible inputs:
 
-- Original theme stills: 1280×720 at five seconds after appearance, Live Sky off, particle seed 22, clock hidden.
+- Original theme stills: 1280×720 at five seconds after appearance, particle seed 22, clock hidden. Aurora uses a fixed Boston new-moon night (March 10, 2024 at 03:00 UTC) so its daylight-aware lights are visible; the other three new themes use Live Sky off.
 - Live Sky: Mountains, Boston coordinates (42.36, −71.06), March 25, 2024. Sunrise 10:40 UTC, noon 16:45 UTC, sunset 23:00 UTC, full-moon night 03:00 UTC. Astronomy is calculated by `sky_position`.
 - Rain: noon with a fixed sample (weather code 63, cloud cover 85%, precipitation 4 mm, wind 12 km/h, temperature 9 °C), rendered through the ordinary weather effects.
 - Hero GIF: moonlit Mountains, six seconds at 10 fps, 768×432.
 - BobOS: the existing accelerated preview timeline; home-screen still at nine seconds, GIF from six through twelve seconds (zoom, home, browser). Its fictional clock is fixed at 19:30.
 
-Random selects one of the five themes, so it has no separate screenshot. These gallery assets illustrate the application and are not a new release. Keep the combined image files below 10 MB when regenerating.
+Random selects one of the nine themes, so it has no separate screenshot. These gallery assets illustrate the application and are not a new release. Keep the combined image files below 10 MB when regenerating.

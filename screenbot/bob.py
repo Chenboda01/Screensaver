@@ -1,7 +1,10 @@
+import math
+
 from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient
-import math
+
 from bobos import BobOSPhase, BobOSStatus
+from screenbot.themes import underwater
 
 
 class BobRenderer:
@@ -113,6 +116,8 @@ class BobRenderer:
         p.drawEllipse(QPointF(44, 5), 5, 5)
         self.draw_custom_accessory(p, appearance.accessory, palette)
         self.draw_weather_accessory(p, t, palette)
+        if getattr(self, 'theme', None) == 'underwater':
+            underwater.draw_bob_diving_helmet(p, QPointF(0, -24), 83)
         if self.phone_enabled and status.phase in {
             BobOSPhase.EXPLORING,
             BobOSPhase.PHONE_ACTIVATION,
@@ -259,6 +264,10 @@ class BobRenderer:
             'snow': f'{name} is watching the snowfall…',
             'forest': f'{name} is exploring the forest…',
             'city': f'{name} is exploring the neon city…',
+            'aurora': f'{name} is watching the aurora…',
+            'ocean': f'{name} is exploring the coastline…',
+            'desert': f'{name} is exploring the desert…',
+            'underwater': f'{name} is exploring underwater…',
         }
         bobos_words = {
             BobOSPhase.CURIOUS: f'{name} spotted a new adventure!',

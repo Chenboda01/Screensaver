@@ -32,8 +32,12 @@ Bob exploring the Mountains under a full moon with Live Sky enabled (six-second 
 | ![Bob floating among blue and pink planets and a golden ringed planet in Space](assets/screenshots/space.webp) | ![Bob above layered blue mountain peaks beneath a glowing moon and purple sky](assets/screenshots/mountains.webp) |
 | **Snow** | **Forest** |
 | ![Bob hovering over snow-covered alpine peaks with drifting snowflakes](assets/screenshots/snow.webp) | ![Bob among dark evergreen silhouettes and glowing fireflies under a green night sky](assets/screenshots/forest.webp) |
-| **Futuristic City** | |
-| ![Bob floating above a futuristic skyline with cyan, violet, and pink illuminated windows](assets/screenshots/city.webp) | |
+| **Futuristic City** | **Aurora** |
+| ![Bob floating above a futuristic skyline with cyan, violet, and pink illuminated windows](assets/screenshots/city.webp) | ![Bob beneath animated green and violet aurora curtains above snowy ridges](assets/screenshots/aurora.webp) |
+| **Ocean / Beach** | **Desert** |
+| ![Bob exploring a tropical coast with palms, waves, and a lighthouse](assets/screenshots/ocean.webp) | ![Bob among warm desert dunes and cacti below a sunlit sky](assets/screenshots/desert.webp) |
+| **Underwater** | |
+| ![Bob wearing a transparent diving helmet above coral, fish, and bubbles](assets/screenshots/underwater.webp) | |
 
 ### Live Sky
 
@@ -140,9 +144,9 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 
 ## Features
 
-- Random, Space, Mountains, Snow, Forest, and Futuristic City themes
+- Random, Space, Mountains, Snow, Forest, Futuristic City, Aurora, Ocean / Beach, Desert, and Underwater themes
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
-- Individually enabled rain, snow, thunderstorms, and fog on landscape themes; optional shooting stars are limited to landscapes, and Space stays free of weather overlays
+- Individually enabled rain, snow, thunderstorms, and fog on landscape themes; Underwater turns rain, snow, and thunderstorms into surface ripples, optional shooting stars are limited to landscapes, and Space stays free of weather overlays
 - Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
 - Optional head-local Bob weather reactions while Live Sky is on: a rain umbrella, snow hat and scarf, strong-sun sunglasses, fog squint, lightning surprise, wind response, moon glances, and a deep-night sleepy expression. Use `--preview-weather rain`, `snow`, or `clear-noon` with a quick preview to see the accessories without waiting for live conditions
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings

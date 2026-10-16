@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 15:05-0400\n"
+"POT-Creation-Date: 2026-10-16 15:58-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -140,6 +140,30 @@ msgctxt "@item:inlistbox Theme"
 msgid "Futuristic City"
 msgstr ""
 
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Aurora"
+msgstr ""
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Ocean / Beach"
+msgstr ""
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Desert"
+msgstr ""
+
+#: ui/main.qml:39
+#, kde-format
+msgctxt "@item:inlistbox Theme"
+msgid "Underwater"
+msgstr ""
+
 #: ui/main.qml:45
 #, kde-format
 msgctxt "@label"
@@ -180,6 +204,30 @@ msgstr ""
 #, kde-format
 msgctxt "@label"
 msgid "Futuristic City"
+msgstr ""
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Aurora"
+msgstr ""
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Ocean / Beach"
+msgstr ""
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Desert"
+msgstr ""
+
+#: ui/main.qml:46
+#, kde-format
+msgctxt "@label"
+msgid "Underwater"
 msgstr ""
 
 #: ui/main.qml:55
@@ -1213,7 +1261,7 @@ msgid ""
 "starts."
 msgstr ""
 
-#: ui/main.qml:582
+#: ui/main.qml:583
 #, kde-format
 msgctxt "@title:window"
 msgid "Choose Bob's color"

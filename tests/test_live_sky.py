@@ -204,7 +204,7 @@ class QtSkyTests(unittest.TestCase):
         self.assertEqual(frame(sky, Weather(3,100), 0), frame(SkyPosition(-30,0,-10,180,.5,False),Weather(3,100),0))
 
     def test_all_landscapes_render_and_manual_settings_survive(self):
-        for theme in ('mountains', 'forest', 'snow', 'city', 'space'):
+        for theme in ('mountains', 'forest', 'snow', 'city', 'space', 'aurora', 'ocean', 'desert', 'underwater'):
             settings = configparser.ConfigParser()
             settings['Screensaver'] = {'theme': theme, 'live_sky_enabled': 'true', 'rain_enabled': 'true'}
             with patch('screenbot.app.read_settings', return_value=settings), patch.object(LiveWeather, 'refresh'):
