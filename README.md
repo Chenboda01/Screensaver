@@ -72,11 +72,45 @@ The full screensaver and KDE System Settings module are supported on **Linux wit
    bash install.sh
    ```
 
-5. Log out and back in so Plasma discovers the user-local settings module.
+5. When the installer offers idle start, choose whether to enable it and enter the delay (5 minutes by default). Then log out and back in so Plasma discovers the user-local settings module.
 6. Open **System Settings → Screensaver**, select a theme and options, then choose **Apply**.
-7. Configure Plasma's idle/screensaver trigger to run `~/ScreenBot/screensaver/start.sh` if it is not already configured.
+7. Check idle setup with `bash ~/ScreenBot/screensaver/start.sh --check`.
 
-The installer builds the KDE Settings module and installs it to your user account without `sudo`. It copies the screensaver to `~/ScreenBot/screensaver` and preserves a backup of an existing installation.
+The installer builds the KDE Settings module and installs it to your user account without `sudo`. It copies the screensaver to `~/ScreenBot/screensaver`, keeps the three newest installation backups, and saves the KDE installed-file list in `~/ScreenBot/install_manifest.txt` for removal even if the build folder is deleted.
+
+For unattended installation, use `bash install.sh --idle-minutes 5` to explicitly enable idle start, or `bash install.sh --no-idle` to leave Power Management unchanged. With no answer on standard input, idle setup is skipped. `bash install.sh --help` lists the options.
+
+### Idle setup and removal
+
+Automatic setup uses Plasma 6 PowerDevil's native Run Script idle action on AC power, battery, and low battery. It reloads PowerDevil after saving, preserves independent lock/suspend settings, and refuses to replace another idle script. Existing inhibitions and KDE's real screen locker still take priority. Close Power Management Settings before installation so an older unsaved page cannot overwrite the new configuration.
+
+If you decline setup, PowerDevil is unavailable, or another script already owns an idle action, follow these steps:
+
+1. Open **System Settings → Power Management → Energy Saving**. On newer Plasma 6 versions the power profiles appear directly under **Power Management**.
+2. Select **On AC Power**. Under **Other Settings → Run command or script**, choose **Choose run conditions → When inactive**. Older Plasma 6 versions label this **Run Script → When idle**.
+3. Use **Choose…** to select `~/ScreenBot/screensaver/start.sh` (expand `~` to your home directory when typing the path).
+4. Set **Run after** to your preferred delay, such as **5 minutes**, and choose **Apply**.
+5. Repeat for **On Battery** and **On Low Battery**, if shown. Run `bash ~/ScreenBot/screensaver/start.sh --check`; it reports each profile and returns nonzero if any profile is unconfigured.
+
+To undo just ScreenBot's idle setup, run `bash ~/ScreenBot/screensaver/idle-trigger.sh --remove`, or clear its command in those profiles and Apply. The helper preserves another script if you replaced ScreenBot's command later. KDE Screen Locking remains independent.
+
+### Uninstall and reinstall
+
+```bash
+bash ~/ScreenBot/screensaver/uninstall.sh
+```
+
+The uninstaller removes ScreenBot's application, installed KDE module and translations, city list, Plasma environment hook, and its idle action. It asks separately before deleting saved preferences (including section expansion state), Live Sky cache, and installation backups; the default is to keep each. It does not stop AI agents or other running applications. Log out and back in afterward so Plasma drops the Settings page and old environment hook.
+
+For scripted removal while keeping personal data:
+
+```bash
+bash ~/ScreenBot/screensaver/uninstall.sh --yes --keep-settings
+```
+
+To explicitly remove personal data too, use `--yes --purge-settings --purge-cache --purge-backups`. `--keep-settings` always preserves preferences, even alongside `--purge-settings`. See `bash uninstall.sh --help` for details. The script also works from the extracted ZIP. To reinstall, extract a fresh ZIP outside `~/ScreenBot/screensaver` and run `bash install.sh` again; retained preferences are reused.
+
+### Python interpreter
 
 The installer selects `SCREENBOT_PYTHON` when provided, otherwise `python3` on `PATH`, then `python` if it is Python 3. It checks that PyQt6 is installed for that interpreter and saves its path in `~/ScreenBot/screensaver/python-path`. Automatic launches, manual launches, and KDE previews all use that saved interpreter. For a virtual environment with PyQt6, install with:
 
