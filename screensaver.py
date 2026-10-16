@@ -96,6 +96,84 @@ def particle_count(total: int, effect_scale: float) -> int:
     return max(1, min(total, round(total * max(0.0, min(1.0, effect_scale)))))
 
 
+BURN_IN_MODES: Final[frozenset[str]] = frozenset({'off', 'standard', 'strong'})
+BURN_IN_SHIFT_LIMIT = 8.0
+
+
+def normalize_burn_in_mode(value: str) -> str:
+    """Return a supported protection mode, defaulting safely to Standard."""
+    mode = value.strip().lower()
+    return mode if mode in BURN_IN_MODES else 'standard'
+
+
+def burn_in_scene_shift(mode: str, elapsed_seconds: float) -> tuple[float, float]:
+    """Return a smooth, time-based scene offset bounded to eight logical pixels."""
+    if mode == 'off':
+        return 0.0, 0.0
+    elapsed = max(0.0, elapsed_seconds)
+    x = 5.0 * math.sin(math.tau * elapsed / 480.0) + 3.0 * math.sin(math.tau * elapsed / 197.0)
+    y = 5.0 * math.sin(math.tau * elapsed / 600.0 + .8) + 3.0 * math.sin(math.tau * elapsed / 233.0)
+    return x, y
+
+
+def burn_in_scene_scale(width: int, height: int) -> float:
+    """Scale around the center enough to cover all edges during the pixel shift."""
+    shortest = max(1, min(width, height))
+    # Two pixels of rasterization slack are included beyond the maximum shift.
+    return 1.0 + 2.0 * (BURN_IN_SHIFT_LIMIT + 2.0) / shortest
+
+
+def burn_in_clock_drift(mode: str, elapsed_seconds: float, width: int, height: int,
+                        position: str, font_size: int, show_date: bool,
+                        show_conditions: bool, scene_offset: tuple[float, float] = (0.0, 0.0),
+                        scene_scale: float = 1.0) -> tuple[float, float]:
+    """Move the clock by up to 3% while keeping its text area on-screen."""
+    if mode == 'off' or width <= 0 or height <= 0:
+        return 0.0, 0.0
+    columns = {'left': (width * .035, width * .42),
+               'center': (width * .29, width * .42),
+               'right': (width * .545, width * .42)}
+    rows = {'top': height * .08, 'center': height * .38, 'bottom': height * .65}
+    row, column = position.split('-')
+    x, area_width = columns[column]
+    y = rows[row]
+    area_height = font_size * 1.5
+    if show_date:
+        area_height += font_size * .62
+    if show_conditions:
+        area_height += font_size * .62
+
+    # The whole scene is transformed first. Limit additional clock drift
+    # against that mapped rectangle so corner clocks stay on-screen.
+    dx, dy = scene_offset
+    tx = width * (1.0 - scene_scale) * .5 + dx
+    ty = height * (1.0 - scene_scale) * .5 + dy
+    mapped_x = x * scene_scale + tx
+    mapped_y = y * scene_scale + ty
+    mapped_width = area_width * scene_scale
+    mapped_height = area_height * scene_scale
+    min_x = -mapped_x / scene_scale
+    max_x = (width - mapped_x - mapped_width) / scene_scale
+    min_y = -mapped_y / scene_scale
+    max_y = (height - mapped_y - mapped_height) / scene_scale
+    if max_x < min_x or max_y < min_y:
+        return 0.0, 0.0
+
+    elapsed = max(0.0, elapsed_seconds)
+    desired_x = width * .03 * math.sin(math.tau * elapsed / 900.0)
+    desired_y = height * .03 * math.sin(math.tau * elapsed / 1110.0)
+    return (min(max(desired_x, min_x), max_x),
+            min(max(desired_y, min_y), max_y))
+
+
+def burn_in_dim_alpha(mode: str, elapsed_seconds: float) -> int:
+    """Fade Strong mode to black between 30 and 60 unattended minutes."""
+    if mode != 'strong':
+        return 0
+    progress = min(1.0, max(0.0, (elapsed_seconds - 30 * 60) / (30 * 60)))
+    return round(255 * progress)
+
+
 def read_settings(config_path: Path | None = None) -> configparser.ConfigParser:
     settings = configparser.ConfigParser()
     path = config_path if config_path is not None else Path.home() / '.config' / 'screenbot-screensaver.ini'
@@ -133,6 +211,8 @@ class Saver(QWidget):
         self.show_date = settings.getboolean('Screensaver', 'show_date', fallback=False)
         clock_position = settings.get('Screensaver', 'clock_position', fallback='top-center').strip()
         self.clock_position = clock_position if clock_position in CLOCK_POSITIONS else 'top-center'
+        self.burn_in_protection = normalize_burn_in_mode(
+            settings.get('Screensaver', 'burn_in_protection', fallback='standard'))
         try:
             clock_font_size = settings.getint('Screensaver', 'clock_font_size', fallback=48)
         except ValueError:
@@ -287,9 +367,17 @@ class Saver(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         w, h = self.width(), self.height()
         t = time.monotonic() - self.start_time
+        protection = self.burn_in_protection
+        scene_offset = burn_in_scene_shift(protection, t)
+        scene_scale = burn_in_scene_scale(w, h) if protection != 'off' else 1.0
+        if protection != 'off':
+            p.save()
+            p.translate(w * .5 + scene_offset[0], h * .5 + scene_offset[1])
+            p.scale(scene_scale, scene_scale)
+            p.translate(-w * .5, -h * .5)
         self.draw_scenery(p, w, h, t)
         if self.show_clock:
-            self.clock(p, w, h)
+            self.clock(p, w, h, protection, t, scene_offset, scene_scale)
         bobos_status = self.bobos_status(t)
         phase = bobos_status.phase
         if phase not in PHONE_UI_PHASES:
@@ -303,6 +391,11 @@ class Saver(QWidget):
             self.countdown(p, w, h, t)
         if self.quick_preview:
             self.preview_hint(p, w, h, t)
+        if protection != 'off':
+            p.restore()
+        dim_alpha = burn_in_dim_alpha(protection, t)
+        if dim_alpha:
+            p.fillRect(QRectF(0, 0, w, h), QColor(0, 0, 0, dim_alpha))
         p.end()
 
     def draw_scenery(self, p: QPainter, w: int, h: int, t: float) -> None:
@@ -706,7 +799,9 @@ class Saver(QWidget):
         p.drawLine(QPointF(0,h*.91),QPointF(w,h*.91))
         p.setPen(Qt.PenStyle.NoPen)
 
-    def clock(self, p: QPainter, w: int, h: int) -> None:
+    def clock(self, p: QPainter, w: int, h: int, protection: str = 'off',
+              elapsed_seconds: float = 0.0, scene_offset: tuple[float, float] = (0.0, 0.0),
+              scene_scale: float = 1.0) -> None:
         columns = {
             'left': (w*.035, w*.42, Qt.AlignmentFlag.AlignLeft),
             'center': (w*.29, w*.42, Qt.AlignmentFlag.AlignHCenter),
@@ -716,6 +811,12 @@ class Saver(QWidget):
         row, column = self.clock_position.split('-')
         x, width, horizontal_alignment = columns[column]
         y = rows[row]
+        show_conditions = self.live_sky_enabled and self.live_sky_conditions and self.theme != 'space'
+        drift_x, drift_y = burn_in_clock_drift(
+            protection, elapsed_seconds, w, h, self.clock_position, self.clock_font_size,
+            self.show_date, show_conditions, scene_offset, scene_scale)
+        x += drift_x
+        y += drift_y
         alignment = horizontal_alignment | Qt.AlignmentFlag.AlignVCenter
         date_y = y + self.clock_font_size * 1.5
         p.setPen(QColor('#ecf7ff'))
@@ -728,7 +829,7 @@ class Saver(QWidget):
             p.setFont(QFont('Sans Serif', max(10, round(self.clock_font_size*.34))))
             p.drawText(QRectF(x, date_y, width, self.clock_font_size*.62), alignment,
                        QDateTime.currentDateTime().toString('ddd, MMM d'))
-        if self.live_sky_enabled and self.live_sky_conditions and self.theme != 'space':
+        if show_conditions:
             live = self.live_weather
             if not live.located:
                 label = 'Location unavailable · choose a city in Settings'

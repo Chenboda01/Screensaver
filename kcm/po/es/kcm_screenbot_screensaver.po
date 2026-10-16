@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 13:33-0400\n"
+"POT-Creation-Date: 2026-10-16 13:47-0400\n"
 "PO-Revision-Date: 2026-10-16 13:20-0400\n"
 "Last-Translator: ScreenBot contributors\n"
 "Language-Team: Spanish\n"
@@ -538,13 +538,13 @@ msgctxt "@label"
 msgid "Enable Live Sky:"
 msgstr "Activar Cielo en vivo:"
 
-#: ui/main.qml:180 ui/main.qml:400
+#: ui/main.qml:180 ui/main.qml:420
 #, kde-format
 msgctxt "@label"
 msgid "On"
 msgstr "Activado"
 
-#: ui/main.qml:180 ui/main.qml:400
+#: ui/main.qml:180 ui/main.qml:420
 #, kde-format
 msgctxt "@label"
 msgid "Off"
@@ -789,7 +789,7 @@ msgctxt "@label"
 msgid "BobOS Activation Delay:"
 msgstr "Espera antes de activar BobOS:"
 
-#: ui/main.qml:335 ui/main.qml:414
+#: ui/main.qml:335 ui/main.qml:434
 #, kde-format
 msgctxt "@label Duration"
 msgid "%1 minute"
@@ -864,8 +864,8 @@ msgid ""
 "Balanced runs at 30 fps on AC power, then 15 fps on battery or after 15 "
 "minutes. Battery saver uses 10 fps."
 msgstr ""
-"El modo equilibrado funciona a 30 fps con corriente y a 15 fps con batería "
-"o tras 15 minutos. El ahorro de batería usa 10 fps."
+"El modo equilibrado funciona a 30 fps con corriente y a 15 fps con batería o "
+"tras 15 minutos. El ahorro de batería usa 10 fps."
 
 #: ui/main.qml:377
 #, kde-format
@@ -897,13 +897,62 @@ msgctxt "@label"
 msgid "Reduce motion and flashes"
 msgstr "Reducir el movimiento y los destellos"
 
+#: ui/main.qml:393
+#, kde-format
+msgctxt "@label"
+msgid "Burn-in protection:"
+msgstr "Protección contra el quemado de pantalla:"
+
 #: ui/main.qml:394
+#, kde-format
+msgctxt "@label Burn-in protection"
+msgid "Off"
+msgstr "Desactivado"
+
+#: ui/main.qml:394
+#, kde-format
+msgctxt "@label Burn-in protection"
+msgid "Standard"
+msgstr "Estándar"
+
+#: ui/main.qml:394
+#, kde-format
+msgctxt "@label Burn-in protection"
+msgid "Strong"
+msgstr "Intensa"
+
+#: ui/main.qml:403
+#, kde-format
+msgctxt "@info Burn-in protection"
+msgid ""
+"Moves the scene and clock, then fades to black between 30 and 60 minutes. "
+"Any input closes the screensaver and cancels the fade."
+msgstr ""
+"Mueve la escena y el reloj, y luego funde la imagen a negro entre los 30 y 60 "
+"minutos. Cualquier entrada cierra el salvapantallas y cancela el fundido."
+
+#: ui/main.qml:405
+#, kde-format
+msgctxt "@info Burn-in protection"
+msgid ""
+"Moves the scene slowly and lets the clock drift within its selected area."
+msgstr ""
+"Desplaza lentamente la escena y permite que el reloj se mueva dentro del área "
+"seleccionada."
+
+#: ui/main.qml:406
+#, kde-format
+msgctxt "@info Burn-in protection"
+msgid "Off preserves the original fixed layout and brightness."
+msgstr "Desactivado conserva la disposición fija y el brillo originales."
+
+#: ui/main.qml:414
 #, kde-format
 msgctxt "@label"
 msgid "Lock"
 msgstr "Bloqueo"
 
-#: ui/main.qml:395
+#: ui/main.qml:415
 #, kde-format
 msgctxt "@info Lock delay summary"
 msgid "Password after %1 min"
@@ -911,49 +960,49 @@ msgid_plural "Password after %1 min"
 msgstr[0] "Contraseña tras %1 min"
 msgstr[1] "Contraseña tras %1 min"
 
-#: ui/main.qml:395
+#: ui/main.qml:415
 #, kde-format
 msgctxt "@info"
 msgid "Screensaver password countdown off"
 msgstr "Cuenta atrás de contraseña desactivada"
 
-#: ui/main.qml:399
+#: ui/main.qml:419
 #, kde-format
 msgctxt "@label"
 msgid "Password unlock:"
 msgstr "Desbloqueo con contraseña:"
 
-#: ui/main.qml:405
+#: ui/main.qml:425
 #, kde-format
 msgctxt "@label"
 msgid "Require password after:"
 msgstr "Pedir contraseña después de:"
 
-#: ui/main.qml:421
+#: ui/main.qml:441
 #, kde-format
 msgctxt "@label"
 msgid "Show countdown:"
 msgstr "Mostrar cuenta atrás:"
 
-#: ui/main.qml:422
+#: ui/main.qml:442
 #, kde-format
 msgctxt "@label"
 msgid "Display time until password is required"
 msgstr "Mostrar el tiempo restante hasta pedir contraseña"
 
-#: ui/main.qml:432
+#: ui/main.qml:452
 #, kde-format
 msgctxt "@label"
 msgid "Countdown color preview (elapsed time)"
 msgstr "Vista previa del color de la cuenta atrás (tiempo transcurrido)"
 
-#: ui/main.qml:433
+#: ui/main.qml:453
 #, kde-format
 msgctxt "@label"
 msgid "Color transition:"
 msgstr "Transición de color:"
 
-#: ui/main.qml:452
+#: ui/main.qml:472
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -964,7 +1013,7 @@ msgstr ""
 "verde a amarillo, naranja y rojo al agotarse el tiempo. KDE se encarga del "
 "bloqueo real con contraseña."
 
-#: ui/main.qml:459
+#: ui/main.qml:479
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -977,7 +1026,7 @@ msgstr ""
 "esta opción no desactiva el bloqueo automático de KDE ni el bloqueo al "
 "suspender."
 
-#: ui/main.qml:465
+#: ui/main.qml:485
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -1014,7 +1063,7 @@ msgstr ""
 "Sin coincidencias. Revise la ortografía o pruebe con una ciudad cercana más "
 "grande."
 
-#: screenbotkcm.cpp:557
+#: screenbotkcm.cpp:575
 #, kde-format
 msgid ""
 "Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure "
@@ -1023,17 +1072,17 @@ msgstr ""
 "Vista previa no disponible. Instale ScreenBot en ~/ScreenBot/screensaver y "
 "compruebe que Bash esté disponible en PATH."
 
-#: screenbotkcm.cpp:564
+#: screenbotkcm.cpp:582
 #, kde-format
 msgid "Could not create temporary preview settings."
 msgstr "No se pudo crear la configuración temporal de la vista previa."
 
-#: screenbotkcm.cpp:575
+#: screenbotkcm.cpp:593
 #, kde-format
 msgid "Could not write temporary preview settings."
 msgstr "No se pudo escribir la configuración temporal de la vista previa."
 
-#: screenbotkcm.cpp:592
+#: screenbotkcm.cpp:610
 #, kde-format
 msgid ""
 "Could not start the preview. Check the ScreenBot installation and Python 3 "
@@ -1042,7 +1091,7 @@ msgstr ""
 "No se pudo iniciar la vista previa. Revise la instalación de ScreenBot y las "
 "dependencias de Python 3."
 
-#: screenbotkcm.cpp:598
+#: screenbotkcm.cpp:616
 #, kde-format
 msgid ""
 "The preview stopped unexpectedly. Check the ScreenBot installation and "

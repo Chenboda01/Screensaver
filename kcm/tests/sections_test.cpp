@@ -59,7 +59,8 @@ private Q_SLOTS:
             {QStringLiteral("agentDetectionMode"), QStringLiteral("block")}, {QStringLiteral("phoneEnabled"), false}, {QStringLiteral("bobosEnabled"), false},
             {QStringLiteral("bobosActivationDelay"), 7}, {QStringLiteral("showWifiAnimation"), false}, {QStringLiteral("passwordLock"), true},
             {QStringLiteral("lockMinutes"), 5}, {QStringLiteral("showTimer"), true},
-            {QStringLiteral("performanceMode"), QStringLiteral("battery-saver")}, {QStringLiteral("reduceMotion"), true}
+            {QStringLiteral("performanceMode"), QStringLiteral("battery-saver")}, {QStringLiteral("reduceMotion"), true},
+            {QStringLiteral("burnInProtection"), QStringLiteral("strong")}
         };
         QVariantMap defaults;
         for (auto it = changes.cbegin(); it != changes.cend(); ++it) {
@@ -182,12 +183,18 @@ private Q_SLOTS:
         item(QStringLiteral("performanceSection"))->setProperty("expanded", true);
         QVERIFY(item(QStringLiteral("performanceMode")));
         QVERIFY(item(QStringLiteral("reduceMotion")));
+        auto *burnIn = item(QStringLiteral("burnInProtection"));
+        QVERIFY(burnIn);
+        QCOMPARE(burnIn->property("count").toInt(), 3);
+        QCOMPARE(burnIn->property("currentIndex").toInt(), 1);
         kcm.setPerformanceMode(QStringLiteral("smooth"));
+        kcm.setBurnInProtection(QStringLiteral("strong"));
         QVERIFY(item(QStringLiteral("performanceSection"))->property("modified").toBool());
         QCOMPARE(item(QStringLiteral("performanceSection"))->property("summary").toString(), QStringLiteral("Smooth"));
         kcm.load();
         QCOMPARE(kcm.performanceMode(), QStringLiteral("balanced"));
         QVERIFY(!kcm.reduceMotion());
+        QCOMPARE(kcm.burnInProtection(), QStringLiteral("standard"));
         item(QStringLiteral("performanceSection"))->setProperty("expanded", false);
         const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
         QVERIFY(!evidence.isEmpty());
