@@ -42,3 +42,31 @@
 - Added persistent Always ask, Always start screensaver, and Don't start screensaver while agents are running settings, plus a reset action.
 - Made uncertain detection and prompt timeouts cancel automatic launches safely; manual launches bypass the agent prompt.
 - Kept the prompt choice separate from KDE's staged settings so the Settings module's Apply and Discard behavior remains intact.
+
+## V16
+
+- Adds clock format, date, position, size, and visibility controls, plus individually configurable animated weather effects.
+
+## V15
+
+- Checks recent Codex and OpenCode turn status so the prompt appears during an active response, even between child commands.
+
+## V14
+
+- Restored prompts during agent response processing while filtering idle terminal UI polling. Active child commands continue to trigger the prompt.
+
+## V13
+
+- Added three shaded planets, including a ringed planet, to the Space theme.
+
+## V12
+
+- Fixed idle-agent false prompts. Agent UI CPU polling no longer counts as work; the notification appears when a recognized terminal agent has an active or recently started child process.
+
+## V11
+
+- Added a **Yes/No** notification before the screensaver starts when a terminal AI agent is detected. Yes starts the saver and leaves the agent running; No cancels that launch.
+
+## V10
+
+- Added Bob's still sleeping pose and password-free user-local KDE installation; includes the themed backgrounds and configurable countdown.
