@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Final
 
-from screenbot.themes import aurora, desert, ocean, underwater
+from screenbot.themes import aurora, desert, ocean, photos, underwater
 from screenbot.themes.city import CityTheme
 from screenbot.themes.forest import ForestTheme
 from screenbot.themes.mountains import MountainsTheme
@@ -29,6 +29,7 @@ THEME_RENDERERS: Final[dict[str, ThemeRenderer]] = {
     'underwater': lambda scene, painter, width, height, elapsed: underwater.draw_background(
         painter, scene.theme_frame(width, height, elapsed)
     ),
+    'photos': photos.draw_background,
 }
 
 THEME_MOTION_RENDERERS: Final[dict[str, Callable[..., None]]] = {

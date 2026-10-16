@@ -11,9 +11,10 @@ from PyQt6.QtGui import QColor, QCursor, QFont, QPainter, QPen, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
 from live_sky_render import SpaceSky
-from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
+from bobos import BobOSPhase, BobOSTimeline
 from screenbot.appearance import BobAppearance
 from screenbot.bob import BobRenderer
+from screenbot.bobos_status import BobOSStatusMixin
 from screenbot.agent_status import AgentBadgePhase, AgentStatusSnapshot, AgentStatusWorker, HIDDEN_SNAPSHOT
 from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
 from screenbot.clock import ClockRenderer
@@ -23,6 +24,7 @@ from screenbot.effects import WeatherEffects
 from screenbot.phone.apps import PhoneAppsRenderer
 from screenbot.phone.camera_pet import CameraState
 from screenbot.phone.frame import PhoneFrameRenderer
+from screenbot.photo_slideshow import PhotoSlideshowRenderer
 from screenbot.runtime import battery_powered, frame_interval_ms
 from screenbot.scene import SceneRenderer
 from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, read_settings, selected_theme
@@ -35,7 +37,7 @@ from screenbot.weather_accessories import WeatherPreview
 from screenbot.weather_accessory_renderer import WeatherAccessoryAnimator, WeatherAccessoryRenderer
 
 
-class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin):
+class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin, BobOSStatusMixin):
     def __init__(self, *, preview: bool = False, config_path: Path | None = None,
                  preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
                  preview_weather: WeatherPreview | None = None):
@@ -54,6 +56,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.weather_accessory_animator = WeatherAccessoryAnimator()
         self.theme = selected_theme(settings)
         self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
+        self.photo_slideshow = PhotoSlideshowRenderer.from_settings(self, settings, self.theme)
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
         self.now_playing_enabled = settings.getboolean('Screensaver', 'now_playing_enabled', fallback=False)
         self.now_playing = NO_MEDIA
@@ -217,20 +220,6 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.timer.stop()
         super().hideEvent(event)
 
-    def bobos_status(self, elapsed_seconds: float) -> BobOSStatus:
-        """Keep BobOS out of disabled states and yield before the real KDE lock."""
-        enabled = bobos_may_run(
-            phone_enabled=self.phone_enabled,
-            bobos_enabled=self.bobos_enabled,
-            password_lock_enabled=self.password_lock,
-            elapsed_seconds=elapsed_seconds,
-            lock_seconds=self.lock_seconds,
-        )
-        return self.bobos_timeline.status_at(
-            elapsed_seconds, enabled=enabled,
-            lock_deadline_seconds=self.lock_seconds if self.password_lock else None,
-        )
-
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -263,6 +252,8 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             self.countdown(p, w, h, t)
         if self.quick_preview:
             self.preview_hint(p, w, h, t)
+        if self.photo_slideshow is not None:
+            self.photo_slideshow.draw_notice(p, w, h, t)
         if protection != 'off':
             p.restore()
         dim_alpha = burn_in_dim_alpha(protection, t)
@@ -354,6 +345,8 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
 
     def closeEvent(self, event) -> None:
         """Request polling shutdown without delaying the screensaver close animation."""
+        if self.photo_slideshow is not None:
+            self.photo_slideshow.close()
         self._closing = True
         self.now_playing = NO_MEDIA
         if self.media_worker is not None:

@@ -30,7 +30,7 @@ def test_all_tracked_project_python_files_stay_below_the_400_line_limit() -> Non
 
 def test_each_supported_theme_is_registered_in_its_own_module() -> None:
     assert set(THEME_RENDERERS) == {
-        'space', 'mountains', 'snow', 'forest', 'city', 'aurora', 'ocean', 'desert', 'underwater'
+        'space', 'mountains', 'snow', 'forest', 'city', 'aurora', 'ocean', 'desert', 'underwater', 'photos'
     }
     assert all(callable(renderer) for renderer in THEME_RENDERERS.values())
     for theme in THEME_RENDERERS:

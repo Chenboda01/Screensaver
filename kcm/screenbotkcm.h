@@ -6,6 +6,7 @@
 class QProcess;
 class QQuickItem;
 class QSettings;
+class QUrl;
 
 class ScreenBotKcm : public KQuickConfigModule {
     Q_OBJECT
@@ -13,6 +14,11 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool previewRunning READ previewRunning NOTIFY previewRunningChanged)
     Q_PROPERTY(QString previewError READ previewError NOTIFY previewErrorChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
+    Q_PROPERTY(QString photoFolder READ photoFolder WRITE setPhotoFolder NOTIFY photoFolderChanged)
+    Q_PROPERTY(bool photoIncludeSubfolders READ photoIncludeSubfolders WRITE setPhotoIncludeSubfolders NOTIFY photoIncludeSubfoldersChanged)
+    Q_PROPERTY(int photoInterval READ photoInterval WRITE setPhotoInterval NOTIFY photoIntervalChanged)
+    Q_PROPERTY(QString photoOrder READ photoOrder WRITE setPhotoOrder NOTIFY photoOrderChanged)
+    Q_PROPERTY(QString photoFit READ photoFit WRITE setPhotoFit NOTIFY photoFitChanged)
     Q_PROPERTY(bool passwordLock READ passwordLock WRITE setPasswordLock NOTIFY passwordLockChanged)
     Q_PROPERTY(int lockMinutes READ lockMinutes WRITE setLockMinutes NOTIFY lockMinutesChanged)
     Q_PROPERTY(bool showTimer READ showTimer WRITE setShowTimer NOTIFY showTimerChanged)
@@ -56,10 +62,16 @@ public:
     QStringList modifiedSections() const;
     Q_INVOKABLE bool sectionExpanded(const QString &section) const;
     Q_INVOKABLE void setSectionExpanded(const QString &section, bool expanded);
+    Q_INVOKABLE void setPhotoFolderUrl(const QUrl &url);
     bool previewRunning() const { return m_previewProcess != nullptr; }
     QString previewError() const { return m_previewError; }
     Q_INVOKABLE void previewTheme(QQuickItem *source = nullptr);
     QString theme() const { return m_theme; }
+    QString photoFolder() const { return m_photoFolder; }
+    bool photoIncludeSubfolders() const { return m_photoIncludeSubfolders; }
+    int photoInterval() const { return m_photoInterval; }
+    QString photoOrder() const { return m_photoOrder; }
+    QString photoFit() const { return m_photoFit; }
     bool passwordLock() const { return m_passwordLock; }
     int lockMinutes() const { return m_lockMinutes; }
     bool showTimer() const { return m_showTimer; }
@@ -100,6 +112,11 @@ public:
     bool reduceMotion() const { return m_reduceMotion; }
     QString burnInProtection() const { return m_burnInProtection; }
     void setTheme(const QString &value);
+    void setPhotoFolder(const QString &value);
+    void setPhotoIncludeSubfolders(bool value);
+    void setPhotoInterval(int value);
+    void setPhotoOrder(const QString &value);
+    void setPhotoFit(const QString &value);
     void setPasswordLock(bool value);
     void setLockMinutes(int value);
     void setShowTimer(bool value);
@@ -144,6 +161,11 @@ Q_SIGNALS:
     void previewRunningChanged();
     void previewErrorChanged();
     void themeChanged();
+    void photoFolderChanged();
+    void photoIncludeSubfoldersChanged();
+    void photoIntervalChanged();
+    void photoOrderChanged();
+    void photoFitChanged();
     void passwordLockChanged();
     void lockMinutesChanged();
     void showTimerChanged();
@@ -186,10 +208,20 @@ private:
     QString m_previewError;
     void checkModified();
     QString m_theme = QStringLiteral("random");
+    QString m_photoFolder;
+    bool m_photoIncludeSubfolders = false;
+    int m_photoInterval = 15;
+    QString m_photoOrder = QStringLiteral("name");
+    QString m_photoFit = QStringLiteral("fill");
     bool m_passwordLock = false;
     int m_lockMinutes = 2;
     bool m_showTimer = false;
     QString m_savedTheme = QStringLiteral("random");
+    QString m_savedPhotoFolder;
+    bool m_savedPhotoIncludeSubfolders = false;
+    int m_savedPhotoInterval = 15;
+    QString m_savedPhotoOrder = QStringLiteral("name");
+    QString m_savedPhotoFit = QStringLiteral("fill");
     bool m_savedPasswordLock = false;
     int m_savedLockMinutes = 2;
     bool m_savedShowTimer = false;

@@ -20,7 +20,7 @@ def read_settings(config_path: Path | None = None) -> configparser.ConfigParser:
 def selected_theme(settings):
     selection = settings.get('Screensaver', 'theme', fallback='random').strip().lower()
     if selection not in ('random', 'space', 'mountains', 'snow', 'forest', 'city',
-                         'aurora', 'ocean', 'desert', 'underwater'):
+                         'aurora', 'ocean', 'desert', 'underwater', 'photos'):
         selection = 'random'
     return random.choice(('space', 'mountains', 'snow', 'forest', 'city',
                           'aurora', 'ocean', 'desert', 'underwater')) if selection == 'random' else selection

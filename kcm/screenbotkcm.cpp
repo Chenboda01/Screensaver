@@ -2,6 +2,7 @@
 #include <KPluginFactory>
 #include <KLocalizedString>
 #include <QSettings>
+#include <QUrl>
 #include <QProcess>
 #include <QDir>
 #include <QFile>
@@ -94,7 +95,10 @@ ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data)
 
 QStringList ScreenBotKcm::modifiedSections() const {
     QStringList sections;
-    if (m_theme != m_savedTheme) sections.append(QStringLiteral("theme"));
+    if (m_theme != m_savedTheme || m_photoFolder != m_savedPhotoFolder
+        || m_photoIncludeSubfolders != m_savedPhotoIncludeSubfolders
+        || m_photoInterval != m_savedPhotoInterval || m_photoOrder != m_savedPhotoOrder
+        || m_photoFit != m_savedPhotoFit) sections.append(QStringLiteral("theme"));
     if (m_clockVisible != m_savedClockVisible
         || m_nowPlayingEnabled != m_savedNowPlayingEnabled
         || m_clockFormat != m_savedClockFormat
@@ -158,7 +162,17 @@ void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
 void ScreenBotKcm::load() {
     QSettings cfg(configFile(), QSettings::IniFormat);
     const QString theme = cfg.value(QStringLiteral("Screensaver/theme"), QStringLiteral("random")).toString();
-    const QString validTheme = (theme == QLatin1String("space") || theme == QLatin1String("mountains") || theme == QLatin1String("random") || theme == QLatin1String("snow") || theme == QLatin1String("forest") || theme == QLatin1String("city") || theme == QLatin1String("aurora") || theme == QLatin1String("ocean") || theme == QLatin1String("desert") || theme == QLatin1String("underwater")) ? theme : QStringLiteral("random");
+    const QString validTheme = (theme == QLatin1String("space") || theme == QLatin1String("mountains") || theme == QLatin1String("random") || theme == QLatin1String("snow") || theme == QLatin1String("forest") || theme == QLatin1String("city") || theme == QLatin1String("aurora") || theme == QLatin1String("ocean") || theme == QLatin1String("desert") || theme == QLatin1String("underwater") || theme == QLatin1String("photos")) ? theme : QStringLiteral("random");
+    const QString defaultPhotoFolder = QDir::homePath() + QStringLiteral("/Pictures");
+    const QString requestedPhotoFolder = cfg.value(QStringLiteral("Screensaver/photo_folder"), defaultPhotoFolder).toString().trimmed();
+    const QString photoFolder = requestedPhotoFolder.isEmpty() ? defaultPhotoFolder : QDir::cleanPath(requestedPhotoFolder);
+    const bool photoIncludeSubfolders = cfg.value(QStringLiteral("Screensaver/photo_include_subfolders"), false).toBool();
+    const int photoInterval = qBound(5, cfg.value(QStringLiteral("Screensaver/photo_interval_seconds"), 15).toInt(), 120);
+    const QString requestedPhotoOrder = cfg.value(QStringLiteral("Screensaver/photo_order"), QStringLiteral("name")).toString();
+    const QString photoOrder = requestedPhotoOrder == QLatin1String("date") || requestedPhotoOrder == QLatin1String("random")
+        ? requestedPhotoOrder : QStringLiteral("name");
+    const QString requestedPhotoFit = cfg.value(QStringLiteral("Screensaver/photo_fit"), QStringLiteral("fill")).toString();
+    const QString photoFit = requestedPhotoFit == QLatin1String("fit-blur") ? requestedPhotoFit : QStringLiteral("fill");
     const bool lock = cfg.value(QStringLiteral("Screensaver/password_lock"), false).toBool();
     const int mins = qBound(1, cfg.value(QStringLiteral("Screensaver/lock_minutes"), 2).toInt(), 60);
     const bool show = cfg.value(QStringLiteral("Screensaver/show_timer"), false).toBool();
@@ -241,6 +255,11 @@ void ScreenBotKcm::load() {
         || requestedBurnInProtection == QLatin1String("strong")
         ? requestedBurnInProtection : QStringLiteral("standard");
     if (m_theme != validTheme) { m_theme = validTheme; Q_EMIT themeChanged(); }
+    if (m_photoFolder != photoFolder) { m_photoFolder = photoFolder; Q_EMIT photoFolderChanged(); }
+    if (m_photoIncludeSubfolders != photoIncludeSubfolders) { m_photoIncludeSubfolders = photoIncludeSubfolders; Q_EMIT photoIncludeSubfoldersChanged(); }
+    if (m_photoInterval != photoInterval) { m_photoInterval = photoInterval; Q_EMIT photoIntervalChanged(); }
+    if (m_photoOrder != photoOrder) { m_photoOrder = photoOrder; Q_EMIT photoOrderChanged(); }
+    if (m_photoFit != photoFit) { m_photoFit = photoFit; Q_EMIT photoFitChanged(); }
     if (m_passwordLock != lock) { m_passwordLock = lock; Q_EMIT passwordLockChanged(); }
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
     if (m_showTimer != show) { m_showTimer = show; Q_EMIT showTimerChanged(); }
@@ -278,6 +297,11 @@ void ScreenBotKcm::load() {
     if (m_reduceMotion != reduceMotion) { m_reduceMotion = reduceMotion; Q_EMIT reduceMotionChanged(); }
     if (m_burnInProtection != burnInProtection) { m_burnInProtection = burnInProtection; Q_EMIT burnInProtectionChanged(); }
     m_savedTheme = m_theme;
+    m_savedPhotoFolder = m_photoFolder;
+    m_savedPhotoIncludeSubfolders = m_photoIncludeSubfolders;
+    m_savedPhotoInterval = m_photoInterval;
+    m_savedPhotoOrder = m_photoOrder;
+    m_savedPhotoFit = m_photoFit;
     m_savedPasswordLock = m_passwordLock;
     m_savedLockMinutes = m_lockMinutes;
     m_savedShowTimer = m_showTimer;
@@ -319,6 +343,11 @@ void ScreenBotKcm::load() {
 
 void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/theme"), m_theme);
+    cfg.setValue(QStringLiteral("Screensaver/photo_folder"), m_photoFolder);
+    cfg.setValue(QStringLiteral("Screensaver/photo_include_subfolders"), m_photoIncludeSubfolders);
+    cfg.setValue(QStringLiteral("Screensaver/photo_interval_seconds"), m_photoInterval);
+    cfg.setValue(QStringLiteral("Screensaver/photo_order"), m_photoOrder);
+    cfg.setValue(QStringLiteral("Screensaver/photo_fit"), m_photoFit);
     cfg.setValue(QStringLiteral("Screensaver/password_lock"), m_passwordLock);
     cfg.setValue(QStringLiteral("Screensaver/lock_minutes"), m_lockMinutes);
     cfg.setValue(QStringLiteral("Screensaver/show_timer"), m_showTimer);
@@ -370,6 +399,11 @@ void ScreenBotKcm::save() {
         return;
     }
     m_savedTheme = m_theme;
+    m_savedPhotoFolder = m_photoFolder;
+    m_savedPhotoIncludeSubfolders = m_photoIncludeSubfolders;
+    m_savedPhotoInterval = m_photoInterval;
+    m_savedPhotoOrder = m_photoOrder;
+    m_savedPhotoFit = m_photoFit;
     m_savedPasswordLock = m_passwordLock;
     m_savedLockMinutes = m_lockMinutes;
     m_savedShowTimer = m_showTimer;
@@ -410,10 +444,57 @@ void ScreenBotKcm::save() {
 }
 
 void ScreenBotKcm::setTheme(const QString &value) {
-    if (value != QLatin1String("space") && value != QLatin1String("mountains") && value != QLatin1String("random") && value != QLatin1String("snow") && value != QLatin1String("forest") && value != QLatin1String("city") && value != QLatin1String("aurora") && value != QLatin1String("ocean") && value != QLatin1String("desert") && value != QLatin1String("underwater")) return;
+    if (value != QLatin1String("space") && value != QLatin1String("mountains") && value != QLatin1String("random") && value != QLatin1String("snow") && value != QLatin1String("forest") && value != QLatin1String("city") && value != QLatin1String("aurora") && value != QLatin1String("ocean") && value != QLatin1String("desert") && value != QLatin1String("underwater") && value != QLatin1String("photos")) return;
     if (value == m_theme) return;
     m_theme = value;
     Q_EMIT themeChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setPhotoFolder(const QString &value) {
+    const QString folder = value.trimmed().isEmpty()
+        ? QDir::homePath() + QStringLiteral("/Pictures") : QDir::cleanPath(value.trimmed());
+    if (folder == m_photoFolder) return;
+    m_photoFolder = folder;
+    Q_EMIT photoFolderChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setPhotoFolderUrl(const QUrl &url) {
+    if (!url.isLocalFile()) return;
+    const QString path = url.toLocalFile();
+    if (!path.isEmpty()) setPhotoFolder(path);
+}
+
+void ScreenBotKcm::setPhotoIncludeSubfolders(bool value) {
+    if (value == m_photoIncludeSubfolders) return;
+    m_photoIncludeSubfolders = value;
+    Q_EMIT photoIncludeSubfoldersChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setPhotoInterval(int value) {
+    value = qBound(5, value, 120);
+    if (value == m_photoInterval) return;
+    m_photoInterval = value;
+    Q_EMIT photoIntervalChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setPhotoOrder(const QString &value) {
+    if (value != QLatin1String("name") && value != QLatin1String("date")
+        && value != QLatin1String("random")) return;
+    if (value == m_photoOrder) return;
+    m_photoOrder = value;
+    Q_EMIT photoOrderChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setPhotoFit(const QString &value) {
+    if (value != QLatin1String("fill") && value != QLatin1String("fit-blur")) return;
+    if (value == m_photoFit) return;
+    m_photoFit = value;
+    Q_EMIT photoFitChanged();
     checkModified();
 }
 

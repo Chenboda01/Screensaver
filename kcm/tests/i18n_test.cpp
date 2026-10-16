@@ -68,7 +68,7 @@ private Q_SLOTS:
         QVERIFY(!before.isEmpty());
         auto *theme = item("themeChoice");
         QVERIFY(theme);
-        QCOMPARE(theme->property("count").toInt(), 10);
+        QCOMPARE(theme->property("count").toInt(), 11);
         theme->setProperty("currentIndex", 4);
         QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, 4)));
         QVERIFY(kcm->needsSave());
@@ -94,6 +94,13 @@ private Q_SLOTS:
             QCOMPARE(kcm->property("theme").toString(), QStringLiteral("forest"));
             QVERIFY(!kcm->needsSave());
         }
+        theme->setProperty("currentIndex", 10);
+        QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, 10)));
+        QCOMPARE(kcm->property("theme").toString(), QStringLiteral("photos"));
+        QVERIFY(kcm->needsSave());
+        kcm->load();
+        QCOMPARE(kcm->property("theme").toString(), QStringLiteral("forest"));
+        QVERIFY(!kcm->needsSave());
         const QStringList keys{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock")};
         window.setColor(QApplication::palette().window().color());
         window.show();

@@ -10,9 +10,11 @@ KCMUtils.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.largeSpacing
         Controls.Label {
+            objectName: "introText"
             Layout.fillWidth: true
             text: i18nc("@label", "Choose how Bob appears and when KDE locks your screen.")
             wrapMode: Text.WordWrap
+            color: Kirigami.Theme.textColor
         }
         Controls.Button {
             objectName: "themePreviewButton"
@@ -36,16 +38,106 @@ KCMUtils.SimpleKCM {
             settings: kcm
             sectionKey: "theme"
             title: i18nc("@label", "Theme")
-            summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City"), i18nc("@item:inlistbox Theme", "Aurora"), i18nc("@item:inlistbox Theme", "Ocean / Beach"), i18nc("@item:inlistbox Theme", "Desert"), i18nc("@item:inlistbox Theme", "Underwater")][["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"].indexOf(kcm.theme)]
+            summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City"), i18nc("@item:inlistbox Theme", "Aurora"), i18nc("@item:inlistbox Theme", "Ocean / Beach"), i18nc("@item:inlistbox Theme", "Desert"), i18nc("@item:inlistbox Theme", "Underwater"), i18nc("@item:inlistbox Theme", "My photos")][["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater", "photos"].indexOf(kcm.theme)]
             form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.ComboBox {
                 implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
                 objectName: "themeChoice"
                 Kirigami.FormData.label: i18nc("@label", "Theme:")
-                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City"), i18nc("@label", "Aurora"), i18nc("@label", "Ocean / Beach"), i18nc("@label", "Desert"), i18nc("@label", "Underwater")]
-                currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"].indexOf(kcm.theme))
-                onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"][index] }
+                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City"), i18nc("@label", "Aurora"), i18nc("@label", "Ocean / Beach"), i18nc("@label", "Desert"), i18nc("@label", "Underwater"), i18nc("@label", "My photos")]
+                currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater", "photos"].indexOf(kcm.theme))
+                onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater", "photos"][index] }
+            }
+            Controls.TextField {
+                id: photoFolderField
+                objectName: "photoFolderField"
+                Kirigami.FormData.label: i18nc("@label", "Photo folder:")
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
+                Layout.maximumWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
+                text: kcm.photoFolder
+                enabled: kcm.theme === "photos"
+                Accessible.name: i18nc("@label", "Local photo folder")
+                onTextEdited: kcm.photoFolder = text
+                Connections {
+                    target: kcm
+                    function onPhotoFolderChanged() {
+                        if (photoFolderField.text !== kcm.photoFolder) photoFolderField.text = kcm.photoFolder
+                    }
+                }
+            }
+            Controls.Button {
+                objectName: "photoFolderBrowseButton"
+                Kirigami.FormData.label: i18nc("@label", "Choose folder:")
+                text: i18nc("@button", "Browse…")
+                enabled: kcm.theme === "photos"
+                icon.name: "folder-open"
+                onClicked: photoFolderDialog.open()
+            }
+            FolderDialog {
+                id: photoFolderDialog
+                objectName: "photoFolderDialog"
+                title: i18nc("@title:window", "Choose photo folder")
+                currentFolder: "file://" + encodeURI(kcm.photoFolder)
+                function stageSelectedFolder(folderUrl) {
+                    kcm.setPhotoFolderUrl(folderUrl)
+                }
+                onAccepted: stageSelectedFolder(selectedFolder)
+            }
+            Controls.Switch {
+                objectName: "photoIncludeSubfolders"
+                Kirigami.FormData.label: i18nc("@label", "Subfolders:")
+                text: checked ? i18nc("@label", "Include subfolders") : i18nc("@label", "Only this folder")
+                checked: kcm.photoIncludeSubfolders
+                enabled: kcm.theme === "photos"
+                onToggled: kcm.photoIncludeSubfolders = checked
+            }
+            Controls.SpinBox {
+                objectName: "photoInterval"
+                Kirigami.FormData.label: i18nc("@label", "Seconds per photo:")
+                from: 5
+                to: 120
+                stepSize: 1
+                value: kcm.photoInterval
+                enabled: kcm.theme === "photos"
+                onValueModified: kcm.photoInterval = value
+                textFromValue: function(value, locale) { return i18nc("@label Photo display interval in seconds", "%1 sec", value) }
+            }
+            Controls.ComboBox {
+                objectName: "photoOrder"
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
+                Layout.maximumWidth: parent.width
+                Kirigami.FormData.label: i18nc("@label", "Photo order:")
+                model: [i18nc("@label Photo order", "By name"), i18nc("@label Photo order", "By date"), i18nc("@label Photo order", "Random")]
+                property var values: ["name", "date", "random"]
+                currentIndex: Math.max(0, values.indexOf(kcm.photoOrder))
+                enabled: kcm.theme === "photos"
+                onActivated: function(index) { kcm.photoOrder = values[index] }
+            }
+            Controls.ComboBox {
+                objectName: "photoFit"
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
+                Layout.maximumWidth: parent.width
+                Kirigami.FormData.label: i18nc("@label", "Photo fit:")
+                model: [i18nc("@label Photo fit", "Fill screen and crop"), i18nc("@label Photo fit", "Fit whole photo with blurred background")]
+                property var values: ["fill", "fit-blur"]
+                currentIndex: Math.max(0, values.indexOf(kcm.photoFit))
+                enabled: kcm.theme === "photos"
+                onActivated: function(index) { kcm.photoFit = values[index] }
+            }
+            Controls.Label {
+                objectName: "photoPrivacyLabel"
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
+                Layout.maximumWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
+                Kirigami.FormData.label: i18nc("@label Photo privacy", "Privacy:")
+                text: i18nc("@info Photo slideshow privacy", "Photos are read only from this local folder when My photos is selected. Hidden entries are skipped, and images are never uploaded. Remember that people nearby can see the photos while the screensaver is running.")
+                color: Kirigami.Theme.textColor
+                wrapMode: Text.WordWrap
+                opacity: kcm.theme === "photos" ? 1.0 : 0.45
             }
         }
         CollapsibleSection {
@@ -118,6 +210,7 @@ KCMUtils.SimpleKCM {
                 Kirigami.FormData.label: i18nc("@label", "Preview:")
                 text: i18nc("@label", "Use Preview above to see Bob with these staged settings. Weather accessories can layer alongside your choice; your headwear stays visible when weather gear would overlap.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
         }
         CollapsibleSection {
@@ -175,6 +268,7 @@ KCMUtils.SimpleKCM {
                 Layout.maximumWidth: parent.width
                 wrapMode: Text.WordWrap
                 text: i18nc("@info", "Off by default: media titles can be personal. Shows player metadata on the primary screen only; never controls playback. Previews keep media hidden.")
+                color: Kirigami.Theme.textColor
             }
             Controls.SpinBox {
                 Kirigami.FormData.label: i18nc("@label", "Clock font size:")
@@ -206,6 +300,7 @@ KCMUtils.SimpleKCM {
                 Kirigami.FormData.label: i18nc("@label", "Animated weather:")
                 text: i18nc("@label", "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
             Controls.Switch {
                 objectName: "bobWeatherEnabledSwitch"
@@ -577,6 +672,7 @@ KCMUtils.SimpleKCM {
                 Layout.maximumWidth: parent.width
                 text: i18nc("@label", "The countdown begins when Bob appears. Its color smoothly changes green → yellow → orange → red as time runs out. KDE handles the actual password lock.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
             Controls.Label {
                 Layout.fillWidth: true
@@ -584,12 +680,15 @@ KCMUtils.SimpleKCM {
                 Layout.maximumWidth: parent.width
                 text: i18nc("@label", "For password protection, configure KDE Screen Locking to require the password immediately and disable any unlock grace period. Disabling this option does not disable KDE's separate automatic locking or suspend locks.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
         }
         Controls.Label {
+            objectName: "applyInstructions"
             Layout.fillWidth: true
             text: i18nc("@label", "Press Apply to save your changes. Changes take effect the next time Bob starts.")
             wrapMode: Text.WordWrap
+            color: Kirigami.Theme.textColor
         }
     }
     ColorDialog {

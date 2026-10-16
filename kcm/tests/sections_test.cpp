@@ -15,6 +15,9 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QUrl>
+#include <algorithm>
+#include <cmath>
 
 class SectionsTest : public QObject {
     Q_OBJECT
@@ -53,6 +56,8 @@ private Q_SLOTS:
         const auto before = savedBytes();
         const QVariantMap changes{
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
+            {QStringLiteral("photoFolder"), QStringLiteral("/tmp/screenbot-photo-test")}, {QStringLiteral("photoIncludeSubfolders"), true},
+            {QStringLiteral("photoInterval"), 45}, {QStringLiteral("photoOrder"), QStringLiteral("random")}, {QStringLiteral("photoFit"), QStringLiteral("fit-blur")},
             {QStringLiteral("nowPlayingEnabled"), true}, {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
             {QStringLiteral("bobWeatherEnabled"), false},
@@ -125,8 +130,11 @@ private Q_SLOTS:
         QVERIFY(QTest::qWaitForWindowExposed(&view));
         auto *section = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("bobosSection"));
         auto *button = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("bobosPreviewButton"));
+        auto *theme = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("themeSection"));
         QVERIFY(section);
         QVERIFY(button);
+        QVERIFY(theme);
+        theme->setProperty("expanded", false);
         section->setProperty("expanded", true);
         QTest::qWait(300);
         QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier,
@@ -166,6 +174,86 @@ private Q_SLOTS:
         QVERIFY(item(QStringLiteral("bobColorPreset")));
         QVERIFY(item(QStringLiteral("bobCustomColorButton")));
         QVERIFY(item(QStringLiteral("bobAccessory")));
+        auto *photoFolder = item(QStringLiteral("photoFolderField"));
+        auto *photoPrivacy = item(QStringLiteral("photoPrivacyLabel"));
+        auto *photoSubfolders = item(QStringLiteral("photoIncludeSubfolders"));
+        auto *photoInterval = item(QStringLiteral("photoInterval"));
+        auto *photoOrder = item(QStringLiteral("photoOrder"));
+        auto *photoFit = item(QStringLiteral("photoFit"));
+        QVERIFY(photoFolder);
+        QVERIFY(photoPrivacy);
+        QVERIFY(photoSubfolders);
+        QVERIFY(photoInterval);
+        QVERIFY(photoOrder);
+        QVERIFY(photoFit);
+        const auto luminance = [](const QColor &color) {
+            const auto channel = [](int value) {
+                const double normalized = value / 255.0;
+                return normalized <= 0.04045 ? normalized / 12.92 : std::pow((normalized + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * channel(color.red()) + 0.7152 * channel(color.green()) + 0.0722 * channel(color.blue());
+        };
+        const auto contrastRatio = [&](QQuickItem *label) {
+            const QColor foreground = label->property("color").value<QColor>();
+            const QColor background = view.color();
+            const double lighter = std::max(luminance(foreground), luminance(background));
+            const double darker = std::min(luminance(foreground), luminance(background));
+            return (lighter + 0.05) / (darker + 0.05);
+        };
+        for (const auto &name : {QStringLiteral("introText"), QStringLiteral("themeTitleLabel"), QStringLiteral("applyInstructions")}) {
+            auto *label = item(name);
+            QVERIFY(label);
+            const QColor foreground = label->property("color").value<QColor>();
+            QVERIFY2(contrastRatio(label) >= 4.5,
+                     qPrintable(QStringLiteral("Insufficient text contrast for %1: foreground %2, background %3")
+                         .arg(name, foreground.name(), view.color().name())));
+        }
+        auto *photoFolderDialog = view.rootObject()->findChild<QObject *>(QStringLiteral("photoFolderDialog"));
+        QVERIFY(photoFolderDialog);
+        QVERIFY(!photoFolder->property("enabled").toBool());
+        kcm.setTheme(QStringLiteral("photos"));
+        QCoreApplication::processEvents();
+        QVERIFY(photoFolder->property("enabled").toBool());
+        const QUrl selectedFolder = QUrl::fromLocalFile(QStringLiteral("/tmp/synthetic album"));
+        QVERIFY(QMetaObject::invokeMethod(photoFolderDialog, "stageSelectedFolder", Qt::DirectConnection,
+                                          Q_ARG(QVariant, QVariant::fromValue(selectedFolder))));
+        QCOMPARE(kcm.photoFolder(), QStringLiteral("/tmp/synthetic album"));
+        QVERIFY(kcm.needsSave());
+        kcm.load();
+        QCOMPARE(kcm.photoFolder(), QDir::homePath() + QStringLiteral("/Pictures"));
+        kcm.setTheme(QStringLiteral("photos"));
+        kcm.setPhotoFolder(QStringLiteral("/tmp/screenbot-photo-ui"));
+        QVERIFY(kcm.needsSave());
+        kcm.load();
+        QCOMPARE(kcm.theme(), QStringLiteral("random"));
+        QCOMPARE(kcm.photoFolder(), QDir::homePath() + QStringLiteral("/Pictures"));
+        QVERIFY(!photoFolder->property("enabled").toBool());
+        kcm.setTheme(QStringLiteral("photos"));
+        kcm.setPhotoFolder(QStringLiteral("/tmp/synthetic folder/with a deliberately long photo directory name"));
+        QCoreApplication::processEvents();
+        const QString photoEvidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
+        qreal narrowPrivacyHeight = 0;
+        for (const int viewportWidth : {768, 1440}) {
+            view.resize(viewportWidth, 900);
+            QCoreApplication::processEvents();
+            QTest::qWait(300);
+            const qreal folderRight = photoFolder->mapToItem(
+                view.rootObject(), QPointF(photoFolder->width(), 0)).x();
+            const qreal privacyRight = photoPrivacy->mapToItem(
+                view.rootObject(), QPointF(photoPrivacy->width(), 0)).x();
+            QVERIFY2(folderRight <= view.rootObject()->width() + 1,
+                     qPrintable(QStringLiteral("Photo folder field clipped at %1px: right %2 root %3 field width %4")
+                         .arg(viewportWidth).arg(folderRight).arg(view.rootObject()->width()).arg(photoFolder->width())));
+            QVERIFY2(privacyRight <= view.rootObject()->width() + 1,
+                     qPrintable(QStringLiteral("Photo privacy text clipped at %1px: right %2 root %3 label width %4")
+                         .arg(viewportWidth).arg(privacyRight).arg(view.rootObject()->width()).arg(photoPrivacy->width())));
+            QVERIFY(photoPrivacy->height() > 0);
+            if (viewportWidth == 768) narrowPrivacyHeight = photoPrivacy->height();
+            else QVERIFY(photoPrivacy->height() <= narrowPrivacyHeight);
+            if (!photoEvidence.isEmpty())
+                QVERIFY(view.grabWindow().save(photoEvidence + QStringLiteral("/photo-settings-%1.png").arg(viewportWidth)));
+        }
+        kcm.load();
         QVERIFY(view.rootObject()->findChild<QObject *>(QStringLiteral("bobColorDialog")));
         for (const auto &key : keys) {
             auto *section = item(key + QStringLiteral("Section"));

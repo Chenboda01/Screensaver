@@ -15,6 +15,8 @@ ScreenBot follows Bob, a floating robot, as he explores themed worlds and fictio
 
 The **Customize Bob** section lets you choose Bob's display name, a cyan/green/purple/orange/pink/gold palette or any custom color, and an optional cap, bow tie, headphones, flower, crown, or antenna ball. Names support emoji and other languages and are capped at 16 visible characters. Your selected accessory stays in settings when weather gear appears; headwear that would overlap the Live Sky layer takes precedence.
 
+Choose **My photos** explicitly in KDE Settings to show a local photo slideshow behind Bob. The Theme section lets you choose a folder (default `~/Pictures`), include subfolders, set 5–120 seconds per image, sort by name or newest file-modification date, shuffle, and fill/crop or fit the complete photo over a blurred copy. Discovery and decoding happen in background workers; images are downscaled and the decoded-image cache is bounded. To keep very large libraries responsive, each scan visits at most 1,024 folders and retains at most 5,000 images; the slideshow may omit entries beyond those limits. Hidden files, hidden directories, and symlinks are skipped. ScreenBot reads photos only while **My photos** is selected, never uploads them, and shows a local Mountains fallback if the folder is missing or has no readable images. Random mode deliberately stays with the built-in themes so it cannot unexpectedly reveal personal photos. The KCM stages every photo preference until Apply; Discard restores the saved values.
+
 The Python runtime is split into the `screenbot/` package: theme painters, weather effects, overlays, BobOS phone screens, settings, lifecycle code, and terminal agent detection are tested as separate modules. The top-level `screensaver.py` and `agent_prompt.py` remain compatibility and command-line entry points.
 
 The Performance settings also include **Burn-in protection** for OLED displays, enabled in Standard mode by default. Standard mode slowly shifts the scene and drifts the clock within its selected area. Strong mode adds a gradual fade to black after 30 minutes, reaching black at 60 minutes; any keyboard or mouse input closes the screensaver and cancels the fade. Off retains the original fixed layout and brightness.
@@ -38,6 +40,10 @@ Bob exploring the Mountains under a full moon with Live Sky enabled (six-second 
 | ![Bob exploring a tropical coast with palms, waves, and a lighthouse](assets/screenshots/ocean.webp) | ![Bob among warm desert dunes and cacti below a sunlit sky](assets/screenshots/desert.webp) |
 | **Underwater** | |
 | ![Bob wearing a transparent diving helmet above coral, fish, and bubbles](assets/screenshots/underwater.webp) | |
+| **My photos** | |
+| ![Bob floating over a locally generated sample photo in the My photos slideshow](assets/screenshots/my-photos.webp) | |
+
+The photo theme also keeps complete portrait images visible over a smoothly blurred backdrop, and shows its missing-folder message above Bob: [fit whole photo](assets/screenshots/my-photos-fit.webp) · [empty-folder fallback](assets/screenshots/my-photos-fallback.webp).
 
 ### Live Sky
 
@@ -144,7 +150,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 
 ## Features
 
-- Random, Space, Mountains, Snow, Forest, Futuristic City, Aurora, Ocean / Beach, Desert, and Underwater themes
+- Random, Space, Mountains, Snow, Forest, Futuristic City, Aurora, Ocean / Beach, Desert, Underwater, and opt-in My photos themes
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
 - Individually enabled rain, snow, thunderstorms, and fog on landscape themes; Underwater turns rain, snow, and thunderstorms into surface ripples, optional shooting stars are limited to landscapes, and Space stays free of weather overlays
 - Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
