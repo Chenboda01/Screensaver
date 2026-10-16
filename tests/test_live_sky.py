@@ -217,3 +217,51 @@ class QtSkyTests(unittest.TestCase):
                 if theme == 'space': self.assertFalse(saver.live_weather.enabled)
                 saver.close()
                 saver.deleteLater()
+
+    def test_space_theme_suppresses_every_weather_and_shooting_star_effect(self):
+        for live_sky in ('false', 'true'):
+            settings = configparser.ConfigParser()
+            settings['Screensaver'] = {
+                'theme': 'space', 'live_sky_enabled': live_sky,
+                'rain_enabled': 'true', 'snow_enabled': 'true',
+                'thunderstorms_enabled': 'true', 'fog_enabled': 'true',
+                'shooting_stars_enabled': 'true',
+            }
+            with self.subTest(live_sky=live_sky), \
+                 patch('screensaver.read_settings', return_value=settings), \
+                 patch.object(LiveWeather, 'refresh'):
+                saver = Saver()
+                image = QImage(640, 360, QImage.Format.Format_ARGB32)
+                painter = QPainter(image)
+                with patch.object(saver, 'draw_rain') as rain, \
+                     patch.object(saver, 'draw_snowfall') as snow, \
+                     patch.object(saver, 'draw_thunderstorms') as thunder, \
+                     patch.object(saver, 'draw_fog') as fog, \
+                     patch.object(saver, 'draw_shooting_stars') as shooting_stars:
+                    saver.weather(painter, 640, 360, 1.0)
+                    rain.assert_not_called()
+                    snow.assert_not_called()
+                    thunder.assert_not_called()
+                    fog.assert_not_called()
+                    shooting_stars.assert_not_called()
+                painter.end()
+                saver.close()
+                saver.deleteLater()
+
+    def test_manual_shooting_stars_remain_available_on_landscapes(self):
+        settings = configparser.ConfigParser()
+        settings['Screensaver'] = {
+            'theme': 'forest', 'live_sky_enabled': 'false',
+            'shooting_stars_enabled': 'true',
+        }
+        with patch('screensaver.read_settings', return_value=settings), \
+             patch.object(LiveWeather, 'refresh'):
+            saver = Saver()
+            image = QImage(640, 360, QImage.Format.Format_ARGB32)
+            painter = QPainter(image)
+            with patch.object(saver, 'draw_shooting_stars') as shooting_stars:
+                saver.weather(painter, 640, 360, 1.0)
+                shooting_stars.assert_called_once_with(painter, 640, 360, 1.0)
+            painter.end()
+            saver.close()
+            saver.deleteLater()

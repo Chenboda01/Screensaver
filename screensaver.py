@@ -468,11 +468,11 @@ class Saver(QWidget):
         p.setPen(Qt.PenStyle.NoPen)
 
     def weather(self, p: QPainter, w: int, h: int, t: float) -> None:
+        # Space uses a dry, atmosphere-free backdrop. Keep this guard before
+        # both the Live Sky and manual-effect paths so saved toggles cannot leak in.
+        if self.theme == 'space':
+            return
         if self.live_sky_enabled:
-            if self.theme == 'space':
-                if self.shooting_stars_enabled:
-                    self.draw_shooting_stars(p, w, h, t)
-                return
             category = self.live_weather.weather.category
             if category in ('rain', 'thunderstorm'):
                 self.draw_rain(p, w, h, t)
@@ -491,7 +491,7 @@ class Saver(QWidget):
             self.draw_fog(p, w, h, t)
         if self.thunderstorms_enabled:
             self.draw_thunderstorms(p, w, h, t)
-        if self.shooting_stars_enabled and self.theme == 'space':
+        if self.shooting_stars_enabled:
             self.draw_shooting_stars(p, w, h, t)
 
     def draw_rain(self, p: QPainter, w: int, h: int, t: float) -> None:

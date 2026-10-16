@@ -73,7 +73,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 
 - Random, Space, Mountains, Snow, Forest, and Futuristic City themes
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
-- Individually enabled animated rain, snow, thunderstorms, fog, and Space shooting stars
+- Individually enabled rain, snow, thunderstorms, and fog on landscape themes; optional shooting stars are limited to landscapes, and Space stays free of weather overlays
 - Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
 - Manual launches remain available regardless of the automatic agent policy

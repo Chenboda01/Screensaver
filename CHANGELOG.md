@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Suppressed rain, snow, thunderstorms, fog, and shooting-star overlays in the Space theme; manual weather and shooting-star settings remain available on landscape themes.
+
 ## V22
 
 - Added opt-in Live Sky mode with local time-of-day and lunar rendering, optional weather-aware animations, KDE settings, asynchronous weather updates, and an offline cache.

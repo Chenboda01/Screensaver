@@ -63,14 +63,14 @@ KCMUtils.SimpleKCM {
         }
         Controls.Label {
             Kirigami.FormData.label: "Animated weather:"
-            text: "Choose any effects to layer over the scene. Shooting stars appear in Space."
+            text: "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes."
             wrapMode: Text.WordWrap
         }
         Controls.Switch {
             Kirigami.FormData.label: "Rain:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.rainEnabled
-            enabled: !kcm.liveSkyEnabled
+            enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
             opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.rainEnabled = checked
         }
@@ -78,7 +78,7 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.label: "Snowfall:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.snowEnabled
-            enabled: !kcm.liveSkyEnabled
+            enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
             opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.snowEnabled = checked
         }
@@ -86,7 +86,7 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.label: "Thunderstorms:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.thunderstormsEnabled
-            enabled: !kcm.liveSkyEnabled
+            enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
             opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.thunderstormsEnabled = checked
         }
@@ -94,14 +94,16 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.label: "Fog:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.fogEnabled
-            enabled: !kcm.liveSkyEnabled
+            enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
             opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.fogEnabled = checked
         }
         Controls.Switch {
-            Kirigami.FormData.label: "Shooting stars:"
+            Kirigami.FormData.label: "Shooting stars (landscapes):"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.shootingStarsEnabled
+            enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
+            opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.shootingStarsEnabled = checked
         }
         Controls.Label {
