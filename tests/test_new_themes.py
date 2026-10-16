@@ -192,3 +192,70 @@ def test_underwater_bubbles_jellyfish_and_diving_helmet_are_visible(app: QApplic
         painter.end()
     # Then the scene contains visible ocean-life and helmet pixels.
     assert _ink_pixels(image) > 0
+
+
+def test_production_compositor_keeps_clock_bob_and_bobos_available_in_each_theme(
+        app: QApplication, tmp_path) -> None:
+    from bobos import BobOSPhase, BobOSStatus
+    from screensaver import Saver
+
+    del app
+    # Given each new theme using the production Saver and phone renderer.
+    config = tmp_path / 'theme-settings.ini'
+    config.write_text('[Screensaver]\ntheme=aurora\nlive_sky_enabled=false\n')
+    saver = Saver(preview=True, config_path=config)
+    for theme in ('aurora', 'ocean', 'desert', 'underwater'):
+        saver.theme = theme
+        image = QImage(WIDTH, HEIGHT, QImage.Format.Format_ARGB32_Premultiplied)
+        image.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(image)
+        try:
+            # When scenery, customizable clock, floating Bob, and fictional BobOS are composited.
+            saver.draw_scenery(painter, WIDTH, HEIGHT, 12.0)
+            saver.clock(painter, WIDTH, HEIGHT)
+            saver.bob(painter, WIDTH, HEIGHT, 12.0, BobOSStatus(BobOSPhase.EXPLORING, 0.0))
+            saver.draw_phone_os(painter, WIDTH, HEIGHT, BobOSStatus(BobOSPhase.HOME, 4.0), 12.0)
+        finally:
+            painter.end()
+        # Then the complete themed frame remains renderable.
+        assert _ink_pixels(image) > WIDTH * HEIGHT // 2, theme
+    saver.close()
+
+
+@pytest.mark.parametrize("live", [False, True])
+def test_underwater_weather_dispatch_uses_only_the_surface_layer(tmp_path, live: bool) -> None:
+    from unittest.mock import patch
+
+    from PyQt6.QtGui import QImage, QPainter
+
+    from screensaver import Saver
+
+    # Given the production underwater compositor with manual or Live Sky precipitation.
+    config = tmp_path / f"underwater-{live}.ini"
+    config.write_text(
+        "[Screensaver]\ntheme=underwater\nlive_sky_enabled=" + str(live).lower()
+        + "\nrain_enabled=true\nsnow_enabled=true\nthunderstorms_enabled=true\n"
+    )
+    saver = Saver(preview=True, config_path=config)
+    saver.live_weather.located = True
+    saver.live_weather.observation = Weather(63, 20.0, 5.0, 10.0, 12.0)
+    image = QImage(WIDTH, HEIGHT, QImage.Format.Format_ARGB32_Premultiplied)
+    painter = QPainter(image)
+    try:
+        # When the ordinary weather hook handles precipitation for this selected theme.
+        with patch("screenbot.themes.underwater.draw_surface_ripples") as ripples, \
+                patch.object(saver, "draw_rain") as rain, \
+                patch.object(saver, "draw_snowfall") as snowfall, \
+                patch.object(saver, "draw_thunderstorms") as thunder, \
+                patch.object(saver, "draw_fog") as fog:
+            saver.weather(painter, WIDTH, HEIGHT, 8.0)
+        # Then the ripple module receives the same scene snapshot, and falling effects stay off.
+        ripples.assert_called_once()
+        assert ripples.call_args.args[1].environment.live_sky_enabled is live
+        rain.assert_not_called()
+        snowfall.assert_not_called()
+        thunder.assert_not_called()
+        fog.assert_not_called()
+    finally:
+        painter.end()
+        saver.close()

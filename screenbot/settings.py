@@ -8,6 +8,7 @@ from PyQt6.QtCore import QSettings
 from bobos import BobOSPhase
 from live_sky_network import read_location_setting
 
+
 def read_settings(config_path: Path | None = None) -> configparser.ConfigParser:
     settings = configparser.ConfigParser()
     path = config_path if config_path is not None else Path.home() / '.config' / 'screenbot-screensaver.ini'
@@ -18,9 +19,11 @@ def read_settings(config_path: Path | None = None) -> configparser.ConfigParser:
 
 def selected_theme(settings):
     selection = settings.get('Screensaver', 'theme', fallback='random').strip().lower()
-    if selection not in ('random', 'space', 'mountains', 'snow', 'forest', 'city'):
+    if selection not in ('random', 'space', 'mountains', 'snow', 'forest', 'city',
+                         'aurora', 'ocean', 'desert', 'underwater'):
         selection = 'random'
-    return random.choice(('space', 'mountains', 'snow', 'forest', 'city')) if selection == 'random' else selection
+    return random.choice(('space', 'mountains', 'snow', 'forest', 'city',
+                          'aurora', 'ocean', 'desert', 'underwater')) if selection == 'random' else selection
 
 CLOCK_POSITIONS: Final[frozenset[str]] = frozenset({
     'top-left', 'top-center', 'top-right',

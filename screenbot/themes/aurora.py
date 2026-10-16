@@ -75,9 +75,9 @@ def draw_motion(painter: QPainter, frame: ThemeFrame) -> None:
         path.closeSubpath()
         gradient = QLinearGradient(0, top, 0, frame.height * .39)
         color = QColor(base_color)
-        color.setAlpha(round(112 * intensity))
+        color.setAlpha(round(190 * intensity))
         dim = QColor(color)
-        dim.setAlpha(round(54 * intensity))
+        dim.setAlpha(round(104 * intensity))
         transparent = QColor(color)
         transparent.setAlpha(0)
         gradient.setColorAt(0.0, transparent)
@@ -85,6 +85,40 @@ def draw_motion(painter: QPainter, frame: ThemeFrame) -> None:
         gradient.setColorAt(.58, dim)
         gradient.setColorAt(1.0, transparent)
         painter.setBrush(gradient)
+        painter.drawPath(path)
+    painter.setPen(Qt.PenStyle.NoPen)
+    curtain_colors = ("#50ffc5", "#45e5e8", "#8b8cff", "#59ffd5")
+    for index, center_ratio in enumerate((.12, .37, .63, .88)):
+        center_x = frame.width * center_ratio
+        band_width = frame.width * (.12 + (index % 2) * .035)
+        phase = frame.elapsed * (.17 + index * .02) + index * 1.3
+        top = frame.height * .015
+        bottom = frame.height * (.33 + index % 2 * .07)
+        path = QPainterPath(QPointF(center_x - band_width * .42, top))
+        path.lineTo(center_x + band_width * .42, top)
+        for step in range(1, 17):
+            progress = step / 16
+            drift = (math.sin(progress * math.tau * 1.2 + phase) * band_width * .20
+                     + math.sin(progress * math.tau * 2.1 - phase * .6) * band_width * .07)
+            path.lineTo(center_x + band_width * .34 + drift, top + (bottom - top) * progress)
+        for step in range(16, -1, -1):
+            progress = step / 16
+            drift = (math.sin(progress * math.tau * 1.2 + phase) * band_width * .20
+                     + math.sin(progress * math.tau * 2.1 - phase * .6) * band_width * .07)
+            path.lineTo(center_x - band_width * .34 + drift, top + (bottom - top) * progress)
+        path.closeSubpath()
+        curtain = QLinearGradient(0, top, 0, bottom)
+        color = QColor(curtain_colors[index])
+        color.setAlpha(round(155 * intensity))
+        dim = QColor(color)
+        dim.setAlpha(round(85 * intensity))
+        invisible = QColor(color)
+        invisible.setAlpha(0)
+        curtain.setColorAt(0.0, invisible)
+        curtain.setColorAt(.12, color)
+        curtain.setColorAt(.56, dim)
+        curtain.setColorAt(1.0, invisible)
+        painter.setBrush(curtain)
         painter.drawPath(path)
     painter.setBrush(Qt.BrushStyle.NoBrush)
     for index in range(11):
@@ -97,7 +131,7 @@ def draw_motion(painter: QPainter, frame: ThemeFrame) -> None:
                  + math.sin(phase * .61 + step * .27) * frame.width * .012)
             fold.lineTo(x, y)
         fold_color = QColor("#a5ffe8" if index % 3 else "#d6b5ff")
-        fold_color.setAlpha(round((112 + index % 3 * 8) * intensity))
+        fold_color.setAlpha(round((170 + index % 3 * 8) * intensity))
         painter.setPen(QPen(fold_color, max(1.5, frame.width * .0018),
                             Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawPath(fold)

@@ -67,7 +67,7 @@ def run_scenario(scenario: str, directory: Path) -> None:
             assert window.isFullScreen() and window.isVisible()
             assert window.screen() is screen
             assert window.size() == screen.size()
-        for theme in ('space', 'mountains', 'snow', 'forest', 'city'):
+        for theme in ('space', 'mountains', 'snow', 'forest', 'city', 'aurora', 'ocean', 'desert', 'underwater'):
             saver.theme = theme
             with patch('time.monotonic', return_value=start + 20):
                 actual = secondary.grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
