@@ -264,6 +264,32 @@ class FactOverlayIntegrationTests(unittest.TestCase):
         self.assertNotEqual(saver._fact_current["id"], outgoing_id)
         saver.close()
 
+    def test_real_paint_calls_advance_the_visible_fact_timeline(self):
+        saver = self.make_saver()
+        saver.facts_interval_minutes = 1
+        saver.fact_cycler = FactCycler(rng=random.Random(2718))
+        frames = {}
+        alphas = {}
+        for elapsed in (0, 30, 59, 61, 120, 180):
+            image = QImage(800, 600, QImage.Format.Format_ARGB32_Premultiplied)
+            image.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(image)
+            alphas[elapsed] = saver.draw_fact_overlay(
+                painter, 800, 600, elapsed, BobOSPhase.EXPLORING
+            )
+            painter.end()
+            frames[elapsed] = saver._fact_current["id"]
+
+        self.assertEqual(frames[0], frames[30])
+        self.assertEqual(frames[30], frames[59])
+        self.assertAlmostEqual(alphas[59][0], .7407, places=2)
+        self.assertAlmostEqual(alphas[59][1], .2593, places=2)
+        self.assertNotEqual(frames[59], frames[61])
+        self.assertNotEqual(frames[61], frames[120])
+        self.assertNotEqual(frames[120], frames[180])
+        self.assertNotEqual(alphas[30], alphas[59])
+        saver.close()
+
     def test_off_switch_disables_card_without_advancing_the_cycler(self):
         saver = self.make_saver()
         saver.facts_enabled = False

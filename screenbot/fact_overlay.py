@@ -216,7 +216,7 @@ class FactOverlayMixin:
         return status
 
     def _advance_facts(self, elapsed: float, weather: str, full_moon: bool,
-                       visible: bool = True) -> tuple[float, float]:
+                       visible: bool | None = True) -> tuple[float, float]:
         category, _, _ = self._fact_sky_category()
         interval = self.facts_interval_minutes * 60.0
         if self._fact_category != category:
@@ -238,6 +238,10 @@ class FactOverlayMixin:
             self._fact_started_at = elapsed - float(state["phase"])
         assert self._fact_started_at is not None and self._fact_current is not None
         state = self._fact_states[category]
+        if visible is None:
+            # Preparation selects/restores a category before layout, without
+            # turning a visible interval into a paused interval on every paint.
+            return 1.0, 0.0
         if not visible:
             phase = float(state["phase"])
             self._fact_started_at = elapsed - phase
@@ -283,14 +287,16 @@ class FactOverlayMixin:
         painter.restore()
 
     def draw_fact_overlay(self, painter: QPainter, width: int, height: int,
-                          elapsed: float, phase: BobOSPhase) -> None:
+                          elapsed: float, phase: BobOSPhase) -> tuple[float, float] | None:
         if not self.facts_enabled or phase is not BobOSPhase.EXPLORING:
-            return
+            self.pause_fact_overlay(elapsed)
+            return None
         _, weather, full_moon = self._fact_sky_category()
-        self._advance_facts(elapsed, weather, full_moon, visible=False)
+        self._advance_facts(elapsed, weather, full_moon, visible=None)
         rect = self.fact_card_geometry(width, height, elapsed, self._fact_current["text"])
         if rect is None:
-            return
+            self.pause_fact_overlay(elapsed)
+            return None
         current_alpha, next_alpha = self._advance_facts(elapsed, weather, full_moon, visible=True)
         painter.save()
         painter.setPen(QPen(QColor(136, 212, 244, 190), 1.2))
@@ -301,3 +307,4 @@ class FactOverlayMixin:
         if next_alpha > 0:
             self._draw_text(painter, rect, self._fact_next, next_alpha, self.fact_labels)
         painter.restore()
+        return current_alpha, next_alpha
