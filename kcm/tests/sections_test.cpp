@@ -84,6 +84,8 @@ private Q_SLOTS:
         const QString install = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver");
         QVERIFY(QDir().mkpath(install));
         QVERIFY(QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/tests/kcm_preview/preview_probe.py"), install + QStringLiteral("/screensaver.py")));
+        QVERIFY(QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/start.sh"), install + QStringLiteral("/start.sh")));
+        QVERIFY(QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/python-runtime.sh"), install + QStringLiteral("/python-runtime.sh")));
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
         QQuickView view;
         view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);

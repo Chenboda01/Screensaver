@@ -16,6 +16,7 @@ cmake --build build/preview-test
 mkdir -p .omo/evidence/preview-run
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
   SCREENBOT_SOURCE="$PWD" \
+  SCREENBOT_TEST_PYTHON="$(command -v python3)" \
   SCREENBOT_PREVIEW_EVIDENCE="$PWD/.omo/evidence/preview-run" \
   build/preview-test/preview_integration \
   "$PWD/build/kcm/bin/plasma/kcms/systemsettings/kcm_screenbot_screensaver.so"
