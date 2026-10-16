@@ -121,7 +121,9 @@ def resolve_weather_look(request: WeatherAccessoryRequest) -> BobWeatherLook:
     if request.preview_override is not None:
         category, sun_altitude = _preview_values(request.preview_override)
 
-    active = request.enabled and request.live_sky_enabled
+    active = request.enabled and (
+        request.live_sky_enabled or request.preview_override is not None
+    )
     weather_known = conditions.fresh or request.preview_override is not None
     accessories: list[WeatherAccessory] = []
     reaction = WeatherReaction.NONE

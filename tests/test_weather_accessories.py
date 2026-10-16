@@ -163,19 +163,20 @@ def test_weather_reactions_cover_fog_lightning_wind_moon_and_deep_night() -> Non
 
 
 @pytest.mark.parametrize(
-    ("override", "expected"),
+    ("override", "expected", "live_sky"),
     [
-        (WeatherPreview.RAIN, WeatherAccessory.UMBRELLA),
-        (WeatherPreview.SNOW, WeatherAccessory.WOOL_HAT),
-        (WeatherPreview.CLEAR_NOON, WeatherAccessory.SUNGLASSES),
+        (WeatherPreview.RAIN, WeatherAccessory.UMBRELLA, False),
+        (WeatherPreview.SNOW, WeatherAccessory.WOOL_HAT, False),
+        (WeatherPreview.CLEAR_NOON, WeatherAccessory.SUNGLASSES, False),
     ],
 )
 def test_preview_overrides_work_without_live_observations(
     override: WeatherPreview,
     expected: WeatherAccessory,
+    live_sky: bool,
 ) -> None:
-    # Given unavailable weather with a forced preview condition
-    request = _request(WeatherCategory.UNKNOWN, fresh=False, override=override)
+    # Given unavailable weather and Live Sky off, with a forced preview condition
+    request = _request(WeatherCategory.UNKNOWN, fresh=False, live_sky=live_sky, override=override)
     # When Bob's look is resolved
     actual = resolve_weather_look(request)
     # Then the requested accessory is shown deterministically
@@ -188,6 +189,20 @@ def test_preview_cannot_force_weather_accessories_in_space() -> None:
     # When Bob's look is resolved
     actual = resolve_weather_look(request)
     # Then the Space theme stays free of weather items
+    assert actual.accessories == ()
+
+
+def test_preview_override_respects_disabled_accessory_setting() -> None:
+    # Given a forced preview condition with Bob's accessory setting off
+    request = _request(
+        WeatherCategory.UNKNOWN,
+        enabled=False,
+        live_sky=False,
+        override=WeatherPreview.RAIN,
+    )
+    # When Bob's look is resolved
+    actual = resolve_weather_look(request)
+    # Then the preview cannot bypass the appearance setting
     assert actual.accessories == ()
 
 
