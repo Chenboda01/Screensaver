@@ -43,6 +43,8 @@ Bob exploring the Mountains under a full moon with Live Sky enabled (six-second 
 | **My photos** | |
 | ![Bob floating over a locally generated sample photo in the My photos slideshow](assets/screenshots/my-photos.webp) | |
 
+The photo theme also keeps complete portrait images visible over a smoothly blurred backdrop, and shows its missing-folder message above Bob: [fit whole photo](assets/screenshots/my-photos-fit.webp) · [empty-folder fallback](assets/screenshots/my-photos-fallback.webp).
+
 ### Live Sky
 
 The same Mountains scene with locally calculated Boston skies and fixed example weather:

@@ -15,6 +15,7 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QUrl>
 
 class SectionsTest : public QObject {
     Q_OBJECT
@@ -181,10 +182,20 @@ private Q_SLOTS:
         QVERIFY(photoInterval);
         QVERIFY(photoOrder);
         QVERIFY(photoFit);
+        auto *photoFolderDialog = view.rootObject()->findChild<QObject *>(QStringLiteral("photoFolderDialog"));
+        QVERIFY(photoFolderDialog);
         QVERIFY(!photoFolder->property("enabled").toBool());
         kcm.setTheme(QStringLiteral("photos"));
         QCoreApplication::processEvents();
         QVERIFY(photoFolder->property("enabled").toBool());
+        const QUrl selectedFolder = QUrl::fromLocalFile(QStringLiteral("/tmp/synthetic album"));
+        QVERIFY(QMetaObject::invokeMethod(photoFolderDialog, "stageSelectedFolder", Qt::DirectConnection,
+                                          Q_ARG(QVariant, QVariant::fromValue(selectedFolder))));
+        QCOMPARE(kcm.photoFolder(), QStringLiteral("/tmp/synthetic album"));
+        QVERIFY(kcm.needsSave());
+        kcm.load();
+        QCOMPARE(kcm.photoFolder(), QDir::homePath() + QStringLiteral("/Pictures"));
+        kcm.setTheme(QStringLiteral("photos"));
         kcm.setPhotoFolder(QStringLiteral("/tmp/screenbot-photo-ui"));
         QVERIFY(kcm.needsSave());
         kcm.load();

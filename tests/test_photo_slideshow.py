@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 from PIL import Image, ImageDraw
-from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtCore import Qt, QRectF, QSize
 from PyQt6.QtGui import QColor, QImage, QPainter
 from PyQt6.QtWidgets import QApplication, QWidget
 
@@ -49,6 +49,16 @@ def _portrait(path: Path, color: tuple[int, int, int]) -> None:
     image = Image.new('RGB', (80, 120), color)
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, 79, 12), fill=(255 - color[0], 255 - color[1], 255 - color[2]))
+    image.save(path)
+
+
+def _checker_portrait(path: Path) -> None:
+    image = Image.new('RGB', (80, 120))
+    draw = ImageDraw.Draw(image)
+    for y in range(0, 120, 2):
+        for x in range(0, 80, 2):
+            color = (245, 245, 245) if (x // 2 + y // 2) % 2 else (15, 15, 15)
+            draw.rectangle((x, y, x + 1, y + 1), fill=color)
     image.save(path)
 
 
@@ -136,6 +146,39 @@ def test_fit_whole_photo_mode_uses_local_blurred_backdrop(tmp_path: Path) -> Non
     frame = _frame(slideshow, 180, 120)
     assert not frame.isNull()
     assert frame.pixelColor(2, 2) != frame.pixelColor(90, 60)
+    # The complete portrait remains centered and uncut through the interval.
+    assert frame.pixelColor(90, 0) != frame.pixelColor(2, 0)
+    assert frame.pixelColor(90, 119) != frame.pixelColor(2, 119)
+    clock = FakeClock()
+    slideshow.clock = clock
+    start = _frame(slideshow, 180, 120)
+    clock.value += 15
+    end = _frame(slideshow, 180, 120)
+    assert start == end
+    assert len(slideshow._blurred_backdrops) <= 2
+    slideshow.close()
+    owner.close()
+
+
+def test_fit_blur_backdrop_smooths_high_frequency_detail(tmp_path: Path) -> None:
+    _app()
+    _checker_portrait(tmp_path / 'checker.png')
+    owner = RenderOwner()
+    slideshow = PhotoSlideshowRenderer(
+        owner, folder=tmp_path, include_subfolders=False,
+        interval_seconds=15, order='name', fit='fit-blur', enabled=True,
+    )
+    _wait(lambda: len(slideshow.paths) == 1)
+    image = QImage(str(tmp_path / 'checker.png'))
+    raw = image.scaled(QSize(180, 120), Qt.AspectRatioMode.IgnoreAspectRatio,
+                       Qt.TransformationMode.SmoothTransformation)
+    blurred = slideshow._blurred_backdrop(image, 180, 120)
+
+    def variation(frame: QImage) -> int:
+        return sum(abs(frame.pixelColor(x, 60).red() - frame.pixelColor(x + 1, 60).red())
+                   for x in range(179))
+
+    assert variation(blurred) < variation(raw) // 4
     slideshow.close()
     owner.close()
 
@@ -171,6 +214,20 @@ def test_unreadable_photo_is_skipped_and_missing_folder_has_friendly_fallback(tm
     painter.end()
     assert not image.isNull()
     assert saver.photo_slideshow.message == 'No photos found in this folder.'
+    top_text_pixels = sum(
+        1 for y in range(10, 90) for x in range(45, 275)
+        if image.pixelColor(x, y).red() > 200
+        and image.pixelColor(x, y).green() > 200
+        and image.pixelColor(x, y).blue() > 200
+    )
+    center_text_pixels = sum(
+        1 for y in range(100, 170) for x in range(45, 275)
+        if image.pixelColor(x, y).red() > 200
+        and image.pixelColor(x, y).green() > 200
+        and image.pixelColor(x, y).blue() > 200
+    )
+    assert top_text_pixels > 0
+    assert center_text_pixels == 0
     saver.photo_slideshow.close()
     saver.close()
 

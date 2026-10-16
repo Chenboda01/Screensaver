@@ -2,6 +2,7 @@
 #include <KPluginFactory>
 #include <KLocalizedString>
 #include <QSettings>
+#include <QUrl>
 #include <QProcess>
 #include <QDir>
 #include <QFile>
@@ -451,6 +452,12 @@ void ScreenBotKcm::setPhotoFolder(const QString &value) {
     m_photoFolder = folder;
     Q_EMIT photoFolderChanged();
     checkModified();
+}
+
+void ScreenBotKcm::setPhotoFolderUrl(const QUrl &url) {
+    if (!url.isLocalFile()) return;
+    const QString path = url.toLocalFile();
+    if (!path.isEmpty()) setPhotoFolder(path);
 }
 
 void ScreenBotKcm::setPhotoIncludeSubfolders(bool value) {

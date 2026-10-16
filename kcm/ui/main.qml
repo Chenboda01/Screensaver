@@ -72,9 +72,13 @@ KCMUtils.SimpleKCM {
             }
             FolderDialog {
                 id: photoFolderDialog
+                objectName: "photoFolderDialog"
                 title: i18nc("@title:window", "Choose photo folder")
                 currentFolder: "file://" + encodeURI(kcm.photoFolder)
-                onAccepted: kcm.photoFolder = selectedFolder.toLocalFile()
+                function stageSelectedFolder(folderUrl) {
+                    kcm.setPhotoFolderUrl(folderUrl)
+                }
+                onAccepted: stageSelectedFolder(selectedFolder)
             }
             Controls.Switch {
                 objectName: "photoIncludeSubfolders"

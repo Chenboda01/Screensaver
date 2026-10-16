@@ -6,6 +6,7 @@
 class QProcess;
 class QQuickItem;
 class QSettings;
+class QUrl;
 
 class ScreenBotKcm : public KQuickConfigModule {
     Q_OBJECT
@@ -60,6 +61,7 @@ public:
     QStringList modifiedSections() const;
     Q_INVOKABLE bool sectionExpanded(const QString &section) const;
     Q_INVOKABLE void setSectionExpanded(const QString &section, bool expanded);
+    Q_INVOKABLE void setPhotoFolderUrl(const QUrl &url);
     bool previewRunning() const { return m_previewProcess != nullptr; }
     QString previewError() const { return m_previewError; }
     Q_INVOKABLE void previewTheme(QQuickItem *source = nullptr);

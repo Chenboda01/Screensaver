@@ -44,7 +44,8 @@ def seeded_random(seed: int | None = None) -> random.Random:
     return RANDOM(22 if seed is None else seed)
 
 
-def make_saver(theme: str, *, bobos: bool = False, photo_folder: Path | None = None) -> Saver:
+def make_saver(theme: str, *, bobos: bool = False, photo_folder: Path | None = None,
+               photo_fit: str = "fill") -> Saver:
     """Use isolated settings with networking, locking, and the clock disabled."""
     settings = configparser.ConfigParser()
     settings["Screensaver"] = {
@@ -53,6 +54,7 @@ def make_saver(theme: str, *, bobos: bool = False, photo_folder: Path | None = N
     }
     if photo_folder is not None:
         settings["Screensaver"]["photo_folder"] = str(photo_folder)
+    settings["Screensaver"]["photo_fit"] = photo_fit
     with patch("screenbot.app.read_settings", return_value=settings), \
          patch("screensaver.random.Random", side_effect=seeded_random), \
          patch("screensaver.time.monotonic", return_value=0.):
@@ -162,6 +164,42 @@ def main() -> None:
         if saver.photo_slideshow is None or saver.photo_slideshow._current_image is None:
             raise RuntimeError("The local demo photos did not decode for the gallery capture.")
         capture(saver, 5).save(OUTPUT / "my-photos.webp", lossless=True)
+        saver.close()
+
+        portrait_folder = folder / "portrait"
+        portrait_folder.mkdir()
+        portrait = Image.new("RGB", (800, 1200), (30, 90, 130))
+        portrait_draw = ImageDraw.Draw(portrait)
+        portrait_draw.rectangle((0, 0, 799, 250), fill=(245, 157, 103))
+        portrait_draw.ellipse((510, 105, 670, 265), fill=(255, 226, 159))
+        portrait_draw.polygon([(0, 770), (180, 560), (380, 790), (580, 510),
+                               (800, 740), (800, 1200), (0, 1200)], fill=(25, 65, 75))
+        portrait_draw.polygon([(0, 920), (240, 740), (450, 980), (650, 720),
+                               (800, 900), (800, 1200), (0, 1200)], fill=(40, 115, 120))
+        portrait.save(portrait_folder / "portrait.jpg", quality=94)
+        saver = make_saver("photos", photo_folder=portrait_folder, photo_fit="fit-blur")
+        deadline = time.monotonic() + 5
+        while (saver.photo_slideshow is not None
+               and saver.photo_slideshow._current_image is None
+               and time.monotonic() < deadline):
+            app.processEvents()
+            saver.update()
+            time.sleep(.005)
+        if saver.photo_slideshow is None or saver.photo_slideshow._current_image is None:
+            raise RuntimeError("The local portrait did not decode for the fit gallery capture.")
+        capture(saver, 5).save(OUTPUT / "my-photos-fit.webp", lossless=True)
+        saver.close()
+
+        missing_folder = folder / "missing-user-folder"
+        saver = make_saver("photos", photo_folder=missing_folder)
+        deadline = time.monotonic() + 5
+        while (saver.photo_slideshow is not None
+               and saver.photo_slideshow.message == "Loading photos…"
+               and time.monotonic() < deadline):
+            app.processEvents()
+            saver.update()
+            time.sleep(.005)
+        capture(saver, 5).save(OUTPUT / "my-photos-fallback.webp", lossless=True)
         saver.close()
 
     saver = make_saver("mountains")

@@ -7,7 +7,8 @@ import time
 from typing import Callable
 
 from PyQt6.QtCore import Qt, QSize, QRectF
-from PyQt6.QtGui import QColor, QFont, QImage, QPainter
+from PyQt6.QtGui import QColor, QFont, QImage, QPainter, QPixmap
+from PyQt6.QtWidgets import QGraphicsBlurEffect, QGraphicsPixmapItem, QGraphicsScene
 
 from screenbot.photos import EMPTY_LIBRARY_MESSAGE, PhotoLibrary, default_photo_folder
 
@@ -50,6 +51,7 @@ class PhotoSlideshowRenderer:
         self._unreadable: set[str] = set()
         self._decode_size = QSize(1, 1)
         self._closed = False
+        self._blurred_backdrops: dict[tuple[int, int, int], QImage] = {}
 
         self.library = PhotoLibrary(
             self.folder,
@@ -222,25 +224,25 @@ class PhotoSlideshowRenderer:
 
     def _draw_photo(self, painter: QPainter, image: QImage, path: Path | None, width: int, height: int,
                     phase: float, opacity: float) -> None:
-        zoom = ZOOM_START + (ZOOM_END - ZOOM_START) * phase
-        travel = (zoom - 1.0) * .38
-        seed = sum(str(path or '').encode('utf-8')) % 97
-        pan_x = math.sin(phase * math.pi + seed) * travel
-        pan_y = math.cos(phase * math.pi + seed * .7) * travel
         painter.save()
         painter.setClipRect(QRectF(0, 0, width, height))
         painter.setOpacity(opacity)
         if self.fit == 'fit-blur':
-            small = image.scaled(QSize(48, 32), Qt.AspectRatioMode.IgnoreAspectRatio,
-                                 Qt.TransformationMode.SmoothTransformation)
-            painter.drawImage(QRectF(0, 0, width, height), small)
+            backdrop = self._blurred_backdrop(image, width, height)
+            painter.drawImage(QRectF(0, 0, width, height), backdrop)
             painter.fillRect(QRectF(0, 0, width, height), QColor(0, 0, 0, 42))
-            scale = min(width / max(1, image.width()), height / max(1, image.height())) * zoom
+            # Keep the complete foreground photo visible for the full interval.
+            scale = min(width / max(1, image.width()), height / max(1, image.height()))
             dest_w, dest_h = image.width() * scale, image.height() * scale
-            x = (width - dest_w) / 2 + pan_x * width * .08
-            y = (height - dest_h) / 2 + pan_y * height * .08
+            x = (width - dest_w) / 2
+            y = (height - dest_h) / 2
             painter.drawImage(QRectF(x, y, dest_w, dest_h), image)
         else:
+            zoom = ZOOM_START + (ZOOM_END - ZOOM_START) * phase
+            travel = (zoom - 1.0) * .38
+            seed = sum(str(path or '').encode('utf-8')) % 97
+            pan_x = math.sin(phase * math.pi + seed) * travel
+            pan_y = math.cos(phase * math.pi + seed * .7) * travel
             scale = max(width / max(1, image.width()), height / max(1, image.height())) * zoom
             dest_w, dest_h = image.width() * scale, image.height() * scale
             x = (width - dest_w) / 2 + pan_x * max(0.0, dest_w - width)
@@ -248,13 +250,42 @@ class PhotoSlideshowRenderer:
             painter.drawImage(QRectF(x, y, dest_w, dest_h), image)
         painter.restore()
 
+    def _blurred_backdrop(self, image: QImage, width: int, height: int) -> QImage:
+        """Render a smooth, real blur, retaining at most two transition frames."""
+        key = (int(image.cacheKey()), width, height)
+        cached = self._blurred_backdrops.get(key)
+        if cached is not None:
+            return cached
+        source = image.scaled(QSize(width, height), Qt.AspectRatioMode.IgnoreAspectRatio,
+                              Qt.TransformationMode.SmoothTransformation)
+        pixmap_item = QGraphicsPixmapItem()
+        pixmap_item.setPixmap(QPixmap.fromImage(source))
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(max(18.0, min(width, height) * .055))
+        blur.setBlurHints(QGraphicsBlurEffect.BlurHint.QualityHint)
+        pixmap_item.setGraphicsEffect(blur)
+        scene = QGraphicsScene()
+        scene.setSceneRect(QRectF(0, 0, width, height))
+        scene.addItem(pixmap_item)
+        output = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
+        output.fill(Qt.GlobalColor.black)
+        target = QPainter(output)
+        scene.render(target, QRectF(0, 0, width, height), QRectF(0, 0, width, height),
+                     Qt.AspectRatioMode.IgnoreAspectRatio)
+        target.end()
+        self._blurred_backdrops[key] = output
+        while len(self._blurred_backdrops) > 2:
+            self._blurred_backdrops.pop(next(iter(self._blurred_backdrops)))
+        return output
+
     def _draw_fallback(self, painter: QPainter, width: int, height: int,
                        elapsed: float, message: str) -> None:
         # Keep the regular landscape/Bob/clock layers alive when the library is
         # empty or unavailable, while making the reason visible to the user.
         self.owner._draw_photo_fallback_landscape(painter, width, height, elapsed)
         painter.save()
-        box = QRectF(width * .2, height * .43, width * .6, 92)
+        box_height = 72
+        box = QRectF(width * .12, max(18, height * .05), width * .76, box_height)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(4, 14, 27, 205))
         painter.drawRoundedRect(box, 18, 18)
