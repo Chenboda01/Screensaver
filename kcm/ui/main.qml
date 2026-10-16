@@ -36,16 +36,16 @@ KCMUtils.SimpleKCM {
             settings: kcm
             sectionKey: "theme"
             title: i18nc("@label", "Theme")
-            summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City")][["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme)]
+            summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City"), i18nc("@item:inlistbox Theme", "Aurora"), i18nc("@item:inlistbox Theme", "Ocean / Beach"), i18nc("@item:inlistbox Theme", "Desert"), i18nc("@item:inlistbox Theme", "Underwater")][["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"].indexOf(kcm.theme)]
             form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.ComboBox {
                 implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
                 objectName: "themeChoice"
                 Kirigami.FormData.label: i18nc("@label", "Theme:")
-                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City")]
-                currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme))
-                onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city"][index] }
+                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City"), i18nc("@label", "Aurora"), i18nc("@label", "Ocean / Beach"), i18nc("@label", "Desert"), i18nc("@label", "Underwater")]
+                currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"].indexOf(kcm.theme))
+                onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"][index] }
             }
         }
         CollapsibleSection {
