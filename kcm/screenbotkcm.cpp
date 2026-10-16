@@ -55,7 +55,8 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_snowEnabled != m_savedSnowEnabled
         || m_thunderstormsEnabled != m_savedThunderstormsEnabled
         || m_fogEnabled != m_savedFogEnabled
-        || m_shootingStarsEnabled != m_savedShootingStarsEnabled) sections.append(QStringLiteral("weather"));
+        || m_shootingStarsEnabled != m_savedShootingStarsEnabled
+        || m_bobWeatherEnabled != m_savedBobWeatherEnabled) sections.append(QStringLiteral("weather"));
     if (m_liveSkyEnabled != m_savedLiveSkyEnabled
         || m_liveSkyLocation != m_savedLiveSkyLocation
         || m_liveSkyPlace != m_savedLiveSkyPlace
@@ -125,6 +126,7 @@ void ScreenBotKcm::load() {
     const bool thunderstorms = cfg.value(QStringLiteral("Screensaver/thunderstorms_enabled"), false).toBool();
     const bool fog = cfg.value(QStringLiteral("Screensaver/fog_enabled"), false).toBool();
     const bool shootingStars = cfg.value(QStringLiteral("Screensaver/shooting_stars_enabled"), false).toBool();
+    const bool bobWeather = cfg.value(QStringLiteral("Screensaver/bob_weather_enabled"), true).toBool();
     const bool liveSky = cfg.value(QStringLiteral("Screensaver/live_sky_enabled"), false).toBool();
     const QVariant locationValue = cfg.value(QStringLiteral("Screensaver/live_sky_location"));
     const QString requestedLiveSkyLocation = locationValue.metaType().id() == QMetaType::QStringList
@@ -188,6 +190,7 @@ void ScreenBotKcm::load() {
     if (m_thunderstormsEnabled != thunderstorms) { m_thunderstormsEnabled = thunderstorms; Q_EMIT thunderstormsEnabledChanged(); }
     if (m_fogEnabled != fog) { m_fogEnabled = fog; Q_EMIT fogEnabledChanged(); }
     if (m_shootingStarsEnabled != shootingStars) { m_shootingStarsEnabled = shootingStars; Q_EMIT shootingStarsEnabledChanged(); }
+    if (m_bobWeatherEnabled != bobWeather) { m_bobWeatherEnabled = bobWeather; Q_EMIT bobWeatherEnabledChanged(); }
     if (m_liveSkyEnabled != liveSky) { m_liveSkyEnabled = liveSky; Q_EMIT liveSkyEnabledChanged(); }
     m_liveSkyLocation = liveSkyLocation;
     Q_EMIT liveSkyLocationChanged();
@@ -219,6 +222,7 @@ void ScreenBotKcm::load() {
     m_savedThunderstormsEnabled = m_thunderstormsEnabled;
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
+    m_savedBobWeatherEnabled = m_bobWeatherEnabled;
     m_savedLiveSkyEnabled = m_liveSkyEnabled;
     m_savedLiveSkyLocation = m_liveSkyLocation;
     m_savedLiveSkyPlace = m_liveSkyPlace;
@@ -254,6 +258,7 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/thunderstorms_enabled"), m_thunderstormsEnabled);
     cfg.setValue(QStringLiteral("Screensaver/fog_enabled"), m_fogEnabled);
     cfg.setValue(QStringLiteral("Screensaver/shooting_stars_enabled"), m_shootingStarsEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/bob_weather_enabled"), m_bobWeatherEnabled);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_enabled"), m_liveSkyEnabled);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_location"), m_liveSkyLocation);
     for (const QString &field : {QStringLiteral("latitude"), QStringLiteral("longitude"), QStringLiteral("timezone")}) {
@@ -299,6 +304,7 @@ void ScreenBotKcm::save() {
     m_savedThunderstormsEnabled = m_thunderstormsEnabled;
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
+    m_savedBobWeatherEnabled = m_bobWeatherEnabled;
     m_savedLiveSkyEnabled = m_liveSkyEnabled;
     m_savedLiveSkyLocation = m_liveSkyLocation;
     m_savedLiveSkyPlace = m_liveSkyPlace;
@@ -423,6 +429,13 @@ void ScreenBotKcm::setShootingStarsEnabled(bool value) {
     if (value == m_shootingStarsEnabled) return;
     m_shootingStarsEnabled = value;
     Q_EMIT shootingStarsEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setBobWeatherEnabled(bool value) {
+    if (value == m_bobWeatherEnabled) return;
+    m_bobWeatherEnabled = value;
+    Q_EMIT bobWeatherEnabledChanged();
     checkModified();
 }
 

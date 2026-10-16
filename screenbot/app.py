@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
 from live_sky_render import SpaceSky
 from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
+from screenbot.appearance import BobAppearance
 from screenbot.bob import BobRenderer
 from screenbot.agent_status import AgentBadgePhase, AgentStatusSnapshot, AgentStatusWorker, HIDDEN_SNAPSHOT
 from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
@@ -27,11 +28,14 @@ from screenbot.themes.forest import ForestTheme
 from screenbot.themes.mountains import MountainsTheme
 from screenbot.themes.snow import SnowTheme
 from screenbot.themes.space import SpaceTheme
+from screenbot.weather_accessories import WeatherPreview
+from screenbot.weather_accessory_renderer import WeatherAccessoryAnimator, WeatherAccessoryRenderer
 
 
-class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer):
+class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer):
     def __init__(self, *, preview: bool = False, config_path: Path | None = None,
-                 preview_bobos: bool = False, preview_wifi_animation: bool | None = None):
+                 preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
+                 preview_weather: WeatherPreview | None = None):
         super().__init__()
         self.setWindowTitle('ScreenBot Screensaver')
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
@@ -41,6 +45,10 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.quick_preview = preview
         self.is_preview = preview or preview_bobos
         settings = read_settings(config_path)
+        self.bob_appearance = BobAppearance.from_settings(settings)
+        self.bob_weather_enabled = settings.getboolean('Screensaver', 'bob_weather_enabled', fallback=True)
+        self.preview_weather_override = preview_weather
+        self.weather_accessory_animator = WeatherAccessoryAnimator()
         self.theme = selected_theme(settings)
         self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)

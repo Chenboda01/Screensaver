@@ -55,6 +55,7 @@ private Q_SLOTS:
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
             {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
+            {QStringLiteral("bobWeatherEnabled"), false},
             {QStringLiteral("liveSkyEnabled"), true}, {QStringLiteral("liveSkyUnits"), QStringLiteral("f")}, {QStringLiteral("liveSkyInterval"), 60}, {QStringLiteral("liveSkyConditions"), false},
             {QStringLiteral("agentDetectionMode"), QStringLiteral("block")}, {QStringLiteral("phoneEnabled"), false}, {QStringLiteral("bobosEnabled"), false},
             {QStringLiteral("bobosActivationDelay"), 7}, {QStringLiteral("showWifiAnimation"), false}, {QStringLiteral("passwordLock"), true},
@@ -161,6 +162,34 @@ private Q_SLOTS:
         QVERIFY(!clock->property("expanded").toBool());
         QTest::keyClick(&view, Qt::Key_Tab);
         QVERIFY(item(QStringLiteral("weatherHeader"))->hasActiveFocus());
+        item(QStringLiteral("weatherSection"))->setProperty("expanded", true);
+        QTest::qWait(300);
+        auto *bobWeather = item(QStringLiteral("bobWeatherEnabledSwitch"));
+        QVERIFY(bobWeather);
+        QVERIFY(!bobWeather->property("enabled").toBool());
+        kcm.setTheme(QStringLiteral("forest"));
+        kcm.setLiveSkyEnabled(true);
+        QCoreApplication::processEvents();
+        QCOMPARE(kcm.theme(), QStringLiteral("forest"));
+        QVERIFY(kcm.liveSkyEnabled());
+        QVERIFY(bobWeather->property("enabled").toBool());
+        QVERIFY(bobWeather->property("checked").toBool());
+        const QString weatherEvidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
+        if (!weatherEvidence.isEmpty())
+            QVERIFY(view.grabWindow().save(weatherEvidence + QStringLiteral("/weather-live-enabled.png")));
+        kcm.setBobWeatherEnabled(false);
+        QVERIFY(!bobWeather->property("checked").toBool());
+        QVERIFY(item(QStringLiteral("weatherSection"))->property("modified").toBool());
+        if (!weatherEvidence.isEmpty())
+            QVERIFY(view.grabWindow().save(weatherEvidence + QStringLiteral("/weather-live-disabled.png")));
+        kcm.load();
+        QVERIFY(bobWeather->property("checked").toBool());
+        QVERIFY(!item(QStringLiteral("weatherSection"))->property("modified").toBool());
+        kcm.setTheme(QStringLiteral("space"));
+        QCoreApplication::processEvents();
+        QVERIFY(!bobWeather->property("enabled").toBool());
+        QVERIFY(bobWeather->property("checked").toBool());
+        kcm.load();
         kcm.setClockFormat(QStringLiteral("24h"));
         QVERIFY(clock->property("modified").toBool());
         QVERIFY(clock->property("summary").toString().contains(QStringLiteral("24-hour")));
