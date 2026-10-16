@@ -1,0 +1,133 @@
+name: Bug report
+description: Report something in ScreenBot that is not working.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: ScreenBot version
+      description: If you choose Other, include the version or commit in your report.
+      # Add new release versions here when publishing a release.
+      options:
+        - V22
+        - V21
+        - V20
+        - V19 or older
+        - Other / built from main
+    validations:
+      required: true
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme
+      options: [Random, Space, Mountains, Snow, Forest, Futuristic City]
+    validations:
+      required: true
+  - type: checkboxes
+    id: enabled-features
+    attributes:
+      label: Features turned on
+      options:
+        - label: Live Sky
+        - label: Rain
+        - label: Snow
+        - label: Thunderstorms
+        - label: Fog
+        - label: Shooting stars
+        - label: Bob's Phone
+        - label: BobOS
+        - label: Password lock
+        - label: Lock countdown
+        - label: AI agent detection
+  - type: dropdown
+    id: affected-area
+    attributes:
+      label: Which part is affected?
+      options:
+        - Animation
+        - KDE settings page
+        - install.sh
+        - Live Sky weather
+        - BobOS
+        - Lock / unlock
+        - AI agent prompt
+    validations:
+      required: true
+  - type: input
+    id: distribution
+    attributes:
+      label: Linux distribution and version
+      placeholder: CachyOS 2026.10 or Fedora 43 KDE
+    validations:
+      required: true
+  - type: textarea
+    id: platform-versions
+    attributes:
+      label: KDE Plasma / Qt / PyQt6 versions
+      description: |
+        You can run `plasmashell --version` and
+        `python3 -c "from PyQt6.QtCore import QT_VERSION_STR, PYQT_VERSION_STR; print('Qt:', QT_VERSION_STR, 'PyQt6:', PYQT_VERSION_STR)"`.
+  - type: dropdown
+    id: wayland
+    attributes:
+      label: Wayland session?
+      options:
+        - "Yes"
+        - No (X11)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Terminal output or errors
+      description: Run `~/ScreenBot/screensaver/start.sh` from a terminal to capture errors. Remove any private information before sharing.
+      render: shell
+  - type: markdown
+    attributes:
+      value: |
+        **Privacy:** Your settings file can contain your Live Sky city in `live_sky_location`.
+        You may delete that line before pasting. Remove any other location details or private information you do not want to publish.
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings file
+      description: Optionally paste `~/.config/screenbot-screensaver.ini` after removing private information.
+      render: ini
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot or video
+      description: Drag and drop an image or video here, if it helps explain the problem.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I'm using the latest release or said which version I use.
+          required: true
