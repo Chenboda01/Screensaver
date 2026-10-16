@@ -42,27 +42,55 @@ ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data)
     load();
 }
 
+QStringList ScreenBotKcm::modifiedSections() const {
+    QStringList sections;
+    if (m_theme != m_savedTheme) sections.append(QStringLiteral("theme"));
+    if (m_clockVisible != m_savedClockVisible
+        || m_clockFormat != m_savedClockFormat
+        || m_showDate != m_savedShowDate
+        || m_clockPosition != m_savedClockPosition
+        || m_clockFontSize != m_savedClockFontSize) sections.append(QStringLiteral("clock"));
+    if (m_rainEnabled != m_savedRainEnabled
+        || m_snowEnabled != m_savedSnowEnabled
+        || m_thunderstormsEnabled != m_savedThunderstormsEnabled
+        || m_fogEnabled != m_savedFogEnabled
+        || m_shootingStarsEnabled != m_savedShootingStarsEnabled) sections.append(QStringLiteral("weather"));
+    if (m_liveSkyEnabled != m_savedLiveSkyEnabled
+        || m_liveSkyLocation != m_savedLiveSkyLocation
+        || m_liveSkyPlace != m_savedLiveSkyPlace
+        || m_liveSkyUnits != m_savedLiveSkyUnits
+        || m_liveSkyInterval != m_savedLiveSkyInterval
+        || m_liveSkyConditions != m_savedLiveSkyConditions) sections.append(QStringLiteral("liveSky"));
+    if (m_agentDetectionMode != m_savedAgentDetectionMode) sections.append(QStringLiteral("agents"));
+    if (m_phoneEnabled != m_savedPhoneEnabled
+        || m_bobosEnabled != m_savedBobosEnabled
+        || m_bobosActivationDelay != m_savedBobosActivationDelay
+        || m_showWifiAnimation != m_savedShowWifiAnimation) sections.append(QStringLiteral("bobos"));
+    if (m_passwordLock != m_savedPasswordLock
+        || m_lockMinutes != m_savedLockMinutes
+        || m_showTimer != m_savedShowTimer) sections.append(QStringLiteral("lock"));
+    return sections;
+}
+
 void ScreenBotKcm::checkModified() {
-    setNeedsSave(m_theme != m_savedTheme || m_passwordLock != m_savedPasswordLock
-                 || m_lockMinutes != m_savedLockMinutes || m_showTimer != m_savedShowTimer
-                 || m_clockVisible != m_savedClockVisible || m_clockFormat != m_savedClockFormat
-                 || m_showDate != m_savedShowDate || m_clockPosition != m_savedClockPosition
-                 || m_clockFontSize != m_savedClockFontSize || m_rainEnabled != m_savedRainEnabled
-                 || m_snowEnabled != m_savedSnowEnabled
-                 || m_thunderstormsEnabled != m_savedThunderstormsEnabled
-                 || m_fogEnabled != m_savedFogEnabled
-                 || m_shootingStarsEnabled != m_savedShootingStarsEnabled
-                 || m_liveSkyEnabled != m_savedLiveSkyEnabled
-                 || m_liveSkyLocation != m_savedLiveSkyLocation
-                 || m_liveSkyPlace != m_savedLiveSkyPlace
-                 || m_liveSkyUnits != m_savedLiveSkyUnits
-                 || m_liveSkyInterval != m_savedLiveSkyInterval
-                 || m_liveSkyConditions != m_savedLiveSkyConditions
-                 || m_agentDetectionMode != m_savedAgentDetectionMode
-                 || m_phoneEnabled != m_savedPhoneEnabled
-                 || m_bobosEnabled != m_savedBobosEnabled
-                 || m_bobosActivationDelay != m_savedBobosActivationDelay
-                 || m_showWifiAnimation != m_savedShowWifiAnimation);
+    setNeedsSave(!modifiedSections().isEmpty());
+    Q_EMIT modifiedSectionsChanged();
+}
+
+bool ScreenBotKcm::sectionExpanded(const QString &section) const {
+    QSettings state(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+                    + QStringLiteral("/screenbot-kcm-state.ini"), QSettings::IniFormat);
+    return state.value(QStringLiteral("Sections/") + section, section == QLatin1String("theme")).toBool();
+}
+
+void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
+    const QStringList sections{QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"),
+        QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("lock")};
+    if (!sections.contains(section)) return;
+    QSettings state(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+                    + QStringLiteral("/screenbot-kcm-state.ini"), QSettings::IniFormat);
+    state.setValue(QStringLiteral("Sections/") + section, expanded);
+    state.sync();
 }
 
 void ScreenBotKcm::load() {
@@ -173,7 +201,7 @@ void ScreenBotKcm::load() {
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
-    setNeedsSave(false);
+    checkModified();
 }
 
 void ScreenBotKcm::writeSettings(QSettings &cfg) const {
@@ -241,7 +269,7 @@ void ScreenBotKcm::save() {
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
-    setNeedsSave(false);
+    checkModified();
 }
 
 void ScreenBotKcm::setTheme(const QString &value) {
