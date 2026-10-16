@@ -35,6 +35,8 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(int liveSkyInterval READ liveSkyInterval WRITE setLiveSkyInterval NOTIFY liveSkyIntervalChanged)
     Q_PROPERTY(bool liveSkyConditions READ liveSkyConditions WRITE setLiveSkyConditions NOTIFY liveSkyConditionsChanged)
     Q_PROPERTY(QString agentDetectionMode READ agentDetectionMode WRITE setAgentDetectionMode NOTIFY agentDetectionModeChanged)
+    Q_PROPERTY(int agentPromptTimeout READ agentPromptTimeout WRITE setAgentPromptTimeout NOTIFY agentPromptTimeoutChanged)
+    Q_PROPERTY(QString agentPromptTimeoutAction READ agentPromptTimeoutAction WRITE setAgentPromptTimeoutAction NOTIFY agentPromptTimeoutActionChanged)
     Q_PROPERTY(bool phoneEnabled READ phoneEnabled WRITE setPhoneEnabled NOTIFY phoneEnabledChanged)
     Q_PROPERTY(bool bobosEnabled READ bobosEnabled WRITE setBobosEnabled NOTIFY bobosEnabledChanged)
     Q_PROPERTY(int bobosActivationDelay READ bobosActivationDelay WRITE setBobosActivationDelay NOTIFY bobosActivationDelayChanged)
@@ -71,6 +73,8 @@ public:
     int liveSkyInterval() const { return m_liveSkyInterval; }
     bool liveSkyConditions() const { return m_liveSkyConditions; }
     QString agentDetectionMode() const { return m_agentDetectionMode; }
+    int agentPromptTimeout() const { return m_agentPromptTimeout; }
+    QString agentPromptTimeoutAction() const { return m_agentPromptTimeoutAction; }
     bool phoneEnabled() const { return m_phoneEnabled; }
     bool bobosEnabled() const { return m_bobosEnabled; }
     int bobosActivationDelay() const { return m_bobosActivationDelay; }
@@ -95,6 +99,8 @@ public:
     void setLiveSkyInterval(int value);
     void setLiveSkyConditions(bool value);
     void setAgentDetectionMode(const QString &value);
+    void setAgentPromptTimeout(int value);
+    void setAgentPromptTimeoutAction(const QString &value);
     Q_INVOKABLE void resetRememberedAgentChoice();
     Q_INVOKABLE void previewBobOS(bool showWifiAnimation);
     void setPhoneEnabled(bool value);
@@ -127,6 +133,8 @@ Q_SIGNALS:
     void liveSkyIntervalChanged();
     void liveSkyConditionsChanged();
     void agentDetectionModeChanged();
+    void agentPromptTimeoutChanged();
+    void agentPromptTimeoutActionChanged();
     void phoneEnabledChanged();
     void bobosEnabledChanged();
     void bobosActivationDelayChanged();
@@ -165,6 +173,8 @@ private:
     int m_liveSkyInterval = 30;
     bool m_liveSkyConditions = true;
     QString m_agentDetectionMode = QStringLiteral("ask");
+    int m_agentPromptTimeout = 10;
+    QString m_agentPromptTimeoutAction = QStringLiteral("start");
     bool m_savedClockVisible = true;
     QString m_savedClockFormat = QStringLiteral("12h");
     bool m_savedShowDate = false;
@@ -181,6 +191,8 @@ private:
     int m_savedLiveSkyInterval = 30;
     bool m_savedLiveSkyConditions = true;
     QString m_savedAgentDetectionMode = QStringLiteral("ask");
+    int m_savedAgentPromptTimeout = 10;
+    QString m_savedAgentPromptTimeoutAction = QStringLiteral("start");
     bool m_phoneEnabled = true;
     bool m_bobosEnabled = true;
     int m_bobosActivationDelay = 3;
