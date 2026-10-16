@@ -5,6 +5,7 @@
 
 class ScreenBotKcm : public KQuickConfigModule {
     Q_OBJECT
+    Q_PROPERTY(QStringList modifiedSections READ modifiedSections NOTIFY modifiedSectionsChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(bool passwordLock READ passwordLock WRITE setPasswordLock NOTIFY passwordLockChanged)
     Q_PROPERTY(int lockMinutes READ lockMinutes WRITE setLockMinutes NOTIFY lockMinutesChanged)
@@ -34,6 +35,9 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool showWifiAnimation READ showWifiAnimation WRITE setShowWifiAnimation NOTIFY showWifiAnimationChanged)
 public:
     ScreenBotKcm(QObject *parent, const KPluginMetaData &data);
+    QStringList modifiedSections() const;
+    Q_INVOKABLE bool sectionExpanded(const QString &section) const;
+    Q_INVOKABLE void setSectionExpanded(const QString &section, bool expanded);
     QString theme() const { return m_theme; }
     bool passwordLock() const { return m_passwordLock; }
     int lockMinutes() const { return m_lockMinutes; }
@@ -91,6 +95,7 @@ public:
     void load() override;
     void save() override;
 Q_SIGNALS:
+    void modifiedSectionsChanged();
     void themeChanged();
     void passwordLockChanged();
     void lockMinutesChanged();

@@ -5,6 +5,6 @@
     "Icon": "preferences-system",
     "EnabledByDefault": true
   },
-  "X-KDE-Keywords": "Screensaver,ScreenBot,Bob,Space,Mountains,Theme,Clock,Weather,Rain,Snow,Fog",
+  "X-KDE-Keywords": "Screensaver,ScreenBot,Bob,Space,Mountains,Theme,Clock,Font size,Date,Time format,Position,Weather,Rain,Snow,Fog,Thunderstorms,Shooting stars,Live Sky,City,Temperature,BobOS,Phone,AI Agents,Agent detection,Password,Lock,Countdown",
   "X-KDE-System-Settings-Parent-Category": "workspace"
 }
