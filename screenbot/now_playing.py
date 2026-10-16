@@ -25,7 +25,7 @@ class CardStyle:
 STYLE: Final = CardStyle()
 
 
-def card_rect(screen: QSizeF, clock: QRectF | None, column: str) -> QRectF:
+def card_rect(screen: QSizeF, clock: QRectF | None, column: str, avoid: tuple[QRectF, ...] = ()) -> QRectF:
     """Keep the card near the clock, inside the display and clear of its text."""
     width = min(STYLE.maximum_width, max(0.0, screen.width() - STYLE.margin * 2))
     height = min(STYLE.height, max(0.0, screen.height() - STYLE.margin * 2))
@@ -41,8 +41,19 @@ def card_rect(screen: QSizeF, clock: QRectF | None, column: str) -> QRectF:
         y = clock.bottom() + STYLE.gap
         if clock.top() > screen.height() * .25 or y + height > screen.height() - STYLE.margin:
             y = clock.top() - STYLE.gap - height
-    return QRectF(max(STYLE.margin, min(x, screen.width() - width - STYLE.margin)),
-                  max(STYLE.margin, min(y, screen.height() - height - STYLE.margin)), width, height)
+    preferred = QRectF(max(STYLE.margin, min(x, screen.width() - width - STYLE.margin)),
+                       max(STYLE.margin, min(y, screen.height() - height - STYLE.margin)), width, height)
+    occupied = avoid + ((clock,) if clock is not None else ())
+    candidates = [preferred]
+    # Reserve Bob's whole motion range so the card does not chase his animation.
+    candidates.extend(QRectF(candidate_x, candidate_y, width, height)
+                      for candidate_y in (STYLE.margin, screen.height() - height - STYLE.margin)
+                      for candidate_x in (preferred.x(), STYLE.margin, screen.width() - width - STYLE.margin))
+    for candidate in candidates:
+        if not any(candidate.intersects(region) for region in occupied):
+            return candidate
+    # Media is supplemental: omit it when the viewport has no clear full-size slot.
+    return QRectF()
 
 
 def card_opacity(snapshot: NowPlaying, now: float, reduce_motion: bool) -> float:

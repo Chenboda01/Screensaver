@@ -189,7 +189,7 @@ For an isolated build, installation, locale, and Apply/Discard check, run `kcm/t
 
 ### Now playing
 
-Enable **System Settings → Screensaver → Clock → Show what's playing**, then choose **Apply** to show the current media title and artist near the clock on the primary screen. The setting is off by default; **Discard** keeps the saved preference. The card also works with the clock hidden. Previews keep real media metadata hidden.
+Enable **System Settings → Screensaver → Clock → Show what's playing**, then choose **Apply** to show the current media title and artist near the clock on the primary screen. The setting is off by default; **Discard** keeps the saved preference. The card also works with the clock hidden. It moves to a clear corner if Bob would cover it, and stays hidden on small layouts with no room clear of Bob, the clock, and captions. Previews keep real media metadata hidden.
 
 ScreenBot reads MPRIS metadata from players such as Elisa, VLC, Spotify, and browsers. Playing media takes priority when several players are open. Track changes appear within a few seconds; pausing or stopping fades the card away. Long titles are shortened, and no player or an unavailable session bus leaves the card hidden. Reduced motion hides the card without fading.
 

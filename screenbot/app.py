@@ -301,7 +301,14 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
                 self.burn_in_protection, elapsed, self.width(), self.height(), self.clock_position,
                 self.clock_font_size, self.show_date, conditions, scene_offset, scene_scale)
             anchor = QRectF(x + drift_x, y + drift_y, self.width() * .42, height)
-        return card_rect(QSizeF(self.size()), anchor, column)
+        scale = min(self.width() / 1250, self.height() / 800, 1.35)
+        sway = min(self.width() * .075, 85)
+        bob_bounds = QRectF(self.width() * .5 - sway - 210 * scale,
+                            self.height() * .56 - 9 - 200 * scale,
+                            2 * sway + 420 * scale, 18 + 320 * scale)
+        captions_top = min(self.height() * .79, self.height() - 55)
+        captions = QRectF(0, captions_top, self.width(), self.height() - captions_top)
+        return card_rect(QSizeF(self.size()), anchor, column, (bob_bounds, captions))
 
     def draw_now_playing(self, painter: QPainter) -> None:
         """Paint the already-cached snapshot, with no D-Bus work on the frame thread."""
