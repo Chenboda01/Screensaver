@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCMUtils
@@ -16,6 +17,23 @@ KCMUtils.SimpleKCM {
             model: ["Random", "Space", "Mountains", "Snow", "Forest", "Futuristic City"]
             currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme))
             onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city"][index] }
+        }
+        Controls.Button {
+            objectName: "themePreviewButton"
+            text: "Preview"
+            icon.name: "view-preview"
+            enabled: !kcm.previewRunning
+            onClicked: kcm.previewTheme(this)
+            Controls.ToolTip.text: "Preview current settings without applying them. Move the mouse or press any key to close."
+            Controls.ToolTip.visible: hovered
+        }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 30
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 30
+            visible: kcm.previewError.length > 0
+            text: kcm.previewError
+            type: Kirigami.MessageType.Error
         }
         Controls.Switch {
             Kirigami.FormData.label: "Clock:"
@@ -202,7 +220,7 @@ KCMUtils.SimpleKCM {
             stepSize: 1
             editable: true
             value: kcm.bobosActivationDelay
-            enabled: kcm.phoneEnabled && kcm.bobosEnabled
+            enabled: !kcm.previewRunning && kcm.phoneEnabled && kcm.bobosEnabled
             opacity: enabled ? 1.0 : 0.4
             onValueModified: kcm.bobosActivationDelay = value
             textFromValue: function(value, locale) { return value + (value === 1 ? " minute" : " minutes") }

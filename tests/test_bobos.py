@@ -204,7 +204,7 @@ class SaverPreviewTests(unittest.TestCase):
             self.assertTrue(saver.bobos_enabled)
             self.assertEqual(saver.bobos_status(600).phase, BobOSPhase.EXPLORING)
 
-    def test_preview_starts_immediately_but_still_obeys_configured_lock(self) -> None:
+    def test_preview_starts_immediately_without_configured_lock(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)
             self.write_config(home, password_lock="true", lock_minutes="1")
@@ -212,7 +212,7 @@ class SaverPreviewTests(unittest.TestCase):
             self.addCleanup(saver.close)
 
             self.assertEqual(saver.bobos_status(0).phase, BobOSPhase.CURIOUS)
-            self.assertTrue(saver.password_lock)
+            self.assertFalse(saver.password_lock)
             self.assertEqual(saver.bobos_status(60).phase, BobOSPhase.EXPLORING)
 
     def test_preview_wifi_argument_overrides_the_saved_preference(self) -> None:

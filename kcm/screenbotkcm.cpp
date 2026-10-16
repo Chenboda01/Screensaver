@@ -7,6 +7,10 @@
 #include <QStandardPaths>
 #include <QStringList>
 #include <QtGlobal>
+#include <QQuickItem>
+#include <QQuickWindow>
+#include <QScreen>
+#include <QTemporaryFile>
 
 K_PLUGIN_CLASS_WITH_JSON(ScreenBotKcm, "kcm_screenbot_screensaver.json")
 
@@ -152,8 +156,7 @@ void ScreenBotKcm::load() {
     setNeedsSave(false);
 }
 
-void ScreenBotKcm::save() {
-    QSettings cfg(configFile(), QSettings::IniFormat);
+void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/theme"), m_theme);
     cfg.setValue(QStringLiteral("Screensaver/password_lock"), m_passwordLock);
     cfg.setValue(QStringLiteral("Screensaver/lock_minutes"), m_lockMinutes);
@@ -178,6 +181,11 @@ void ScreenBotKcm::save() {
     cfg.setValue(QStringLiteral("Screensaver/bobos_enabled"), m_bobosEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_activation_delay"), m_bobosActivationDelay);
     cfg.setValue(QStringLiteral("Screensaver/show_wifi_animation"), m_showWifiAnimation);
+}
+
+void ScreenBotKcm::save() {
+    QSettings cfg(configFile(), QSettings::IniFormat);
+    writeSettings(cfg);
     cfg.sync();
     if (cfg.status() != QSettings::NoError) {
         qWarning("Could not write ScreenBot settings.");
@@ -397,14 +405,70 @@ void ScreenBotKcm::setShowWifiAnimation(bool value) {
 }
 
 void ScreenBotKcm::previewBobOS(bool showWifiAnimation) {
+    startPreview(true, showWifiAnimation);
+}
+
+void ScreenBotKcm::previewTheme(QQuickItem *source) {
+    startPreview(false, m_showWifiAnimation, source);
+}
+
+void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *source) {
+    if (m_previewProcess) return;
+    m_previewError.clear();
+    Q_EMIT previewErrorChanged();
     const QString script = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver/screensaver.py");
-    QStringList arguments{script, QStringLiteral("--preview-bobos")};
-    arguments.append(showWifiAnimation ? QStringLiteral("--wifi-animation")
-                                      : QStringLiteral("--no-wifi-animation"));
-    if (!QProcess::startDetached(QStringLiteral("/usr/bin/python"), arguments,
-                                 QDir::homePath() + QStringLiteral("/ScreenBot/screensaver"))) {
-        qWarning("Could not start the BobOS preview.");
+    const QString python = QStandardPaths::findExecutable(QStringLiteral("python3"));
+    if (!QFile::exists(script) || python.isEmpty()) {
+        m_previewError = QStringLiteral("Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure Python 3 is available.");
+        Q_EMIT previewErrorChanged();
+        return;
     }
+    auto *process = new QProcess(this);
+    auto *temporary = new QTemporaryFile(QDir::tempPath() + QStringLiteral("/screenbot-preview-XXXXXX.ini"), process);
+    if (!temporary->open()) {
+        m_previewError = QStringLiteral("Could not create temporary preview settings.");
+        Q_EMIT previewErrorChanged();
+        delete process;
+        return;
+    }
+    const QString path = temporary->fileName();
+    temporary->close();
+    QSettings cfg(path, QSettings::IniFormat);
+    writeSettings(cfg);
+    cfg.sync();
+    if (cfg.status() != QSettings::NoError) {
+        m_previewError = QStringLiteral("Could not write temporary preview settings.");
+        Q_EMIT previewErrorChanged();
+        delete process;
+        return;
+    }
+    QStringList arguments{script, bobos ? QStringLiteral("--preview-bobos") : QStringLiteral("--preview"),
+                          QStringLiteral("--config"), path};
+    if (bobos) arguments.append(wifiAnimation ? QStringLiteral("--wifi-animation") : QStringLiteral("--no-wifi-animation"));
+    if (source && source->window() && source->window()->screen())
+        arguments.append({QStringLiteral("--screen"), source->window()->screen()->name()});
+    auto cleanup = [this, process]() {
+        if (m_previewProcess != process) return;
+        m_previewProcess = nullptr;
+        Q_EMIT previewRunningChanged();
+        process->deleteLater();
+    };
+    connect(process, &QProcess::errorOccurred, this, [this, cleanup](QProcess::ProcessError error) {
+        m_previewError = QStringLiteral("Could not start the preview. Check the ScreenBot installation and Python 3 dependencies.");
+        Q_EMIT previewErrorChanged();
+        if (error == QProcess::FailedToStart) cleanup();
+    });
+    connect(process, &QProcess::finished, this, [this, cleanup](int exitCode, QProcess::ExitStatus status) {
+        if (exitCode != 0 || status != QProcess::NormalExit) {
+            m_previewError = QStringLiteral("The preview stopped unexpectedly. Check the ScreenBot installation and Python 3 dependencies.");
+            Q_EMIT previewErrorChanged();
+        }
+        cleanup();
+    });
+    m_previewProcess = process;
+    Q_EMIT previewRunningChanged();
+    process->setWorkingDirectory(QDir::homePath() + QStringLiteral("/ScreenBot/screensaver"));
+    process->start(python, arguments);
 }
 
 #include "screenbotkcm.moc"
