@@ -13,6 +13,44 @@
 
 ScreenBot follows Bob, a floating robot, as he explores themed worlds and fictional BobOS phone adventures. Customize the clock, weather, and optional Live Sky in KDE System Settings.
 
+## Gallery
+
+Bob exploring the Mountains under a full moon with Live Sky enabled (six-second loop):
+
+![Animated Bob floating above layered mountain peaks beneath a starry, moonlit Live Sky](assets/screenshots/bob-moonlight.gif)
+
+### Themes
+
+| Space | Mountains |
+| --- | --- |
+| ![Bob floating among blue and pink planets and a golden ringed planet in Space](assets/screenshots/space.webp) | ![Bob above layered blue mountain peaks beneath a glowing moon and purple sky](assets/screenshots/mountains.webp) |
+| **Snow** | **Forest** |
+| ![Bob hovering over snow-covered alpine peaks with drifting snowflakes](assets/screenshots/snow.webp) | ![Bob among dark evergreen silhouettes and glowing fireflies under a green night sky](assets/screenshots/forest.webp) |
+| **Futuristic City** | |
+| ![Bob floating above a futuristic skyline with cyan, violet, and pink illuminated windows](assets/screenshots/city.webp) | |
+
+### Live Sky
+
+The same Mountains scene with locally calculated Boston skies and fixed example weather:
+
+| Sunrise | Noon |
+| --- | --- |
+| ![Peach sunrise behind the Mountains with Bob hovering over the peaks](assets/screenshots/live-sky-sunrise.webp) | ![Bright blue midday sky and sun above Bob and the Mountains](assets/screenshots/live-sky-noon.webp) |
+| **Sunset** | **Full-moon night** |
+| ![Orange and violet sunset behind Bob and the mountain ridges](assets/screenshots/live-sky-sunset.webp) | ![Full moon and stars illuminating Bob and blue mountain ridges at night](assets/screenshots/live-sky-moonlight.webp) |
+| **Rain** | |
+| ![Rain streaks and thick gray clouds over Bob and the mountain landscape](assets/screenshots/live-sky-rain.webp) | |
+
+### BobOS
+
+Bob's fictional phone zooms into its home screen and opens Bob Browser:
+
+![Animated BobOS phone zooming in, showing its app launcher, then opening the simulated browser](assets/screenshots/bobos-phone.gif)
+
+![BobOS phone home screen with fictional Browser, Files, Terminal, Games, Chat, Maps, Weather, Calendar, and App Store buttons](assets/screenshots/bobos.webp)
+
+All previews are captured from the production renderer. Stills are 1280×720; animations are six-second, 768×432 loops. [Regenerate the gallery](assets/screenshots/README.md) after visual changes.
+
 ## Download
 
 Get the latest ZIP from the [latest release](https://github.com/Chenboda01/Screensaver/releases/latest).
