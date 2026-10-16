@@ -248,6 +248,96 @@ def test_enabled_worker_publishes_metadata_then_clears_on_stop() -> None:
     assert app is not None
 
 
+def test_titleless_playing_media_mutes_ambience_without_exposing_metadata() -> None:
+    """Now Playing may hide a title, but opted-in playback status still mutes audio."""
+    app = QCoreApplication.instance() or QCoreApplication([])
+    published = Event()
+    snapshots: list[NowPlaying] = []
+    playing_states: list[bool] = []
+
+    class TitlelessReader:
+        def read(self) -> tuple[PlayerSample, ...]:
+            return (PlayerSample('player', Playback.PLAYING, Track('Player', '')),)
+
+        def is_playing(self) -> bool:
+            return True
+
+    worker = MprisWorker(enabled=True, reader_factory=TitlelessReader, publish_playback=True)
+    worker.changed.connect(snapshots.append)
+    loop = QEventLoop()
+    worker.playing_changed.connect(lambda state: (playing_states.append(state), published.set(), loop.quit()))
+    worker.start()
+    try:
+        QTimer.singleShot(1000, loop.quit)
+        loop.exec()
+        assert published.is_set()
+        deadline = time.monotonic() + 1.0
+        while (not snapshots or snapshots[-1] != HIDDEN) and time.monotonic() < deadline:
+            app.processEvents()
+            time.sleep(.005)
+        app.processEvents()
+        assert playing_states == [True]
+        assert all(snapshot == HIDDEN for snapshot in snapshots)
+    finally:
+        worker.stop()
+    assert app is not None
+
+
+def test_titleless_playing_mutes_when_another_title_is_displayable() -> None:
+    app = QCoreApplication.instance() or QCoreApplication([])
+    published = Event()
+    playing_states: list[bool] = []
+    snapshots: list[NowPlaying] = []
+
+    class MixedReader:
+        def read(self) -> tuple[PlayerSample, ...]:
+            return (sample('paused', playback=Playback.PAUSED),
+                    PlayerSample('private', Playback.PLAYING, Track('Player', '')))
+
+        def is_playing(self) -> bool:
+            return True
+
+    worker = MprisWorker(enabled=True, reader_factory=MixedReader, publish_playback=True)
+    worker.changed.connect(snapshots.append)
+    loop = QEventLoop()
+    worker.playing_changed.connect(lambda state: (playing_states.append(state), published.set(), loop.quit()))
+    worker.start()
+    try:
+        QTimer.singleShot(1000, loop.quit)
+        loop.exec()
+        assert published.is_set()
+        deadline = time.monotonic() + .5
+        while not snapshots and time.monotonic() < deadline:
+            app.processEvents()
+            time.sleep(.005)
+        assert playing_states == [True]
+        assert snapshots and snapshots[-1].track == sample('paused', playback=Playback.PAUSED).track
+    finally:
+        worker.stop()
+
+
+def test_now_playing_privacy_mode_does_not_publish_playback_metadata() -> None:
+    app = QCoreApplication.instance() or QCoreApplication([])
+    published: list[bool] = []
+
+    class Reader:
+        def read(self) -> tuple[PlayerSample, ...]:
+            return ()
+
+        def is_playing(self) -> bool:
+            return True
+
+    worker = MprisWorker(enabled=True, reader_factory=Reader)
+    worker.playing_changed.connect(published.append)
+    worker.start()
+    try:
+        time.sleep(.05)
+        app.processEvents()
+        assert published == []
+    finally:
+        worker.stop()
+
+
 def test_playback_only_worker_publishes_status_without_metadata() -> None:
     app = QCoreApplication.instance() or QCoreApplication([])
     published = Event()

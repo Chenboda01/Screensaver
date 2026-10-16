@@ -16,6 +16,7 @@ import wave
 
 RATE = 22_050
 DURATION = 8
+THUNDER_DURATION = 2
 LOOPS = ('rain', 'wind', 'waves', 'forest', 'crickets', 'city', 'space', 'thunder')
 
 
@@ -32,10 +33,11 @@ def sample(kind: str, index: int, previous: float, noise: float) -> float:
         drone = .04 * math.sin(math.tau * 55 * time) + .025 * math.sin(math.tau * 82 * time)
         return drone + .08 * (noise * .08 + previous * .92)
     if kind == 'thunder':
-        rain = .12 * (noise * .38 + previous * .62)
-        envelope = max(0.0, math.sin(math.tau * time / DURATION)) ** 6
-        rumble = math.sin(math.tau * (38 + 2 * math.sin(time * .9)) * time) * envelope * .11
-        return rain + rumble
+        # Delayed one-shot rumble: scene code starts this after the visible flash.
+        envelope = math.exp(-max(0.0, time - .85) * 2.1) if time >= .85 else 0.0
+        onset = min(1.0, max(0.0, (time - .85) * 7))
+        rumble = math.sin(math.tau * (38 + 2 * math.sin(time * .9)) * time) * envelope * onset * .13
+        return rumble + .008 * (noise * .3 + previous * .7)
     if kind == 'space':
         fade = .5 + .5 * math.sin(math.tau * time / DURATION)
         return .028 * fade * (math.sin(math.tau * 48 * time) + .4 * math.sin(math.tau * 72 * time))
@@ -50,12 +52,17 @@ def sample(kind: str, index: int, previous: float, noise: float) -> float:
 
 def write_loop(kind: str, destination: Path, rng: random.Random) -> None:
     """Write a deterministic temporary PCM loop and encode it as compact Ogg."""
+    duration = THUNDER_DURATION if kind == 'thunder' else DURATION
     temporary = destination.with_suffix('.wav')
     previous = 0.0
     frames = bytearray()
-    for index in range(RATE * DURATION):
+    for index in range(RATE * duration):
         previous = sample(kind, index, previous, rng.gauss(0.0, 1.0))
         frames.extend(struct.pack('<h', round(max(-1.0, min(1.0, previous)) * 32767)))
+    if kind == 'thunder':
+        # Preserve the historical shared RNG positions for all subsequent loops.
+        for _ in range(RATE * (DURATION - THUNDER_DURATION)):
+            rng.gauss(0.0, 1.0)
     with wave.open(str(temporary), 'wb') as output:
         output.setnchannels(1)
         output.setsampwidth(2)

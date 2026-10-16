@@ -45,6 +45,7 @@ class SceneSound:
     snow_enabled: bool
     thunder_enabled: bool
     elapsed_hours: float
+    rain_intensity: float = 0.5
 
 
 AMBIENT_THEMES: Final[frozenset[SceneTheme]] = frozenset({
@@ -84,7 +85,7 @@ def choose_loop(scene: SceneSound) -> str | None:
             case WeatherCategory.RAIN:
                 return 'rain'
             case WeatherCategory.THUNDERSTORM:
-                return 'thunder'
+                return 'rain'
             case WeatherCategory.SNOW | WeatherCategory.FOG:
                 return 'wind'
             case WeatherCategory.CLEAR | WeatherCategory.CLOUDY | WeatherCategory.OVERCAST:
@@ -95,7 +96,7 @@ def choose_loop(scene: SceneSound) -> str | None:
                 assert_never(unreachable)
     if not scene.live_sky_enabled:
         if scene.thunder_enabled:
-            return 'thunder'
+            return 'rain'
         if scene.rain_enabled:
             return 'rain'
         if scene.snow_enabled:
@@ -115,3 +116,11 @@ def choose_loop(scene: SceneSound) -> str | None:
             return None
         case unreachable:
             assert_never(unreachable)
+
+
+def volume_scale(scene: SceneSound) -> float:
+    """Scale rain ambience with Live Sky intensity without exceeding user volume."""
+    if scene.weather is not WeatherCategory.RAIN or not scene.live_sky_enabled or not scene.live_sky_fresh:
+        return 1.0
+    intensity = max(0.0, min(1.0, scene.rain_intensity))
+    return 0.45 + 0.55 * intensity

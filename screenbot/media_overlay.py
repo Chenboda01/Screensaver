@@ -19,8 +19,8 @@ class MediaOverlayMixin:
         """Reject queued media after shutdown, or when privacy is not opted in."""
         if self._closing or self.is_preview:
             return
-        self._mpris_playing = snapshot.track is not None and snapshot.paused_at is None
         if not self.now_playing_enabled:
+            self._mpris_playing = snapshot.track is not None and snapshot.paused_at is None
             self.update_ambient_sound()
             return
         self.now_playing = snapshot
@@ -42,10 +42,13 @@ class MediaOverlayMixin:
     def init_media_worker(self) -> None:
         """Poll MPRIS only for the now-playing card or opted-in audio muting."""
         if (self.now_playing_enabled or self.ambient_sound_enabled) and not self.is_preview:
-            self.media_worker = MprisWorker(self, enabled=True, playing_only=not self.now_playing_enabled)
+            self.media_worker = MprisWorker(
+                self, enabled=True, playing_only=not self.now_playing_enabled,
+                publish_playback=self.ambient_sound_enabled,
+            )
             if self.now_playing_enabled:
                 self.media_worker.changed.connect(self.set_now_playing)
-            else:
+            if self.ambient_sound_enabled:
                 self.media_worker.playing_changed.connect(self.set_mpris_playing)
 
     def stop_media_worker(self) -> None:

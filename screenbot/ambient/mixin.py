@@ -57,6 +57,7 @@ class AmbientSoundMixin:
             rain_enabled=self.rain_enabled, snow_enabled=self.snow_enabled,
             thunder_enabled=self.thunderstorms_enabled,
             elapsed_hours=now.hour + now.minute / 60,
+            rain_intensity=self.live_weather.weather.intensity,
         )
         self.ambient_sound.update_scene(scene, playing_media=self._mpris_playing)
 

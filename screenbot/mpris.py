@@ -103,11 +103,12 @@ class MprisWorker(QThread):
 
     def __init__(self, parent: QObject | None = None, *, enabled: bool = False,
                  reader_factory: Callable[[], MetadataReader] = _session_reader,
-                 playing_only: bool = False) -> None:
+                 playing_only: bool = False, publish_playback: bool = False) -> None:
         super().__init__(parent)
         self._enabled = enabled
         self._reader_factory = reader_factory
         self._playing_only = playing_only
+        self._publish_playback = publish_playback
         self._stop = Event()
         self._publication_lock = RLock()
 
@@ -145,12 +146,17 @@ class MprisWorker(QThread):
             return
         tracker = NowPlayingTracker()
         previous = HIDDEN
+        previous_playing: bool | None = None
         while not self._stop.is_set() and not self.isInterruptionRequested():
             started = time.monotonic()
+            playing = reader.is_playing() if self._publish_playback else None
             snapshot = tracker.observe(reader.read(), time.monotonic())
             with self._publication_lock:
                 if self._stop.is_set() or self.isInterruptionRequested():
                     break
+                if playing is not None and playing != previous_playing:
+                    self.playing_changed.emit(playing)
+                    previous_playing = playing
                 if snapshot != previous:
                     self.changed.emit(snapshot)
                     previous = snapshot
