@@ -245,6 +245,13 @@ KCMUtils.SimpleKCM {
                 currentIndex: ["ask", "start", "block"].indexOf(kcm.agentDetectionMode)
                 onActivated: function(index) { kcm.agentDetectionMode = ["ask", "start", "block"][index] }
             }
+            Controls.Switch {
+                objectName: "agentStatusEnabled"
+                Kirigami.FormData.label: i18nc("@label", "Show AI agent status on the screensaver:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.agentStatusEnabled
+                onToggled: kcm.agentStatusEnabled = checked
+            }
             Controls.CheckBox {
                 objectName: "agentPromptNever"
                 Kirigami.FormData.label: i18nc("@label", "Automatic answer:")

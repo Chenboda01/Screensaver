@@ -63,6 +63,7 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_liveSkyInterval != m_savedLiveSkyInterval
         || m_liveSkyConditions != m_savedLiveSkyConditions) sections.append(QStringLiteral("liveSky"));
     if (m_agentDetectionMode != m_savedAgentDetectionMode
+        || m_agentStatusEnabled != m_savedAgentStatusEnabled
         || m_agentPromptTimeout != m_savedAgentPromptTimeout
         || m_agentPromptTimeoutAction != m_savedAgentPromptTimeoutAction) sections.append(QStringLiteral("agents"));
     if (m_phoneEnabled != m_savedPhoneEnabled
@@ -151,6 +152,7 @@ void ScreenBotKcm::load() {
         ? requestedLiveSkyInterval : 30;
     const bool liveSkyConditions = cfg.value(QStringLiteral("Screensaver/live_sky_conditions"), true).toBool();
     const QString requestedAgentMode = cfg.value(QStringLiteral("Screensaver/agent_detection_mode"), QStringLiteral("ask")).toString();
+    const bool agentStatusEnabled = cfg.value(QStringLiteral("Screensaver/agent_status_enabled"), true).toBool();
     const QString agentMode = requestedAgentMode == QLatin1String("start") || requestedAgentMode == QLatin1String("block")
         ? requestedAgentMode : QStringLiteral("ask");
     bool timeoutOk = false;
@@ -193,6 +195,7 @@ void ScreenBotKcm::load() {
     if (m_liveSkyInterval != liveSkyInterval) { m_liveSkyInterval = liveSkyInterval; Q_EMIT liveSkyIntervalChanged(); }
     if (m_liveSkyConditions != liveSkyConditions) { m_liveSkyConditions = liveSkyConditions; Q_EMIT liveSkyConditionsChanged(); }
     if (m_agentDetectionMode != agentMode) { m_agentDetectionMode = agentMode; Q_EMIT agentDetectionModeChanged(); }
+    if (m_agentStatusEnabled != agentStatusEnabled) { m_agentStatusEnabled = agentStatusEnabled; Q_EMIT agentStatusEnabledChanged(); }
     if (m_agentPromptTimeout != promptTimeout) { m_agentPromptTimeout = promptTimeout; Q_EMIT agentPromptTimeoutChanged(); }
     if (m_agentPromptTimeoutAction != promptTimeoutAction) { m_agentPromptTimeoutAction = promptTimeoutAction; Q_EMIT agentPromptTimeoutActionChanged(); }
     if (m_phoneEnabled != phone) { m_phoneEnabled = phone; Q_EMIT phoneEnabledChanged(); }
@@ -223,6 +226,7 @@ void ScreenBotKcm::load() {
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
     m_savedAgentDetectionMode = m_agentDetectionMode;
+    m_savedAgentStatusEnabled = m_agentStatusEnabled;
     m_savedAgentPromptTimeout = m_agentPromptTimeout;
     m_savedAgentPromptTimeoutAction = m_agentPromptTimeoutAction;
     m_savedPhoneEnabled = m_phoneEnabled;
@@ -261,6 +265,7 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/live_sky_interval"), m_liveSkyInterval);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_conditions"), m_liveSkyConditions);
     cfg.setValue(QStringLiteral("Screensaver/agent_detection_mode"), m_agentDetectionMode);
+    cfg.setValue(QStringLiteral("Screensaver/agent_status_enabled"), m_agentStatusEnabled);
     cfg.setValue(QStringLiteral("Screensaver/agent_prompt_timeout_seconds"), m_agentPromptTimeout);
     cfg.setValue(QStringLiteral("Screensaver/agent_prompt_timeout_action"), m_agentPromptTimeoutAction);
     cfg.setValue(QStringLiteral("Screensaver/bob_phone_enabled"), m_phoneEnabled);
@@ -301,6 +306,7 @@ void ScreenBotKcm::save() {
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
     m_savedAgentDetectionMode = m_agentDetectionMode;
+    m_savedAgentStatusEnabled = m_agentStatusEnabled;
     m_savedAgentPromptTimeout = m_agentPromptTimeout;
     m_savedAgentPromptTimeoutAction = m_agentPromptTimeoutAction;
     m_savedPhoneEnabled = m_phoneEnabled;
@@ -480,6 +486,13 @@ void ScreenBotKcm::setAgentDetectionMode(const QString &value) {
     if (value == m_agentDetectionMode) return;
     m_agentDetectionMode = value;
     Q_EMIT agentDetectionModeChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setAgentStatusEnabled(bool value) {
+    if (value == m_agentStatusEnabled) return;
+    m_agentStatusEnabled = value;
+    Q_EMIT agentStatusEnabledChanged();
     checkModified();
 }
 

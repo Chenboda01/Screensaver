@@ -1,4 +1,5 @@
 import configparser
+from datetime import datetime
 import math
 import random
 import subprocess
@@ -6,12 +7,13 @@ import time
 from pathlib import Path
 
 from PyQt6.QtCore import QRectF, Qt, QTimer
-from PyQt6.QtGui import QColor, QCursor, QPainter, QShowEvent
+from PyQt6.QtGui import QColor, QCursor, QFont, QPainter, QPen, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
 from live_sky_render import SpaceSky
 from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
 from screenbot.bob import BobRenderer
+from screenbot.agent_status import AgentBadgePhase, AgentStatusSnapshot, AgentStatusWorker, HIDDEN_SNAPSHOT
 from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
 from screenbot.clock import ClockRenderer
 from screenbot.effects import WeatherEffects
@@ -134,6 +136,14 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.lock_error = False
         self.start_time = time.monotonic()
         self.session_started = False
+        self.agent_status_enabled = settings.getboolean('Screensaver', 'agent_status_enabled', fallback=True)
+        self.agent_status = HIDDEN_SNAPSHOT
+        self.agent_status_worker = None
+        self._agent_celebration_pending = False
+        self._agent_celebration_started_at: float | None = None
+        if self.agent_status_enabled and not self.is_preview:
+            self.agent_status_worker = AgentStatusWorker(self)
+            self.agent_status_worker.status_changed.connect(self.set_agent_status)
         self.old_mouse = None
         r = random.Random()
         self.particles = [(r.random(), r.random(), r.uniform(.65, 2.6), r.random()*math.tau) for _ in range(110)]
@@ -218,12 +228,14 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         bobos_status = self.bobos_status(t)
         phase = bobos_status.phase
         if phase not in PHONE_UI_PHASES:
-            self.bob(p, w, h, t, bobos_status)
+            celebration_elapsed = self._agent_celebration_elapsed(phase)
+            self.bob(p, w, h, t, bobos_status, celebration_elapsed=celebration_elapsed)
             self.caption(p, w, h, t, phase)
         if phase in PHONE_UI_PHASES:
             self.draw_phone_os(p, w, h, bobos_status, t)
         elif phase in (BobOSPhase.ZOOM_IN, BobOSPhase.ZOOM_OUT):
             self.draw_phone_zoom(p, w, h, bobos_status, t)
+        self.draw_agent_status(p, w, h)
         if self.show_timer:
             self.countdown(p, w, h, t)
         if self.quick_preview:
@@ -234,6 +246,94 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         if dim_alpha:
             p.fillRect(QRectF(0, 0, w, h), QColor(0, 0, 0, dim_alpha))
         p.end()
+
+    def set_agent_status(self, snapshot: AgentStatusSnapshot) -> None:
+        """Accept only the status worker's privacy-safe state and clock values."""
+        previous_phase = self.agent_status.phase
+        self.agent_status = snapshot
+        if snapshot.phase is AgentBadgePhase.FINISHED and previous_phase is not AgentBadgePhase.FINISHED:
+            self._agent_celebration_pending = True
+        elif snapshot.phase is AgentBadgePhase.WORKING:
+            self._agent_celebration_pending = False
+            self._agent_celebration_started_at = None
+        elif snapshot.phase is AgentBadgePhase.HIDDEN:
+            self._agent_celebration_pending = False
+            self._agent_celebration_started_at = None
+        self.update()
+
+    def start_agent_status_worker(self) -> None:
+        """Start optional polling only for the real primary screensaver session."""
+        if (self.agent_status_worker is not None
+                and not self.is_preview
+                and not self.agent_status_worker.isRunning()):
+            self.agent_status_worker.start()
+
+    def stop_agent_status_worker(self) -> None:
+        """Join the worker after QApplication exits, when no screen is blocked."""
+        if self.agent_status_worker is not None and self.agent_status_worker.isRunning():
+            self.agent_status_worker.stop()
+
+    def _agent_celebration_elapsed(self, phase: BobOSPhase) -> float | None:
+        """Start one brief celebration when Bob is visible after a confirmed finish."""
+        if phase in PHONE_UI_PHASES:
+            return None
+        if self._agent_celebration_pending:
+            self._agent_celebration_pending = False
+            self._agent_celebration_started_at = time.monotonic()
+        if self._agent_celebration_started_at is None:
+            return None
+        elapsed = time.monotonic() - self._agent_celebration_started_at
+        if elapsed >= 4.5:
+            self._agent_celebration_started_at = None
+            return None
+        return elapsed
+
+    def draw_agent_status(self, painter: QPainter, width: int, height: int) -> None:
+        """Paint only the safe working/finished label on the primary Saver window."""
+        if not self.agent_status_enabled or self.agent_status.phase is AgentBadgePhase.HIDDEN:
+            return
+        compact = width < 280
+        if self.agent_status.phase is AgentBadgePhase.WORKING:
+            started_at = self.agent_status.started_at
+            elapsed = max(0, int(time.monotonic() - started_at)) if started_at is not None else 0
+            if compact:
+                duration = f'{elapsed // 60}m' if elapsed >= 60 else f'{elapsed}s'
+            else:
+                duration = f'{elapsed // 60} min' if elapsed >= 60 else f'{elapsed} sec'
+            text = f'Working · {duration}' if compact else f'AI agent working · {duration}'
+            accent = QColor('#63d9ff')
+        else:
+            finished_at = self.agent_status.finished_at
+            if finished_at is None:
+                return
+            local_time = datetime.fromtimestamp(finished_at).strftime('%H:%M')
+            text = f'Finished · {local_time}' if compact else f'AI agent finished · {local_time}'
+            accent = QColor('#77e4a0')
+        badge_width = min(370, max(180, width - 24))
+        badge_height = 44
+        x = width - badge_width - 18
+        y = height - badge_height - 18
+        painter.save()
+        painter.setPen(QPen(QColor(accent.red(), accent.green(), accent.blue(), 190), 1.5))
+        painter.setBrush(QColor(8, 19, 35, 226))
+        painter.drawRoundedRect(QRectF(x, y, badge_width, badge_height), 15, 15)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(accent)
+        painter.drawRoundedRect(QRectF(x + 12, y + 12, 20, 20), 6, 6)
+        painter.setPen(QColor('#061421'))
+        painter.setFont(QFont('Sans Serif', 9, QFont.Weight.Bold))
+        painter.drawText(QRectF(x + 12, y + 12, 20, 20), Qt.AlignmentFlag.AlignCenter, 'AI')
+        painter.setPen(QColor('#eff8ff'))
+        painter.setFont(QFont('Sans Serif', max(10, min(14, width // 72)), QFont.Weight.DemiBold))
+        painter.drawText(QRectF(x + 42, y + 4, badge_width - 52, badge_height - 8),
+                         Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, text)
+        painter.restore()
+
+    def closeEvent(self, event) -> None:
+        """Request polling shutdown without delaying the screensaver close animation."""
+        if self.agent_status_worker is not None and self.agent_status_worker.isRunning():
+            self.agent_status_worker.request_stop()
+        super().closeEvent(event)
 
     def request_kde_lock(self):
         if self.is_preview or self.lock_attempted:
