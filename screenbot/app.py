@@ -21,6 +21,7 @@ from screenbot.mpris import HIDDEN as NO_MEDIA, MprisWorker
 from screenbot.media_overlay import MediaOverlayMixin
 from screenbot.effects import WeatherEffects
 from screenbot.phone.apps import PhoneAppsRenderer
+from screenbot.phone.camera_pet import CameraState
 from screenbot.phone.frame import PhoneFrameRenderer
 from screenbot.runtime import battery_powered, frame_interval_ms
 from screenbot.scene import SceneRenderer
@@ -140,6 +141,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self._scenery_cache_time = 0.0
         self._space_foreground_cache = None
         self._space_foreground_key = None
+        self.bobos_camera = CameraState()
         schedule_random = random.Random()
         self.bobos_timeline = BobOSTimeline(
             activation_delay_seconds=self.bobos_activation_delay_seconds,
@@ -224,7 +226,10 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             elapsed_seconds=elapsed_seconds,
             lock_seconds=self.lock_seconds,
         )
-        return self.bobos_timeline.status_at(elapsed_seconds, enabled=enabled)
+        return self.bobos_timeline.status_at(
+            elapsed_seconds, enabled=enabled,
+            lock_deadline_seconds=self.lock_seconds if self.password_lock else None,
+        )
 
     def paintEvent(self, event):
         p = QPainter(self)

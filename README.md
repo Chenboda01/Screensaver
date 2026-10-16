@@ -53,11 +53,15 @@ The same Mountains scene with locally calculated Boston skies and fixed example 
 
 ### BobOS
 
-Bob's fictional phone zooms into its home screen and opens Bob Browser:
+Bob's fictional phone zooms into its home screen before each adventure. It chooses 4–6 different apps, with a different selection from the previous adventure, then shuts down and returns to exploring. The full-sequence KDE preview still shows every app.
 
 ![Animated BobOS phone zooming in, showing its app launcher, then opening the simulated browser](assets/screenshots/bobos-phone.gif)
 
 ![BobOS phone home screen with fictional Browser, Files, Terminal, Games, Chat, Maps, Weather, Calendar, and App Store buttons](assets/screenshots/bobos.webp)
+
+**Bob Camera** takes a simulated selfie against the current theme and Live Sky, flashes, and shows the photo in Bob Files. Its viewfinder refreshes at most five times per second; only two 480×200 images are kept in memory and disappear when the screensaver closes. It never accesses a camera or saves photos to disk. **Bob Pet** feeds Pip a pretend snack and plays moonball; each visit starts fresh, with no persistent pet state or external service. The existing **Reduce motion and flashes** preference freezes Camera’s viewfinder, suppresses its flash, and stops Pip’s continuous motion while preserving feeding and play states.
+
+Each selected adventure must fit entirely before the configured KDE password-lock deadline. If it cannot, Bob keeps exploring until KDE locks. The activation delay, connection animation option, and minimum five-minute cooldown still apply.
 
 All previews are captured from the production renderer. Stills are 1280×720; animations are six-second, 768×432 loops. [Regenerate the gallery](assets/screenshots/README.md) after visual changes.
 
@@ -148,7 +152,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
 - Optional primary-screen AI agent status badge with elapsed work time, confirmed finish time, and one short Bob celebration; uncertain states remain hidden and no prompts, filenames, or output appear on screen
 - Manual launches remain available regardless of the automatic agent policy
-- Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, AI Wi-Fi, and an immediate preview
+- Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, Camera, Pet, AI Wi-Fi, and an immediate preview
 - Configurable BobOS delay of 1–30 minutes from the first visible screensaver frame, plus a cooldown of at least five minutes
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
