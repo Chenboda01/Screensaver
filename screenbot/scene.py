@@ -57,6 +57,8 @@ class SceneRenderer:
         if self.live_sky_enabled and self.theme not in ('space', 'underwater') and self.live_sky_position is not None:
             self.live_landscape_light(p, w, h, t)
         self.weather(p, w, h, t)
+        latitude = self.live_weather.latitude if self.live_weather.located else None
+        self.seasonal_bob_hat = self.seasonal_session.draw(p, w, h, t, self.theme, latitude, self.reduce_motion)
 
     def _draw_static_scenery(self, p: QPainter, w: int, h: int, t: float) -> None:
         """Render the selected theme through the central theme registry."""

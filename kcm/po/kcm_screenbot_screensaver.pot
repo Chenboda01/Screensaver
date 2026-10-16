@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 16:54-0400\n"
+"POT-Creation-Date: 2026-10-16 19:15-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -78,19 +78,19 @@ msgctxt "@info:accessible Section state, summary"
 msgid "%1. %2"
 msgstr ""
 
-#: ui/main.qml:14
+#: ui/main.qml:27
 #, kde-format
 msgctxt "@label"
 msgid "Choose how Bob appears and when KDE locks your screen."
 msgstr ""
 
-#: ui/main.qml:19
+#: ui/main.qml:33
 #, kde-format
 msgctxt "@label"
 msgid "Preview"
 msgstr ""
 
-#: ui/main.qml:23
+#: ui/main.qml:37
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -98,259 +98,259 @@ msgid ""
 "key to close."
 msgstr ""
 
-#: ui/main.qml:38
+#: ui/main.qml:52
 #, kde-format
 msgctxt "@label"
 msgid "Theme"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Random"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Space"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Mountains"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Snow"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Forest"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Futuristic City"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Aurora"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Ocean / Beach"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Desert"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "Underwater"
 msgstr ""
 
-#: ui/main.qml:39
+#: ui/main.qml:53
 #, kde-format
 msgctxt "@item:inlistbox Theme"
 msgid "My photos"
 msgstr ""
 
-#: ui/main.qml:46
+#: ui/main.qml:59
 #, kde-format
 msgctxt "@label"
 msgid "Theme:"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Random"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Space"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Mountains"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Snow"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Forest"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Futuristic City"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Aurora"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Ocean / Beach"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Desert"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "Underwater"
 msgstr ""
 
-#: ui/main.qml:47
+#: ui/main.qml:60
 #, kde-format
 msgctxt "@label"
 msgid "My photos"
 msgstr ""
 
-#: ui/main.qml:54
+#: ui/main.qml:67
 #, kde-format
 msgctxt "@label"
 msgid "Photo folder:"
 msgstr ""
 
-#: ui/main.qml:61
+#: ui/main.qml:74
 #, kde-format
 msgctxt "@label"
 msgid "Local photo folder"
 msgstr ""
 
-#: ui/main.qml:72
+#: ui/main.qml:85
 #, kde-format
 msgctxt "@label"
 msgid "Choose folder:"
 msgstr ""
 
-#: ui/main.qml:73
+#: ui/main.qml:86
 #, kde-format
 msgctxt "@button"
 msgid "Browse…"
 msgstr ""
 
-#: ui/main.qml:81
+#: ui/main.qml:94
 #, kde-format
 msgctxt "@title:window"
 msgid "Choose photo folder"
 msgstr ""
 
-#: ui/main.qml:90
+#: ui/main.qml:103
 #, kde-format
 msgctxt "@label"
 msgid "Subfolders:"
 msgstr ""
 
-#: ui/main.qml:91
+#: ui/main.qml:104
 #, kde-format
 msgctxt "@label"
 msgid "Include subfolders"
 msgstr ""
 
-#: ui/main.qml:91
+#: ui/main.qml:104
 #, kde-format
 msgctxt "@label"
 msgid "Only this folder"
 msgstr ""
 
-#: ui/main.qml:98
+#: ui/main.qml:111
 #, kde-format
 msgctxt "@label"
 msgid "Seconds per photo:"
 msgstr ""
 
-#: ui/main.qml:105
+#: ui/main.qml:118
 #, kde-format
 msgctxt "@label Photo display interval in seconds"
 msgid "%1 sec"
 msgstr ""
 
-#: ui/main.qml:111
+#: ui/main.qml:124
 #, kde-format
 msgctxt "@label"
 msgid "Photo order:"
 msgstr ""
 
-#: ui/main.qml:112
+#: ui/main.qml:125
 #, kde-format
 msgctxt "@label Photo order"
 msgid "By name"
 msgstr ""
 
-#: ui/main.qml:112
+#: ui/main.qml:125
 #, kde-format
 msgctxt "@label Photo order"
 msgid "By date"
 msgstr ""
 
-#: ui/main.qml:112
+#: ui/main.qml:125
 #, kde-format
 msgctxt "@label Photo order"
 msgid "Random"
 msgstr ""
 
-#: ui/main.qml:122
+#: ui/main.qml:135
 #, kde-format
 msgctxt "@label"
 msgid "Photo fit:"
 msgstr ""
 
-#: ui/main.qml:123
+#: ui/main.qml:136
 #, kde-format
 msgctxt "@label Photo fit"
 msgid "Fill screen and crop"
 msgstr ""
 
-#: ui/main.qml:123
+#: ui/main.qml:136
 #, kde-format
 msgctxt "@label Photo fit"
 msgid "Fit whole photo with blurred background"
 msgstr ""
 
-#: ui/main.qml:135
+#: ui/main.qml:148
 #, kde-format
 msgctxt "@label Photo privacy"
 msgid "Privacy:"
 msgstr ""
 
-#: ui/main.qml:136
+#: ui/main.qml:149
 #, kde-format
 msgctxt "@info Photo slideshow privacy"
 msgid ""
@@ -359,187 +359,187 @@ msgid ""
 "people nearby can see the photos while the screensaver is running."
 msgstr ""
 
-#: ui/main.qml:145
+#: ui/main.qml:159
 #, kde-format
 msgctxt "@label"
 msgid "Customize Bob"
 msgstr ""
 
-#: ui/main.qml:146
+#: ui/main.qml:160
 #, kde-format
 msgctxt "@info Bob appearance summary"
 msgid "%1 · %2"
 msgstr ""
 
-#: ui/main.qml:151
+#: ui/main.qml:165
 #, kde-format
 msgctxt "@label"
 msgid "Bob's name:"
 msgstr ""
 
-#: ui/main.qml:154
+#: ui/main.qml:168
 #, kde-format
 msgctxt "@label"
 msgid "Bob's display name"
 msgstr ""
 
-#: ui/main.qml:168
+#: ui/main.qml:182
 #, kde-format
 msgctxt "@label"
 msgid "Bob's color:"
 msgstr ""
 
-#: ui/main.qml:169
+#: ui/main.qml:183
 #, kde-format
 msgctxt "@item:inlistbox Bob color"
 msgid "Cyan"
 msgstr ""
 
-#: ui/main.qml:169
+#: ui/main.qml:183
 #, kde-format
 msgctxt "@item:inlistbox Bob color"
 msgid "Green"
 msgstr ""
 
-#: ui/main.qml:169
+#: ui/main.qml:183
 #, kde-format
 msgctxt "@item:inlistbox Bob color"
 msgid "Purple"
 msgstr ""
 
-#: ui/main.qml:169
+#: ui/main.qml:183
 #, kde-format
 msgctxt "@item:inlistbox Bob color"
 msgid "Orange"
 msgstr ""
 
-#: ui/main.qml:169
+#: ui/main.qml:183
 #, kde-format
 msgctxt "@item:inlistbox Bob color"
 msgid "Pink"
 msgstr ""
 
-#: ui/main.qml:169
+#: ui/main.qml:183
 #, kde-format
 msgctxt "@item:inlistbox Bob color"
 msgid "Gold"
 msgstr ""
 
-#: ui/main.qml:169
+#: ui/main.qml:183
 #, kde-format
 msgctxt "@item:inlistbox Bob color"
 msgid "Custom"
 msgstr ""
 
-#: ui/main.qml:171
+#: ui/main.qml:185
 #, kde-format
 msgctxt "@label Bob color summary"
 msgid "Cyan"
 msgstr ""
 
-#: ui/main.qml:171
+#: ui/main.qml:185
 #, kde-format
 msgctxt "@label Bob color summary"
 msgid "Green"
 msgstr ""
 
-#: ui/main.qml:171
+#: ui/main.qml:185
 #, kde-format
 msgctxt "@label Bob color summary"
 msgid "Purple"
 msgstr ""
 
-#: ui/main.qml:171
+#: ui/main.qml:185
 #, kde-format
 msgctxt "@label Bob color summary"
 msgid "Orange"
 msgstr ""
 
-#: ui/main.qml:171
+#: ui/main.qml:185
 #, kde-format
 msgctxt "@label Bob color summary"
 msgid "Pink"
 msgstr ""
 
-#: ui/main.qml:171
+#: ui/main.qml:185
 #, kde-format
 msgctxt "@label Bob color summary"
 msgid "Gold"
 msgstr ""
 
-#: ui/main.qml:171
+#: ui/main.qml:185
 #, kde-format
 msgctxt "@label Bob color summary"
 msgid "Custom color"
 msgstr ""
 
-#: ui/main.qml:177
+#: ui/main.qml:191
 #, kde-format
 msgctxt "@label"
 msgid "Custom color:"
 msgstr ""
 
-#: ui/main.qml:178
+#: ui/main.qml:192
 #, kde-format
 msgctxt "@label"
 msgid "Choose color…"
 msgstr ""
 
-#: ui/main.qml:198
+#: ui/main.qml:212
 #, kde-format
 msgctxt "@label"
 msgid "Accessory:"
 msgstr ""
 
-#: ui/main.qml:199
+#: ui/main.qml:213
 #, kde-format
 msgctxt "@item:inlistbox Bob accessory"
 msgid "None"
 msgstr ""
 
-#: ui/main.qml:199
+#: ui/main.qml:213
 #, kde-format
 msgctxt "@item:inlistbox Bob accessory"
 msgid "Cap"
 msgstr ""
 
-#: ui/main.qml:199
+#: ui/main.qml:213
 #, kde-format
 msgctxt "@item:inlistbox Bob accessory"
 msgid "Bow tie"
 msgstr ""
 
-#: ui/main.qml:199
+#: ui/main.qml:213
 #, kde-format
 msgctxt "@item:inlistbox Bob accessory"
 msgid "Headphones"
 msgstr ""
 
-#: ui/main.qml:199
+#: ui/main.qml:213
 #, kde-format
 msgctxt "@item:inlistbox Bob accessory"
 msgid "Flower"
 msgstr ""
 
-#: ui/main.qml:199
+#: ui/main.qml:213
 #, kde-format
 msgctxt "@item:inlistbox Bob accessory"
 msgid "Crown"
 msgstr ""
 
-#: ui/main.qml:199
+#: ui/main.qml:213
 #, kde-format
 msgctxt "@item:inlistbox Bob accessory"
 msgid "Antenna ball"
 msgstr ""
 
-#: ui/main.qml:208
+#: ui/main.qml:222
 #, kde-format
 msgctxt "@label"
 msgid "Preview:"
 msgstr ""
 
-#: ui/main.qml:209
+#: ui/main.qml:223
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -548,211 +548,211 @@ msgid ""
 "gear would overlap."
 msgstr ""
 
-#: ui/main.qml:217
+#: ui/main.qml:232
 #, kde-format
 msgctxt "@label"
 msgid "Clock"
 msgstr ""
 
-#: ui/main.qml:218 ui/main.qml:230
+#: ui/main.qml:233 ui/main.qml:245
 #, kde-format
 msgctxt "@label"
 msgid "24-hour"
 msgstr ""
 
-#: ui/main.qml:218 ui/main.qml:230
+#: ui/main.qml:233 ui/main.qml:245
 #, kde-format
 msgctxt "@label"
 msgid "12-hour"
 msgstr ""
 
-#: ui/main.qml:218
+#: ui/main.qml:233
 #, kde-format
 msgctxt "@info Clock summary: format, position"
 msgid "On · %1 · %2"
 msgstr ""
 
-#: ui/main.qml:218 ui/main.qml:290 ui/main.qml:357
+#: ui/main.qml:233 ui/main.qml:306 ui/main.qml:374 ui/main.qml:436
 #, kde-format
 msgctxt "@label Feature state"
 msgid "Off"
 msgstr ""
 
-#: ui/main.qml:221
+#: ui/main.qml:236
 #, kde-format
 msgctxt "@label"
 msgid "Clock:"
 msgstr ""
 
-#: ui/main.qml:222
+#: ui/main.qml:237
 #, kde-format
 msgctxt "@label"
 msgid "Visible"
 msgstr ""
 
-#: ui/main.qml:222 ui/main.qml:257
+#: ui/main.qml:237 ui/main.qml:272
 #, kde-format
 msgctxt "@label"
 msgid "Hidden"
 msgstr ""
 
-#: ui/main.qml:229
+#: ui/main.qml:244
 #, kde-format
 msgctxt "@label"
 msgid "Time format:"
 msgstr ""
 
-#: ui/main.qml:236
+#: ui/main.qml:251
 #, kde-format
 msgctxt "@label"
 msgid "Date:"
 msgstr ""
 
-#: ui/main.qml:237
+#: ui/main.qml:252
 #, kde-format
 msgctxt "@label"
 msgid "Show date below the time"
 msgstr ""
 
-#: ui/main.qml:237
+#: ui/main.qml:252
 #, kde-format
 msgctxt "@label"
 msgid "Hide date"
 msgstr ""
 
-#: ui/main.qml:246
+#: ui/main.qml:261
 #, kde-format
 msgctxt "@label"
 msgid "Clock position:"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Top left"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Top center"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Top right"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Center left"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Center"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Center right"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Bottom left"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Bottom center"
 msgstr ""
 
-#: ui/main.qml:247
+#: ui/main.qml:262
 #, kde-format
 msgctxt "@label"
 msgid "Bottom right"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "top left"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "top center"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "top right"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "center left"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "center center"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "center right"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "bottom left"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "bottom center"
 msgstr ""
 
-#: ui/main.qml:248
+#: ui/main.qml:263
 #, kde-format
 msgctxt "@label Clock position summary"
 msgid "bottom right"
 msgstr ""
 
-#: ui/main.qml:256
+#: ui/main.qml:271
 #, kde-format
 msgctxt "@label"
 msgid "Show what's playing:"
 msgstr ""
 
-#: ui/main.qml:257
+#: ui/main.qml:272
 #, kde-format
 msgctxt "@label"
 msgid "Show media title and artist"
 msgstr ""
 
-#: ui/main.qml:260
+#: ui/main.qml:275
 #, kde-format
 msgctxt "@label"
 msgid "Show what's playing"
 msgstr ""
 
-#: ui/main.qml:267
+#: ui/main.qml:282
 #, kde-format
 msgctxt "@info"
 msgid ""
@@ -760,79 +760,79 @@ msgid ""
 "primary screen only; never controls playback. Previews keep media hidden."
 msgstr ""
 
-#: ui/main.qml:270
+#: ui/main.qml:286
 #, kde-format
 msgctxt "@label"
 msgid "Clock font size:"
 msgstr ""
 
-#: ui/main.qml:278
+#: ui/main.qml:294
 #, kde-format
 msgctxt "@label Font size in points"
 msgid "%1 pt"
 msgstr ""
 
-#: ui/main.qml:289
+#: ui/main.qml:305
 #, kde-format
 msgctxt "@label"
 msgid "Weather"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "@info"
 msgid "No weather effects in Space"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "@info"
 msgid "Managed by Live Sky"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "@label Weather"
 msgid "Rain"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "@label Weather"
 msgid "Snow"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "@label Weather"
 msgid "Thunderstorms"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "@label Weather"
 msgid "Fog"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "@label Weather"
 msgid "Shooting stars"
 msgstr ""
 
-#: ui/main.qml:290
+#: ui/main.qml:306
 #, kde-format
 msgctxt "Separator between enabled weather effects"
 msgid " · "
 msgstr ""
 
-#: ui/main.qml:296
+#: ui/main.qml:312
 #, kde-format
 msgctxt "@label"
 msgid "Animated weather:"
 msgstr ""
 
-#: ui/main.qml:297
+#: ui/main.qml:313
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -840,89 +840,91 @@ msgid ""
 "available on the landscape themes."
 msgstr ""
 
-#: ui/main.qml:302
+#: ui/main.qml:319
 #, kde-format
 msgctxt "@label"
 msgid "Bob's weather accessories:"
 msgstr ""
 
-#: ui/main.qml:303 ui/main.qml:313 ui/main.qml:321 ui/main.qml:329
-#: ui/main.qml:337 ui/main.qml:345 ui/main.qml:440 ui/main.qml:508
-#: ui/main.qml:514
+#: ui/main.qml:320 ui/main.qml:330 ui/main.qml:338 ui/main.qml:346
+#: ui/main.qml:354 ui/main.qml:362 ui/main.qml:463 ui/main.qml:472
+#: ui/main.qml:481 ui/main.qml:490 ui/main.qml:499 ui/main.qml:508
+#: ui/main.qml:517 ui/main.qml:594 ui/main.qml:662 ui/main.qml:668
 #, kde-format
 msgctxt "@label"
 msgid "Enabled"
 msgstr ""
 
-#: ui/main.qml:303 ui/main.qml:313 ui/main.qml:321 ui/main.qml:329
-#: ui/main.qml:337 ui/main.qml:345 ui/main.qml:440 ui/main.qml:508
-#: ui/main.qml:514
+#: ui/main.qml:320 ui/main.qml:330 ui/main.qml:338 ui/main.qml:346
+#: ui/main.qml:354 ui/main.qml:362 ui/main.qml:463 ui/main.qml:472
+#: ui/main.qml:481 ui/main.qml:490 ui/main.qml:499 ui/main.qml:508
+#: ui/main.qml:517 ui/main.qml:594 ui/main.qml:662 ui/main.qml:668
 #, kde-format
 msgctxt "@label"
 msgid "Disabled"
 msgstr ""
 
-#: ui/main.qml:308
+#: ui/main.qml:325
 #, kde-format
 msgctxt "@info:tooltip"
 msgid "Bob can wear weather accessories when Live Sky is enabled."
 msgstr ""
 
-#: ui/main.qml:312
+#: ui/main.qml:329
 #, kde-format
 msgctxt "@label"
 msgid "Rain:"
 msgstr ""
 
-#: ui/main.qml:320
+#: ui/main.qml:337
 #, kde-format
 msgctxt "@label"
 msgid "Snowfall:"
 msgstr ""
 
-#: ui/main.qml:328
+#: ui/main.qml:345
 #, kde-format
 msgctxt "@label"
 msgid "Thunderstorms:"
 msgstr ""
 
-#: ui/main.qml:336
+#: ui/main.qml:353
 #, kde-format
 msgctxt "@label"
 msgid "Fog:"
 msgstr ""
 
-#: ui/main.qml:344
+#: ui/main.qml:361
 #, kde-format
 msgctxt "@label"
 msgid "Shooting stars (landscapes):"
 msgstr ""
 
-#: ui/main.qml:356
+#: ui/main.qml:373
 #, kde-format
 msgctxt "@label"
 msgid "Live Sky"
 msgstr ""
 
-#: ui/main.qml:357
+#: ui/main.qml:374
 #, kde-format
 msgctxt "@info"
 msgid "No location selected"
 msgstr ""
 
-#: ui/main.qml:357
+#: ui/main.qml:374
 #, kde-format
 msgctxt "@info Live Sky summary: location, temperature unit"
 msgid "On · %1 · °%2"
 msgstr ""
 
-#: ui/main.qml:363
+#: ui/main.qml:380
 #, kde-format
 msgctxt "@label"
 msgid "Live Sky:"
 msgstr ""
 
-#: ui/main.qml:364
+#: ui/main.qml:381
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -931,25 +933,25 @@ msgid ""
 "shooting stars. Manual weather effects are dimmed while Live Sky is enabled."
 msgstr ""
 
-#: ui/main.qml:368
+#: ui/main.qml:385
 #, kde-format
 msgctxt "@label"
 msgid "Enable Live Sky:"
 msgstr ""
 
-#: ui/main.qml:369 ui/main.qml:616
+#: ui/main.qml:386 ui/main.qml:456 ui/main.qml:770
 #, kde-format
 msgctxt "@label"
 msgid "On"
 msgstr ""
 
-#: ui/main.qml:369 ui/main.qml:616
+#: ui/main.qml:386 ui/main.qml:456 ui/main.qml:770
 #, kde-format
 msgctxt "@label"
 msgid "Off"
 msgstr ""
 
-#: ui/main.qml:382
+#: ui/main.qml:399
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -958,31 +960,31 @@ msgid ""
 "bundled city catalog. No IP-based lookup is used."
 msgstr ""
 
-#: ui/main.qml:388
+#: ui/main.qml:405
 #, kde-format
 msgctxt "@label"
 msgid "Temperature units:"
 msgstr ""
 
-#: ui/main.qml:389
+#: ui/main.qml:406
 #, kde-format
 msgctxt "@label"
 msgid "Celsius"
 msgstr ""
 
-#: ui/main.qml:389
+#: ui/main.qml:406
 #, kde-format
 msgctxt "@label"
 msgid "Fahrenheit"
 msgstr ""
 
-#: ui/main.qml:398
+#: ui/main.qml:415
 #, kde-format
 msgctxt "@label"
 msgid "Weather refresh:"
 msgstr ""
 
-#: ui/main.qml:399
+#: ui/main.qml:416
 #, kde-format
 msgctxt "@item:inlistbox Weather refresh interval"
 msgid "Every %1 minute"
@@ -990,55 +992,268 @@ msgid_plural "Every %1 minutes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ui/main.qml:406
+#: ui/main.qml:423
 #, kde-format
 msgctxt "@label"
 msgid "Current conditions:"
 msgstr ""
 
-#: ui/main.qml:407
+#: ui/main.qml:424
 #, kde-format
 msgctxt "@label"
 msgid "Show weather under the clock"
 msgstr ""
 
-#: ui/main.qml:407
+#: ui/main.qml:424
 #, kde-format
 msgctxt "@label"
 msgid "Hide weather text"
 msgstr ""
 
-#: ui/main.qml:418
+#: ui/main.qml:435
+#, kde-format
+msgctxt "@label"
+msgid "Seasonal decorations"
+msgstr ""
+
+#: ui/main.qml:437
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "New Year"
+msgstr ""
+
+#: ui/main.qml:438
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Lunar New Year"
+msgstr ""
+
+#: ui/main.qml:439
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Valentine's Day"
+msgstr ""
+
+#: ui/main.qml:440
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Spring"
+msgstr ""
+
+#: ui/main.qml:441
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Halloween"
+msgstr ""
+
+#: ui/main.qml:442
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Winter holidays"
+msgstr ""
+
+#: ui/main.qml:443
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Birthday"
+msgstr ""
+
+#: ui/main.qml:444
+#, kde-format
+msgctxt "Separator between enabled seasonal events"
+msgid " · "
+msgstr ""
+
+#: ui/main.qml:444
+#, kde-format
+msgctxt "@info"
+msgid "On · no events selected"
+msgstr ""
+
+#: ui/main.qml:450
+#, kde-format
+msgctxt "@info"
+msgid ""
+"Dates use your system's local time. Seasons follow the selected Live Sky "
+"location when its latitude is available; otherwise Northern Hemisphere dates "
+"are used. Birthday date and name stay in this local settings file."
+msgstr ""
+
+#: ui/main.qml:455
+#, kde-format
+msgctxt "@label"
+msgid "Seasonal decorations:"
+msgstr ""
+
+#: ui/main.qml:462
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "New Year:"
+msgstr ""
+
+#: ui/main.qml:471
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Lunar New Year:"
+msgstr ""
+
+#: ui/main.qml:480
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Valentine's Day:"
+msgstr ""
+
+#: ui/main.qml:489
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Spring:"
+msgstr ""
+
+#: ui/main.qml:498
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Halloween:"
+msgstr ""
+
+#: ui/main.qml:507
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Winter holidays:"
+msgstr ""
+
+#: ui/main.qml:516
+#, kde-format
+msgctxt "@label Seasonal event"
+msgid "Birthday:"
+msgstr ""
+
+#: ui/main.qml:526
+#, kde-format
+msgctxt "@label"
+msgid "Birthday month:"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "January"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "February"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "March"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "April"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "May"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "June"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "July"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "August"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "September"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "October"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "November"
+msgstr ""
+
+#: ui/main.qml:527
+#, kde-format
+msgctxt "@item:inlistbox Month"
+msgid "December"
+msgstr ""
+
+#: ui/main.qml:540
+#, kde-format
+msgctxt "@label"
+msgid "Birthday day:"
+msgstr ""
+
+#: ui/main.qml:552
+#, kde-format
+msgctxt "@label"
+msgid "Birthday name (optional):"
+msgstr ""
+
+#: ui/main.qml:553
+#, kde-format
+msgctxt "@label"
+msgid "Optional display name"
+msgstr ""
+
+#: ui/main.qml:572
 #, kde-format
 msgctxt "@label"
 msgid "AI Agents"
 msgstr ""
 
-#: ui/main.qml:419 ui/main.qml:433
+#: ui/main.qml:573 ui/main.qml:587
 #, kde-format
 msgctxt "@label"
 msgid "Always ask"
 msgstr ""
 
-#: ui/main.qml:419 ui/main.qml:433
+#: ui/main.qml:573 ui/main.qml:587
 #, kde-format
 msgctxt "@label"
 msgid "Always start screensaver"
 msgstr ""
 
-#: ui/main.qml:419
+#: ui/main.qml:573
 #, kde-format
 msgctxt "@label"
 msgid "Do not start while agents are running"
 msgstr ""
 
-#: ui/main.qml:425
+#: ui/main.qml:579
 #, kde-format
 msgctxt "@label"
 msgid "AI Agent Detection:"
 msgstr ""
 
-#: ui/main.qml:426
+#: ui/main.qml:580
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -1046,67 +1261,67 @@ msgid ""
 "launches always remain available."
 msgstr ""
 
-#: ui/main.qml:432
+#: ui/main.qml:586
 #, kde-format
 msgctxt "@label"
 msgid "When an agent is active:"
 msgstr ""
 
-#: ui/main.qml:433
+#: ui/main.qml:587
 #, kde-format
 msgctxt "@label"
 msgid "Don't start screensaver while agents are running"
 msgstr ""
 
-#: ui/main.qml:439
+#: ui/main.qml:593
 #, kde-format
 msgctxt "@label"
 msgid "Show AI agent status on the screensaver:"
 msgstr ""
 
-#: ui/main.qml:446
+#: ui/main.qml:600
 #, kde-format
 msgctxt "@label"
 msgid "Automatic answer:"
 msgstr ""
 
-#: ui/main.qml:447
+#: ui/main.qml:601
 #, kde-format
 msgctxt "@label"
 msgid "Never (wait for me)"
 msgstr ""
 
-#: ui/main.qml:454
+#: ui/main.qml:608
 #, kde-format
 msgctxt "@label"
 msgid "Answer automatically after (s):"
 msgstr ""
 
-#: ui/main.qml:455
+#: ui/main.qml:609
 #, kde-format
 msgctxt "@label"
 msgid "Answer automatically after, in seconds"
 msgstr ""
 
-#: ui/main.qml:468
+#: ui/main.qml:622
 #, kde-format
 msgctxt "@label"
 msgid "When time runs out:"
 msgstr ""
 
-#: ui/main.qml:471
+#: ui/main.qml:625
 #, kde-format
 msgctxt "@label"
 msgid "Start screensaver (Yes)"
 msgstr ""
 
-#: ui/main.qml:471
+#: ui/main.qml:625
 #, kde-format
 msgctxt "@label"
 msgid "Keep desktop visible (No)"
 msgstr ""
 
-#: ui/main.qml:480
+#: ui/main.qml:634
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -1114,37 +1329,37 @@ msgid ""
 "remember a choice."
 msgstr ""
 
-#: ui/main.qml:485
+#: ui/main.qml:639
 #, kde-format
 msgctxt "@label"
 msgid "Remembered choice:"
 msgstr ""
 
-#: ui/main.qml:486
+#: ui/main.qml:640
 #, kde-format
 msgctxt "@label"
 msgid "Reset to Always ask"
 msgstr ""
 
-#: ui/main.qml:495
+#: ui/main.qml:649
 #, kde-format
 msgctxt "@label"
 msgid "BobOS"
 msgstr ""
 
-#: ui/main.qml:496
+#: ui/main.qml:650
 #, kde-format
 msgctxt "@info"
 msgid "Phone off"
 msgstr ""
 
-#: ui/main.qml:496
+#: ui/main.qml:650
 #, kde-format
 msgctxt "@info"
 msgid "Phone on · BobOS off"
 msgstr ""
 
-#: ui/main.qml:496
+#: ui/main.qml:650
 #, kde-format
 msgctxt "@info BobOS delay summary"
 msgid "On · After %1 min"
@@ -1152,13 +1367,13 @@ msgid_plural "On · After %1 min"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ui/main.qml:502
+#: ui/main.qml:656
 #, kde-format
 msgctxt "@label"
 msgid "Bob's Phone & BobOS 2.0"
 msgstr ""
 
-#: ui/main.qml:503
+#: ui/main.qml:657
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -1166,25 +1381,25 @@ msgid ""
 "messages, places, and games are animated drawings only."
 msgstr ""
 
-#: ui/main.qml:507
+#: ui/main.qml:661
 #, kde-format
 msgctxt "@label"
 msgid "Enable Bob's Phone:"
 msgstr ""
 
-#: ui/main.qml:513
+#: ui/main.qml:667
 #, kde-format
 msgctxt "@label"
 msgid "Enable BobOS:"
 msgstr ""
 
-#: ui/main.qml:522
+#: ui/main.qml:676
 #, kde-format
 msgctxt "@label"
 msgid "BobOS Activation Delay:"
 msgstr ""
 
-#: ui/main.qml:531 ui/main.qml:630
+#: ui/main.qml:685 ui/main.qml:784
 #, kde-format
 msgctxt "@label Duration"
 msgid "%1 minute"
@@ -1192,67 +1407,67 @@ msgid_plural "%1 minutes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ui/main.qml:538
+#: ui/main.qml:692
 #, kde-format
 msgctxt "@label"
 msgid "AI Wi-Fi animation:"
 msgstr ""
 
-#: ui/main.qml:539
+#: ui/main.qml:693
 #, kde-format
 msgctxt "@label"
 msgid "Shown before BobOS opens"
 msgstr ""
 
-#: ui/main.qml:539
+#: ui/main.qml:693
 #, kde-format
 msgctxt "@label"
 msgid "Skipped"
 msgstr ""
 
-#: ui/main.qml:547
+#: ui/main.qml:701
 #, kde-format
 msgctxt "@label"
 msgid "BobOS preview:"
 msgstr ""
 
-#: ui/main.qml:548
+#: ui/main.qml:702
 #, kde-format
 msgctxt "@label"
 msgid "Preview full adventure"
 msgstr ""
 
-#: ui/main.qml:558
+#: ui/main.qml:712
 #, kde-format
 msgctxt "@label"
 msgid "Performance"
 msgstr ""
 
-#: ui/main.qml:559
+#: ui/main.qml:713
 #, kde-format
 msgctxt "@label Performance mode"
 msgid "Smooth"
 msgstr ""
 
-#: ui/main.qml:559 ui/main.qml:574
+#: ui/main.qml:713 ui/main.qml:728
 #, kde-format
 msgctxt "@label Performance mode"
 msgid "Balanced"
 msgstr ""
 
-#: ui/main.qml:559
+#: ui/main.qml:713
 #, kde-format
 msgctxt "@label Performance mode"
 msgid "Battery saver"
 msgstr ""
 
-#: ui/main.qml:565
+#: ui/main.qml:719
 #, kde-format
 msgctxt "@label"
 msgid "Frame pacing:"
 msgstr ""
 
-#: ui/main.qml:566
+#: ui/main.qml:720
 #, kde-format
 msgctxt "@info"
 msgid ""
@@ -1260,61 +1475,61 @@ msgid ""
 "minutes. Battery saver uses 10 fps."
 msgstr ""
 
-#: ui/main.qml:573
+#: ui/main.qml:727
 #, kde-format
 msgctxt "@label"
 msgid "Performance mode:"
 msgstr ""
 
-#: ui/main.qml:574
+#: ui/main.qml:728
 #, kde-format
 msgctxt "@label Performance mode"
 msgid "Smooth (30 fps)"
 msgstr ""
 
-#: ui/main.qml:574
+#: ui/main.qml:728
 #, kde-format
 msgctxt "@label Performance mode"
 msgid "Battery saver (10 fps)"
 msgstr ""
 
-#: ui/main.qml:580
+#: ui/main.qml:734
 #, kde-format
 msgctxt "@label"
 msgid "Motion:"
 msgstr ""
 
-#: ui/main.qml:581
+#: ui/main.qml:735
 #, kde-format
 msgctxt "@label"
 msgid "Reduce motion and flashes"
 msgstr ""
 
-#: ui/main.qml:589
+#: ui/main.qml:743
 #, kde-format
 msgctxt "@label"
 msgid "Burn-in protection:"
 msgstr ""
 
-#: ui/main.qml:590
+#: ui/main.qml:744
 #, kde-format
 msgctxt "@label Burn-in protection"
 msgid "Off"
 msgstr ""
 
-#: ui/main.qml:590
+#: ui/main.qml:744
 #, kde-format
 msgctxt "@label Burn-in protection"
 msgid "Standard"
 msgstr ""
 
-#: ui/main.qml:590
+#: ui/main.qml:744
 #, kde-format
 msgctxt "@label Burn-in protection"
 msgid "Strong"
 msgstr ""
 
-#: ui/main.qml:599
+#: ui/main.qml:753
 #, kde-format
 msgctxt "@info Burn-in protection"
 msgid ""
@@ -1322,26 +1537,26 @@ msgid ""
 "Any input closes the screensaver and cancels the fade."
 msgstr ""
 
-#: ui/main.qml:601
+#: ui/main.qml:755
 #, kde-format
 msgctxt "@info Burn-in protection"
 msgid ""
 "Moves the scene slowly and lets the clock drift within its selected area."
 msgstr ""
 
-#: ui/main.qml:602
+#: ui/main.qml:756
 #, kde-format
 msgctxt "@info Burn-in protection"
 msgid "Off preserves the original fixed layout and brightness."
 msgstr ""
 
-#: ui/main.qml:610
+#: ui/main.qml:764
 #, kde-format
 msgctxt "@label"
 msgid "Lock"
 msgstr ""
 
-#: ui/main.qml:611
+#: ui/main.qml:765
 #, kde-format
 msgctxt "@info Lock delay summary"
 msgid "Password after %1 min"
@@ -1349,49 +1564,49 @@ msgid_plural "Password after %1 min"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ui/main.qml:611
+#: ui/main.qml:765
 #, kde-format
 msgctxt "@info"
 msgid "Screensaver password countdown off"
 msgstr ""
 
-#: ui/main.qml:615
+#: ui/main.qml:769
 #, kde-format
 msgctxt "@label"
 msgid "Password unlock:"
 msgstr ""
 
-#: ui/main.qml:621
+#: ui/main.qml:775
 #, kde-format
 msgctxt "@label"
 msgid "Require password after:"
 msgstr ""
 
-#: ui/main.qml:637
+#: ui/main.qml:791
 #, kde-format
 msgctxt "@label"
 msgid "Show countdown:"
 msgstr ""
 
-#: ui/main.qml:638
+#: ui/main.qml:792
 #, kde-format
 msgctxt "@label"
 msgid "Display time until password is required"
 msgstr ""
 
-#: ui/main.qml:648
+#: ui/main.qml:802
 #, kde-format
 msgctxt "@label"
 msgid "Countdown color preview (elapsed time)"
 msgstr ""
 
-#: ui/main.qml:649
+#: ui/main.qml:803
 #, kde-format
 msgctxt "@label"
 msgid "Color transition:"
 msgstr ""
 
-#: ui/main.qml:668
+#: ui/main.qml:822
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -1399,7 +1614,7 @@ msgid ""
 "yellow → orange → red as time runs out. KDE handles the actual password lock."
 msgstr ""
 
-#: ui/main.qml:675
+#: ui/main.qml:830
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -1408,7 +1623,7 @@ msgid ""
 "option does not disable KDE's separate automatic locking or suspend locks."
 msgstr ""
 
-#: ui/main.qml:681
+#: ui/main.qml:838
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -1416,7 +1631,7 @@ msgid ""
 "starts."
 msgstr ""
 
-#: ui/main.qml:688
+#: ui/main.qml:846
 #, kde-format
 msgctxt "@title:window"
 msgid "Choose Bob's color"
@@ -1443,31 +1658,31 @@ msgstr ""
 msgid "No matches. Check the spelling, or try a nearby larger town."
 msgstr ""
 
-#: screenbotkcm.cpp:809
+#: screenbotkcm.cpp:984
 #, kde-format
 msgid ""
 "Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure "
 "Bash is available on PATH."
 msgstr ""
 
-#: screenbotkcm.cpp:816
+#: screenbotkcm.cpp:991
 #, kde-format
 msgid "Could not create temporary preview settings."
 msgstr ""
 
-#: screenbotkcm.cpp:827
+#: screenbotkcm.cpp:1002
 #, kde-format
 msgid "Could not write temporary preview settings."
 msgstr ""
 
-#: screenbotkcm.cpp:844
+#: screenbotkcm.cpp:1019
 #, kde-format
 msgid ""
 "Could not start the preview. Check the ScreenBot installation and Python 3 "
 "dependencies."
 msgstr ""
 
-#: screenbotkcm.cpp:850
+#: screenbotkcm.cpp:1025
 #, kde-format
 msgid ""
 "The preview stopped unexpectedly. Check the ScreenBot installation and "

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ScreenBot screensaver V22 compatibility facade and command-line entrypoint."""
 import configparser
+from datetime import datetime
 import random
 import subprocess
 import sys
@@ -52,14 +53,22 @@ def main(arguments: list[str] | None = None) -> int:
         QCommandLineOption('wifi-animation', 'Show the BobOS connection animation.'),
         QCommandLineOption('no-wifi-animation', 'Skip the BobOS connection animation.'),
         QCommandLineOption('preview-weather', 'Force a Bob weather appearance in preview mode.', 'condition'),
+        QCommandLineOption('force-date', 'Override local calendar date/time in preview only (ISO format).', 'date-time'),
     ])
     parser.process([sys.argv[0], *command_arguments])
     preview = parser.isSet('preview')
     preview_bobos = parser.isSet('preview-bobos')
     if ((preview and preview_bobos)
             or ((parser.isSet('config') or parser.isSet('preview-weather'))
-                and not (preview or preview_bobos))):
+                and not (preview or preview_bobos))
+            or (parser.isSet('force-date') and not (preview or preview_bobos))):
         parser.showHelp(2)
+    forced_preview_datetime: datetime | None = None
+    if parser.isSet('force-date'):
+        try:
+            forced_preview_datetime = datetime.fromisoformat(parser.value('force-date'))
+        except ValueError:
+            parser.showHelp(2)
     weather_override: WeatherPreview | None = None
     if parser.isSet('preview-weather'):
         weather_override = parse_weather_preview(parser.value('preview-weather'))
@@ -78,6 +87,7 @@ def main(arguments: list[str] | None = None) -> int:
             preview_bobos=preview_bobos,
             preview_wifi_animation=wifi_override,
             preview_weather=weather_override,
+            forced_preview_datetime=forced_preview_datetime,
         )
     except (OSError, configparser.Error, ValueError) as error:
         print(f'Could not read ScreenBot settings: {error}', file=sys.stderr)

@@ -28,6 +28,7 @@ from screenbot.photo_slideshow import PhotoSlideshowRenderer
 from screenbot.runtime import battery_powered, frame_interval_ms
 from screenbot.scene import SceneRenderer
 from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, read_settings, selected_theme
+from screenbot.seasonal_renderer import SeasonalSession
 from screenbot.themes.city import CityTheme
 from screenbot.themes.forest import ForestTheme
 from screenbot.themes.mountains import MountainsTheme
@@ -40,16 +41,17 @@ from screenbot.weather_accessory_renderer import WeatherAccessoryAnimator, Weath
 class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin, BobOSStatusMixin):
     def __init__(self, *, preview: bool = False, config_path: Path | None = None,
                  preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
-                 preview_weather: WeatherPreview | None = None):
+                 preview_weather: WeatherPreview | None = None,
+                 forced_preview_datetime: datetime | None = None):
         super().__init__()
         self.setWindowTitle('ScreenBot Screensaver')
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMouseTracking(True)
         self.setCursor(Qt.CursorShape.BlankCursor)
-        self.quick_preview = preview
-        self.is_preview = preview or preview_bobos
+        self.quick_preview, self.is_preview = preview, preview or preview_bobos
         settings = read_settings(config_path)
+        self.seasonal_session = SeasonalSession.from_settings(settings, is_preview=self.is_preview, forced_preview_datetime=forced_preview_datetime)
         self.bob_appearance = BobAppearance.from_settings(settings)
         self.bob_weather_enabled = settings.getboolean('Screensaver', 'bob_weather_enabled', fallback=True)
         self.preview_weather_override = preview_weather
@@ -386,8 +388,6 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
                 QApplication.quit()
         self.old_mouse = pos
 
-    def mousePressEvent(self, event):
-        QApplication.quit()
+    def mousePressEvent(self, event): QApplication.quit()
 
-    def keyPressEvent(self, event):
-        QApplication.quit()
+    def keyPressEvent(self, event): QApplication.quit()

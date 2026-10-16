@@ -51,7 +51,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "theme"
             title: i18nc("@label", "Theme")
             summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City"), i18nc("@item:inlistbox Theme", "Aurora"), i18nc("@item:inlistbox Theme", "Ocean / Beach"), i18nc("@item:inlistbox Theme", "Desert"), i18nc("@item:inlistbox Theme", "Underwater"), i18nc("@item:inlistbox Theme", "My photos")][["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater", "photos"].indexOf(kcm.theme)]
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.ComboBox {
                 implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
@@ -158,7 +158,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "appearance"
             title: i18nc("@label", "Customize Bob")
             summary: i18nc("@info Bob appearance summary", "%1 · %2", kcm.bobName, bobColorPreset.summaryLabels[bobColorPreset.currentIndex])
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.TextField {
                 id: bobNameField
                 objectName: "bobNameField"
@@ -231,7 +231,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "clock"
             title: i18nc("@label", "Clock")
             summary: kcm.clockVisible ? i18nc("@info Clock summary: format, position", "On · %1 · %2", kcm.clockFormat === "24h" ? i18nc("@label", "24-hour") : i18nc("@label", "12-hour"), clockPosition.summaryLabels[clockPosition.currentIndex]) : i18nc("@label Feature state", "Off")
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Switch {
                 Kirigami.FormData.label: i18nc("@label", "Clock:")
                 text: checked ? i18nc("@label", "Visible") : i18nc("@label", "Hidden")
@@ -304,7 +304,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "weather"
             title: i18nc("@label", "Weather")
             summary: kcm.theme === "space" ? i18nc("@info", "No weather effects in Space") : kcm.liveSkyEnabled ? i18nc("@info", "Managed by Live Sky") : [kcm.rainEnabled ? i18nc("@label Weather", "Rain") : "", kcm.snowEnabled ? i18nc("@label Weather", "Snow") : "", kcm.thunderstormsEnabled ? i18nc("@label Weather", "Thunderstorms") : "", kcm.fogEnabled ? i18nc("@label Weather", "Fog") : "", kcm.shootingStarsEnabled ? i18nc("@label Weather", "Shooting stars") : ""].filter(function(value) { return value.length > 0 }).join(i18nc("Separator between enabled weather effects", " · ")) || i18nc("@label Feature state", "Off")
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -372,7 +372,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "liveSky"
             title: i18nc("@label", "Live Sky")
             summary: kcm.liveSkyEnabled ? i18nc("@info Live Sky summary: location, temperature unit", "On · %1 · °%2", kcm.liveSkyLocation || i18nc("@info", "No location selected"), kcm.liveSkyUnits.toUpperCase()) : i18nc("@label Feature state", "Off")
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -429,12 +429,149 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            id: seasonalSection
+            settings: kcm
+            sectionKey: "seasonal"
+            title: i18nc("@label", "Seasonal decorations")
+            summary: !kcm.seasonalEnabled ? i18nc("@label Feature state", "Off") : [
+                kcm.seasonalNewYearEnabled ? i18nc("@label Seasonal event", "New Year") : "",
+                kcm.seasonalLunarNewYearEnabled ? i18nc("@label Seasonal event", "Lunar New Year") : "",
+                kcm.seasonalValentinesEnabled ? i18nc("@label Seasonal event", "Valentine's Day") : "",
+                kcm.seasonalSpringEnabled ? i18nc("@label Seasonal event", "Spring") : "",
+                kcm.seasonalHalloweenEnabled ? i18nc("@label Seasonal event", "Halloween") : "",
+                kcm.seasonalWinterHolidaysEnabled ? i18nc("@label Seasonal event", "Winter holidays") : "",
+                kcm.seasonalBirthdayEnabled ? i18nc("@label Seasonal event", "Birthday") : ""
+            ].filter(function(value) { return value.length > 0 }).join(i18nc("Separator between enabled seasonal events", " · ")) || i18nc("@info", "On · no events selected")
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            Controls.Label {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
+                text: i18nc("@info", "Dates use your system's local time. Seasons follow the selected Live Sky location when its latitude is available; otherwise Northern Hemisphere dates are used. Birthday date and name stay in this local settings file.")
+                wrapMode: Text.WordWrap
+            }
+            Controls.Switch {
+                objectName: "seasonalEnabledSwitch"
+                Kirigami.FormData.label: i18nc("@label", "Seasonal decorations:")
+                text: checked ? i18nc("@label", "On") : i18nc("@label", "Off")
+                checked: kcm.seasonalEnabled
+                onToggled: kcm.seasonalEnabled = checked
+            }
+            Controls.Switch {
+                objectName: "seasonalNewYearSwitch"
+                Kirigami.FormData.label: i18nc("@label Seasonal event", "New Year:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.seasonalNewYearEnabled
+                enabled: kcm.seasonalEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.seasonalNewYearEnabled = checked
+            }
+            Controls.Switch {
+                objectName: "seasonalLunarNewYearSwitch"
+                Kirigami.FormData.label: i18nc("@label Seasonal event", "Lunar New Year:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.seasonalLunarNewYearEnabled
+                enabled: kcm.seasonalEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.seasonalLunarNewYearEnabled = checked
+            }
+            Controls.Switch {
+                objectName: "seasonalValentinesSwitch"
+                Kirigami.FormData.label: i18nc("@label Seasonal event", "Valentine's Day:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.seasonalValentinesEnabled
+                enabled: kcm.seasonalEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.seasonalValentinesEnabled = checked
+            }
+            Controls.Switch {
+                objectName: "seasonalSpringSwitch"
+                Kirigami.FormData.label: i18nc("@label Seasonal event", "Spring:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.seasonalSpringEnabled
+                enabled: kcm.seasonalEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.seasonalSpringEnabled = checked
+            }
+            Controls.Switch {
+                objectName: "seasonalHalloweenSwitch"
+                Kirigami.FormData.label: i18nc("@label Seasonal event", "Halloween:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.seasonalHalloweenEnabled
+                enabled: kcm.seasonalEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.seasonalHalloweenEnabled = checked
+            }
+            Controls.Switch {
+                objectName: "seasonalWinterHolidaysSwitch"
+                Kirigami.FormData.label: i18nc("@label Seasonal event", "Winter holidays:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.seasonalWinterHolidaysEnabled
+                enabled: kcm.seasonalEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.seasonalWinterHolidaysEnabled = checked
+            }
+            Controls.Switch {
+                objectName: "seasonalBirthdaySwitch"
+                Kirigami.FormData.label: i18nc("@label Seasonal event", "Birthday:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.seasonalBirthdayEnabled
+                enabled: kcm.seasonalEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onToggled: kcm.seasonalBirthdayEnabled = checked
+            }
+            Controls.ComboBox {
+                id: seasonalBirthdayMonth
+                objectName: "seasonalBirthdayMonth"
+                Kirigami.FormData.label: i18nc("@label", "Birthday month:")
+                model: [i18nc("@item:inlistbox Month", "January"), i18nc("@item:inlistbox Month", "February"), i18nc("@item:inlistbox Month", "March"), i18nc("@item:inlistbox Month", "April"), i18nc("@item:inlistbox Month", "May"), i18nc("@item:inlistbox Month", "June"), i18nc("@item:inlistbox Month", "July"), i18nc("@item:inlistbox Month", "August"), i18nc("@item:inlistbox Month", "September"), i18nc("@item:inlistbox Month", "October"), i18nc("@item:inlistbox Month", "November"), i18nc("@item:inlistbox Month", "December")]
+                currentIndex: Math.max(0, Number(kcm.seasonalBirthdayDate.slice(0, 2)) - 1)
+                enabled: kcm.seasonalEnabled && kcm.seasonalBirthdayEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onActivated: function(index) {
+                    var day = Number(kcm.seasonalBirthdayDate.slice(3, 5))
+                    var maxDay = new Date(2000, index + 1, 0).getDate()
+                    kcm.seasonalBirthdayDate = String(index + 1).padStart(2, "0") + "-" + String(Math.min(day, maxDay)).padStart(2, "0")
+                }
+            }
+            Controls.SpinBox {
+                id: seasonalBirthdayDay
+                objectName: "seasonalBirthdayDay"
+                Kirigami.FormData.label: i18nc("@label", "Birthday day:")
+                from: 1
+                to: new Date(2000, seasonalBirthdayMonth.currentIndex + 1, 0).getDate()
+                value: Number(kcm.seasonalBirthdayDate.slice(3, 5))
+                editable: true
+                enabled: kcm.seasonalEnabled && kcm.seasonalBirthdayEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onValueModified: kcm.seasonalBirthdayDate = String(seasonalBirthdayMonth.currentIndex + 1).padStart(2, "0") + "-" + String(value).padStart(2, "0")
+            }
+            Controls.TextField {
+                id: seasonalBirthdayName
+                objectName: "seasonalBirthdayName"
+                Kirigami.FormData.label: i18nc("@label", "Birthday name (optional):")
+                placeholderText: i18nc("@label", "Optional display name")
+                text: kcm.seasonalBirthdayName
+                maximumLength: 64
+                enabled: kcm.seasonalEnabled && kcm.seasonalBirthdayEnabled
+                opacity: enabled ? 1.0 : 0.4
+                onTextEdited: kcm.seasonalBirthdayName = text
+                Connections {
+                    target: kcm
+                    function onSeasonalBirthdayNameChanged() {
+                        if (seasonalBirthdayName.text !== kcm.seasonalBirthdayName)
+                            seasonalBirthdayName.text = kcm.seasonalBirthdayName
+                    }
+                }
+            }
+        }
+        CollapsibleSection {
             id: agentsSection
             settings: kcm
             sectionKey: "agents"
             title: i18nc("@label", "AI Agents")
             summary: [i18nc("@label", "Always ask"), i18nc("@label", "Always start screensaver"), i18nc("@label", "Do not start while agents are running")][["ask", "start", "block"].indexOf(kcm.agentDetectionMode)]
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -511,7 +648,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "bobos"
             title: i18nc("@label", "BobOS")
             summary: !kcm.phoneEnabled ? i18nc("@info", "Phone off") : !kcm.bobosEnabled ? i18nc("@info", "Phone on · BobOS off") : i18ncp("@info BobOS delay summary", "On · After %1 min", "On · After %1 min", kcm.bobosActivationDelay)
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -574,7 +711,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "performance"
             title: i18nc("@label", "Performance")
             summary: [i18nc("@label Performance mode", "Smooth"), i18nc("@label Performance mode", "Balanced"), i18nc("@label Performance mode", "Battery saver")][["smooth", "balanced", "battery-saver"].indexOf(kcm.performanceMode)]
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -626,7 +763,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "lock"
             title: i18nc("@label", "Lock")
             summary: kcm.passwordLock ? i18ncp("@info Lock delay summary", "Password after %1 min", "Password after %1 min", kcm.lockMinutes) : i18nc("@info", "Screensaver password countdown off")
-            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Switch {
                 id: passwordSwitch
                 Kirigami.FormData.label: i18nc("@label", "Password unlock:")

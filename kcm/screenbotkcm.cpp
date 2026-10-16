@@ -14,6 +14,7 @@
 #include <QScreen>
 #include <QTemporaryFile>
 #include <QColor>
+#include <QDate>
 #include <QTextBoundaryFinder>
 
 K_PLUGIN_CLASS_WITH_JSON(ScreenBotKcm, "kcm_screenbot_screensaver.json")
@@ -56,6 +57,46 @@ static QString sanitizedBobName(QString value) {
     }
     safe.truncate(end);
     return safe.isEmpty() ? QStringLiteral("Bob") : safe;
+}
+
+static QString sanitizedBirthdayName(QString value) {
+    QString safe;
+    for (qsizetype index = 0; index < value.size(); ++index) {
+        const QChar character = value.at(index);
+        if (character.isHighSurrogate() && index + 1 < value.size()
+            && value.at(index + 1).isLowSurrogate()) {
+            safe.append(character);
+            safe.append(value.at(++index));
+            continue;
+        }
+        if (character.isSpace()) {
+            safe.append(QLatin1Char(' '));
+            continue;
+        }
+        const auto category = character.category();
+        if (category == QChar::Other_Control || category == QChar::Other_Format
+            || category == QChar::Other_Surrogate) continue;
+        safe.append(character);
+    }
+    safe = safe.simplified();
+    QTextBoundaryFinder boundaryFinder(QTextBoundaryFinder::Grapheme, safe);
+    qsizetype end = 0;
+    for (int grapheme = 0; grapheme < 32; ++grapheme) {
+        const qsizetype next = boundaryFinder.toNextBoundary();
+        if (next < 0) break;
+        end = next;
+    }
+    safe.truncate(end);
+    return safe;
+}
+
+static QString validBirthdayDate(const QString &value) {
+    if (value.size() != 5 || value.at(2) != QLatin1Char('-')) return QStringLiteral("01-01");
+    bool monthOk = false, dayOk = false;
+    const int month = value.left(2).toInt(&monthOk);
+    const int day = value.mid(3, 2).toInt(&dayOk);
+    if (!monthOk || !dayOk || !QDate(2000, month, day).isValid()) return QStringLiteral("01-01");
+    return value;
 }
 
 static bool validBobColor(const QString &value) {
@@ -117,6 +158,17 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_liveSkyUnits != m_savedLiveSkyUnits
         || m_liveSkyInterval != m_savedLiveSkyInterval
         || m_liveSkyConditions != m_savedLiveSkyConditions) sections.append(QStringLiteral("liveSky"));
+    if (m_seasonalEnabled != m_savedSeasonalEnabled
+        || m_seasonalNewYearEnabled != m_savedSeasonalNewYearEnabled
+        || m_seasonalLunarNewYearEnabled != m_savedSeasonalLunarNewYearEnabled
+        || m_seasonalValentinesEnabled != m_savedSeasonalValentinesEnabled
+        || m_seasonalSpringEnabled != m_savedSeasonalSpringEnabled
+        || m_seasonalHalloweenEnabled != m_savedSeasonalHalloweenEnabled
+        || m_seasonalWinterHolidaysEnabled != m_savedSeasonalWinterHolidaysEnabled
+        || m_seasonalBirthdayEnabled != m_savedSeasonalBirthdayEnabled
+        || m_seasonalBirthdayDate != m_savedSeasonalBirthdayDate
+        || m_seasonalBirthdayName != m_savedSeasonalBirthdayName)
+        sections.append(QStringLiteral("seasonal"));
     if (m_agentDetectionMode != m_savedAgentDetectionMode
         || m_agentStatusEnabled != m_savedAgentStatusEnabled
         || m_agentPromptTimeout != m_savedAgentPromptTimeout
@@ -150,7 +202,7 @@ bool ScreenBotKcm::sectionExpanded(const QString &section) const {
 
 void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
     const QStringList sections{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"),
-        QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"),
+        QStringLiteral("liveSky"), QStringLiteral("seasonal"), QStringLiteral("agents"), QStringLiteral("bobos"),
         QStringLiteral("performance"), QStringLiteral("lock")};
     if (!sections.contains(section)) return;
     QSettings state(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
@@ -231,6 +283,18 @@ void ScreenBotKcm::load() {
     const int liveSkyInterval = requestedLiveSkyInterval == 15 || requestedLiveSkyInterval == 60
         ? requestedLiveSkyInterval : 30;
     const bool liveSkyConditions = cfg.value(QStringLiteral("Screensaver/live_sky_conditions"), true).toBool();
+    const bool seasonalEnabled = cfg.value(QStringLiteral("Screensaver/seasonal_enabled"), true).toBool();
+    const bool seasonalNewYear = cfg.value(QStringLiteral("Screensaver/seasonal_new_year_enabled"), true).toBool();
+    const bool seasonalLunarNewYear = cfg.value(QStringLiteral("Screensaver/seasonal_lunar_new_year_enabled"), false).toBool();
+    const bool seasonalValentines = cfg.value(QStringLiteral("Screensaver/seasonal_valentines_enabled"), false).toBool();
+    const bool seasonalSpring = cfg.value(QStringLiteral("Screensaver/seasonal_spring_enabled"), false).toBool();
+    const bool seasonalHalloween = cfg.value(QStringLiteral("Screensaver/seasonal_halloween_enabled"), false).toBool();
+    const bool seasonalWinterHolidays = cfg.value(QStringLiteral("Screensaver/seasonal_winter_holidays_enabled"), false).toBool();
+    const bool seasonalBirthday = cfg.value(QStringLiteral("Screensaver/seasonal_birthday_enabled"), false).toBool();
+    const QString seasonalBirthdayDate = validBirthdayDate(cfg.value(
+        QStringLiteral("Screensaver/seasonal_birthday_date"), QStringLiteral("01-01")).toString());
+    const QString seasonalBirthdayName = sanitizedBirthdayName(cfg.value(
+        QStringLiteral("Screensaver/seasonal_birthday_name")).toString());
     const QString requestedAgentMode = cfg.value(QStringLiteral("Screensaver/agent_detection_mode"), QStringLiteral("ask")).toString();
     const bool agentStatusEnabled = cfg.value(QStringLiteral("Screensaver/agent_status_enabled"), true).toBool();
     const QString agentMode = requestedAgentMode == QLatin1String("start") || requestedAgentMode == QLatin1String("block")
@@ -285,6 +349,16 @@ void ScreenBotKcm::load() {
     if (m_liveSkyUnits != liveSkyUnits) { m_liveSkyUnits = liveSkyUnits; Q_EMIT liveSkyUnitsChanged(); }
     if (m_liveSkyInterval != liveSkyInterval) { m_liveSkyInterval = liveSkyInterval; Q_EMIT liveSkyIntervalChanged(); }
     if (m_liveSkyConditions != liveSkyConditions) { m_liveSkyConditions = liveSkyConditions; Q_EMIT liveSkyConditionsChanged(); }
+    if (m_seasonalEnabled != seasonalEnabled) { m_seasonalEnabled = seasonalEnabled; Q_EMIT seasonalEnabledChanged(); }
+    if (m_seasonalNewYearEnabled != seasonalNewYear) { m_seasonalNewYearEnabled = seasonalNewYear; Q_EMIT seasonalNewYearEnabledChanged(); }
+    if (m_seasonalLunarNewYearEnabled != seasonalLunarNewYear) { m_seasonalLunarNewYearEnabled = seasonalLunarNewYear; Q_EMIT seasonalLunarNewYearEnabledChanged(); }
+    if (m_seasonalValentinesEnabled != seasonalValentines) { m_seasonalValentinesEnabled = seasonalValentines; Q_EMIT seasonalValentinesEnabledChanged(); }
+    if (m_seasonalSpringEnabled != seasonalSpring) { m_seasonalSpringEnabled = seasonalSpring; Q_EMIT seasonalSpringEnabledChanged(); }
+    if (m_seasonalHalloweenEnabled != seasonalHalloween) { m_seasonalHalloweenEnabled = seasonalHalloween; Q_EMIT seasonalHalloweenEnabledChanged(); }
+    if (m_seasonalWinterHolidaysEnabled != seasonalWinterHolidays) { m_seasonalWinterHolidaysEnabled = seasonalWinterHolidays; Q_EMIT seasonalWinterHolidaysEnabledChanged(); }
+    if (m_seasonalBirthdayEnabled != seasonalBirthday) { m_seasonalBirthdayEnabled = seasonalBirthday; Q_EMIT seasonalBirthdayEnabledChanged(); }
+    if (m_seasonalBirthdayDate != seasonalBirthdayDate) { m_seasonalBirthdayDate = seasonalBirthdayDate; Q_EMIT seasonalBirthdayDateChanged(); }
+    if (m_seasonalBirthdayName != seasonalBirthdayName) { m_seasonalBirthdayName = seasonalBirthdayName; Q_EMIT seasonalBirthdayNameChanged(); }
     if (m_agentDetectionMode != agentMode) { m_agentDetectionMode = agentMode; Q_EMIT agentDetectionModeChanged(); }
     if (m_agentStatusEnabled != agentStatusEnabled) { m_agentStatusEnabled = agentStatusEnabled; Q_EMIT agentStatusEnabledChanged(); }
     if (m_agentPromptTimeout != promptTimeout) { m_agentPromptTimeout = promptTimeout; Q_EMIT agentPromptTimeoutChanged(); }
@@ -327,6 +401,16 @@ void ScreenBotKcm::load() {
     m_savedLiveSkyUnits = m_liveSkyUnits;
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
+    m_savedSeasonalEnabled = m_seasonalEnabled;
+    m_savedSeasonalNewYearEnabled = m_seasonalNewYearEnabled;
+    m_savedSeasonalLunarNewYearEnabled = m_seasonalLunarNewYearEnabled;
+    m_savedSeasonalValentinesEnabled = m_seasonalValentinesEnabled;
+    m_savedSeasonalSpringEnabled = m_seasonalSpringEnabled;
+    m_savedSeasonalHalloweenEnabled = m_seasonalHalloweenEnabled;
+    m_savedSeasonalWinterHolidaysEnabled = m_seasonalWinterHolidaysEnabled;
+    m_savedSeasonalBirthdayEnabled = m_seasonalBirthdayEnabled;
+    m_savedSeasonalBirthdayDate = m_seasonalBirthdayDate;
+    m_savedSeasonalBirthdayName = m_seasonalBirthdayName;
     m_savedAgentDetectionMode = m_agentDetectionMode;
     m_savedAgentStatusEnabled = m_agentStatusEnabled;
     m_savedAgentPromptTimeout = m_agentPromptTimeout;
@@ -377,6 +461,16 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/live_sky_units"), m_liveSkyUnits);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_interval"), m_liveSkyInterval);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_conditions"), m_liveSkyConditions);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_enabled"), m_seasonalEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_new_year_enabled"), m_seasonalNewYearEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_lunar_new_year_enabled"), m_seasonalLunarNewYearEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_valentines_enabled"), m_seasonalValentinesEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_spring_enabled"), m_seasonalSpringEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_halloween_enabled"), m_seasonalHalloweenEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_winter_holidays_enabled"), m_seasonalWinterHolidaysEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_birthday_enabled"), m_seasonalBirthdayEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_birthday_date"), m_seasonalBirthdayDate);
+    cfg.setValue(QStringLiteral("Screensaver/seasonal_birthday_name"), m_seasonalBirthdayName);
     cfg.setValue(QStringLiteral("Screensaver/agent_detection_mode"), m_agentDetectionMode);
     cfg.setValue(QStringLiteral("Screensaver/agent_status_enabled"), m_agentStatusEnabled);
     cfg.setValue(QStringLiteral("Screensaver/agent_prompt_timeout_seconds"), m_agentPromptTimeout);
@@ -429,6 +523,16 @@ void ScreenBotKcm::save() {
     m_savedLiveSkyUnits = m_liveSkyUnits;
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
+    m_savedSeasonalEnabled = m_seasonalEnabled;
+    m_savedSeasonalNewYearEnabled = m_seasonalNewYearEnabled;
+    m_savedSeasonalLunarNewYearEnabled = m_seasonalLunarNewYearEnabled;
+    m_savedSeasonalValentinesEnabled = m_seasonalValentinesEnabled;
+    m_savedSeasonalSpringEnabled = m_seasonalSpringEnabled;
+    m_savedSeasonalHalloweenEnabled = m_seasonalHalloweenEnabled;
+    m_savedSeasonalWinterHolidaysEnabled = m_seasonalWinterHolidaysEnabled;
+    m_savedSeasonalBirthdayEnabled = m_seasonalBirthdayEnabled;
+    m_savedSeasonalBirthdayDate = m_seasonalBirthdayDate;
+    m_savedSeasonalBirthdayName = m_seasonalBirthdayName;
     m_savedAgentDetectionMode = m_agentDetectionMode;
     m_savedAgentStatusEnabled = m_agentStatusEnabled;
     m_savedAgentPromptTimeout = m_agentPromptTimeout;
@@ -699,6 +803,77 @@ void ScreenBotKcm::setLiveSkyConditions(bool value) {
     if (value == m_liveSkyConditions) return;
     m_liveSkyConditions = value;
     Q_EMIT liveSkyConditionsChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalEnabled(bool value) {
+    if (value == m_seasonalEnabled) return;
+    m_seasonalEnabled = value;
+    Q_EMIT seasonalEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalNewYearEnabled(bool value) {
+    if (value == m_seasonalNewYearEnabled) return;
+    m_seasonalNewYearEnabled = value;
+    Q_EMIT seasonalNewYearEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalLunarNewYearEnabled(bool value) {
+    if (value == m_seasonalLunarNewYearEnabled) return;
+    m_seasonalLunarNewYearEnabled = value;
+    Q_EMIT seasonalLunarNewYearEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalValentinesEnabled(bool value) {
+    if (value == m_seasonalValentinesEnabled) return;
+    m_seasonalValentinesEnabled = value;
+    Q_EMIT seasonalValentinesEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalSpringEnabled(bool value) {
+    if (value == m_seasonalSpringEnabled) return;
+    m_seasonalSpringEnabled = value;
+    Q_EMIT seasonalSpringEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalHalloweenEnabled(bool value) {
+    if (value == m_seasonalHalloweenEnabled) return;
+    m_seasonalHalloweenEnabled = value;
+    Q_EMIT seasonalHalloweenEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalWinterHolidaysEnabled(bool value) {
+    if (value == m_seasonalWinterHolidaysEnabled) return;
+    m_seasonalWinterHolidaysEnabled = value;
+    Q_EMIT seasonalWinterHolidaysEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalBirthdayEnabled(bool value) {
+    if (value == m_seasonalBirthdayEnabled) return;
+    m_seasonalBirthdayEnabled = value;
+    Q_EMIT seasonalBirthdayEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalBirthdayDate(const QString &value) {
+    if (validBirthdayDate(value) != value || value == m_seasonalBirthdayDate) return;
+    m_seasonalBirthdayDate = value;
+    Q_EMIT seasonalBirthdayDateChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setSeasonalBirthdayName(const QString &value) {
+    const QString safe = sanitizedBirthdayName(value);
+    if (safe == m_seasonalBirthdayName) return;
+    m_seasonalBirthdayName = safe;
+    Q_EMIT seasonalBirthdayNameChanged();
     checkModified();
 }
 

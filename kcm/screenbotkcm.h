@@ -46,6 +46,16 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(QString liveSkyUnits READ liveSkyUnits WRITE setLiveSkyUnits NOTIFY liveSkyUnitsChanged)
     Q_PROPERTY(int liveSkyInterval READ liveSkyInterval WRITE setLiveSkyInterval NOTIFY liveSkyIntervalChanged)
     Q_PROPERTY(bool liveSkyConditions READ liveSkyConditions WRITE setLiveSkyConditions NOTIFY liveSkyConditionsChanged)
+    Q_PROPERTY(bool seasonalEnabled READ seasonalEnabled WRITE setSeasonalEnabled NOTIFY seasonalEnabledChanged)
+    Q_PROPERTY(bool seasonalNewYearEnabled READ seasonalNewYearEnabled WRITE setSeasonalNewYearEnabled NOTIFY seasonalNewYearEnabledChanged)
+    Q_PROPERTY(bool seasonalLunarNewYearEnabled READ seasonalLunarNewYearEnabled WRITE setSeasonalLunarNewYearEnabled NOTIFY seasonalLunarNewYearEnabledChanged)
+    Q_PROPERTY(bool seasonalValentinesEnabled READ seasonalValentinesEnabled WRITE setSeasonalValentinesEnabled NOTIFY seasonalValentinesEnabledChanged)
+    Q_PROPERTY(bool seasonalSpringEnabled READ seasonalSpringEnabled WRITE setSeasonalSpringEnabled NOTIFY seasonalSpringEnabledChanged)
+    Q_PROPERTY(bool seasonalHalloweenEnabled READ seasonalHalloweenEnabled WRITE setSeasonalHalloweenEnabled NOTIFY seasonalHalloweenEnabledChanged)
+    Q_PROPERTY(bool seasonalWinterHolidaysEnabled READ seasonalWinterHolidaysEnabled WRITE setSeasonalWinterHolidaysEnabled NOTIFY seasonalWinterHolidaysEnabledChanged)
+    Q_PROPERTY(bool seasonalBirthdayEnabled READ seasonalBirthdayEnabled WRITE setSeasonalBirthdayEnabled NOTIFY seasonalBirthdayEnabledChanged)
+    Q_PROPERTY(QString seasonalBirthdayDate READ seasonalBirthdayDate WRITE setSeasonalBirthdayDate NOTIFY seasonalBirthdayDateChanged)
+    Q_PROPERTY(QString seasonalBirthdayName READ seasonalBirthdayName WRITE setSeasonalBirthdayName NOTIFY seasonalBirthdayNameChanged)
     Q_PROPERTY(QString agentDetectionMode READ agentDetectionMode WRITE setAgentDetectionMode NOTIFY agentDetectionModeChanged)
     Q_PROPERTY(bool agentStatusEnabled READ agentStatusEnabled WRITE setAgentStatusEnabled NOTIFY agentStatusEnabledChanged)
     Q_PROPERTY(int agentPromptTimeout READ agentPromptTimeout WRITE setAgentPromptTimeout NOTIFY agentPromptTimeoutChanged)
@@ -100,6 +110,16 @@ public:
     QString liveSkyUnits() const { return m_liveSkyUnits; }
     int liveSkyInterval() const { return m_liveSkyInterval; }
     bool liveSkyConditions() const { return m_liveSkyConditions; }
+    bool seasonalEnabled() const { return m_seasonalEnabled; }
+    bool seasonalNewYearEnabled() const { return m_seasonalNewYearEnabled; }
+    bool seasonalLunarNewYearEnabled() const { return m_seasonalLunarNewYearEnabled; }
+    bool seasonalValentinesEnabled() const { return m_seasonalValentinesEnabled; }
+    bool seasonalSpringEnabled() const { return m_seasonalSpringEnabled; }
+    bool seasonalHalloweenEnabled() const { return m_seasonalHalloweenEnabled; }
+    bool seasonalWinterHolidaysEnabled() const { return m_seasonalWinterHolidaysEnabled; }
+    bool seasonalBirthdayEnabled() const { return m_seasonalBirthdayEnabled; }
+    QString seasonalBirthdayDate() const { return m_seasonalBirthdayDate; }
+    QString seasonalBirthdayName() const { return m_seasonalBirthdayName; }
     QString agentDetectionMode() const { return m_agentDetectionMode; }
     bool agentStatusEnabled() const { return m_agentStatusEnabled; }
     int agentPromptTimeout() const { return m_agentPromptTimeout; }
@@ -141,6 +161,16 @@ public:
     void setLiveSkyUnits(const QString &value);
     void setLiveSkyInterval(int value);
     void setLiveSkyConditions(bool value);
+    void setSeasonalEnabled(bool value);
+    void setSeasonalNewYearEnabled(bool value);
+    void setSeasonalLunarNewYearEnabled(bool value);
+    void setSeasonalValentinesEnabled(bool value);
+    void setSeasonalSpringEnabled(bool value);
+    void setSeasonalHalloweenEnabled(bool value);
+    void setSeasonalWinterHolidaysEnabled(bool value);
+    void setSeasonalBirthdayEnabled(bool value);
+    void setSeasonalBirthdayDate(const QString &value);
+    void setSeasonalBirthdayName(const QString &value);
     void setAgentDetectionMode(const QString &value);
     void setAgentStatusEnabled(bool value);
     void setAgentPromptTimeout(int value);
@@ -190,6 +220,16 @@ Q_SIGNALS:
     void liveSkyUnitsChanged();
     void liveSkyIntervalChanged();
     void liveSkyConditionsChanged();
+    void seasonalEnabledChanged();
+    void seasonalNewYearEnabledChanged();
+    void seasonalLunarNewYearEnabledChanged();
+    void seasonalValentinesEnabledChanged();
+    void seasonalSpringEnabledChanged();
+    void seasonalHalloweenEnabledChanged();
+    void seasonalWinterHolidaysEnabledChanged();
+    void seasonalBirthdayEnabledChanged();
+    void seasonalBirthdayDateChanged();
+    void seasonalBirthdayNameChanged();
     void agentDetectionModeChanged();
     void agentStatusEnabledChanged();
     void agentPromptTimeoutChanged();
@@ -251,6 +291,26 @@ private:
     QString m_liveSkyUnits = QStringLiteral("c");
     int m_liveSkyInterval = 30;
     bool m_liveSkyConditions = true;
+    bool m_seasonalEnabled = true;
+    bool m_seasonalNewYearEnabled = true;
+    bool m_seasonalLunarNewYearEnabled = false;
+    bool m_seasonalValentinesEnabled = false;
+    bool m_seasonalSpringEnabled = false;
+    bool m_seasonalHalloweenEnabled = false;
+    bool m_seasonalWinterHolidaysEnabled = false;
+    bool m_seasonalBirthdayEnabled = false;
+    QString m_seasonalBirthdayDate = QStringLiteral("01-01");
+    QString m_seasonalBirthdayName;
+    bool m_savedSeasonalEnabled = true;
+    bool m_savedSeasonalNewYearEnabled = true;
+    bool m_savedSeasonalLunarNewYearEnabled = false;
+    bool m_savedSeasonalValentinesEnabled = false;
+    bool m_savedSeasonalSpringEnabled = false;
+    bool m_savedSeasonalHalloweenEnabled = false;
+    bool m_savedSeasonalWinterHolidaysEnabled = false;
+    bool m_savedSeasonalBirthdayEnabled = false;
+    QString m_savedSeasonalBirthdayDate = QStringLiteral("01-01");
+    QString m_savedSeasonalBirthdayName;
     QString m_agentDetectionMode = QStringLiteral("ask");
     bool m_agentStatusEnabled = true;
     int m_agentPromptTimeout = 10;
