@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
+import heapq
 import os
 from pathlib import Path
 import random
@@ -30,7 +31,28 @@ MAX_PENDING_DECODES: Final[int] = 2
 MAX_IMAGE_WIDTH: Final[int] = 3840
 MAX_IMAGE_HEIGHT: Final[int] = 2160
 MAX_IMAGE_PIXELS: Final[int] = 8_294_400
+MAX_CATALOG_PHOTOS: Final[int] = 5_000
+MAX_CATALOG_DIRECTORIES: Final[int] = 1_024
 EMPTY_LIBRARY_MESSAGE: Final[str] = 'No photos found in this folder.'
+CATALOG_LIMIT_MESSAGE: Final[str] = 'Photo scan reached its safety limit; some images may be omitted.'
+
+
+class PhotoCatalog(list[Path]):
+    """List-compatible capped catalog with a flag for omitted entries."""
+
+    def __init__(self, paths=(), *, truncated: bool = False) -> None:
+        super().__init__(paths)
+        self.truncated = truncated
+
+
+@dataclass
+class _HeapPhoto:
+    key: tuple[float | str, str]
+    path: str
+
+    def __lt__(self, other: _HeapPhoto) -> bool:
+        # Reverse order so the worst retained candidate stays at heap[0].
+        return self.key > other.key
 
 
 def default_photo_folder() -> Path:
@@ -48,7 +70,7 @@ def discover_photos(
     include_subfolders: bool = False,
     order: str = 'name',
     random_seed: int | None = None,
-) -> list[Path]:
+) -> PhotoCatalog:
     """List supported local images, skipping hidden entries and symlinks.
 
     ``date`` means newest filesystem modification time first.  Random order is
@@ -61,12 +83,17 @@ def discover_photos(
     try:
         root = root.resolve(strict=True)
         if not root.is_dir():
-            return []
+            return PhotoCatalog()
     except (OSError, RuntimeError):
-        return []
+        return PhotoCatalog()
 
-    found: list[Path] = []
-    stack = [root]
+    heap: list[_HeapPhoto] = []
+    reservoir: list[str] = []
+    rng = random.Random(random_seed)
+    candidate_count = 0
+    directories_queued = 1
+    truncated = False
+    stack = [str(root)]
     while stack:
         current = stack.pop()
         try:
@@ -78,28 +105,46 @@ def discover_photos(
                     try:
                         if entry.is_dir(follow_symlinks=False):
                             if include_subfolders:
-                                stack.append(Path(entry.path))
+                                if directories_queued < MAX_CATALOG_DIRECTORIES:
+                                    stack.append(entry.path)
+                                    directories_queued += 1
+                                else:
+                                    truncated = True
                         elif (entry.is_file(follow_symlinks=False)
                               and Path(entry.name).suffix.casefold() in PHOTO_EXTENSIONS):
-                            found.append(Path(entry.path))
+                            candidate_count += 1
+                            if order == 'random':
+                                if len(reservoir) < MAX_CATALOG_PHOTOS:
+                                    reservoir.append(entry.path)
+                                else:
+                                    replacement = rng.randrange(candidate_count)
+                                    if replacement < MAX_CATALOG_PHOTOS:
+                                        reservoir[replacement] = entry.path
+                            else:
+                                if order == 'name':
+                                    key = (entry.name.casefold(), entry.path.casefold())
+                                else:
+                                    modified = entry.stat(follow_symlinks=False).st_mtime
+                                    key = (-modified, entry.path.casefold())
+                                item = _HeapPhoto(key, entry.path)
+                                if len(heap) < MAX_CATALOG_PHOTOS:
+                                    heapq.heappush(heap, item)
+                                elif item.key < heap[0].key:
+                                    heapq.heapreplace(heap, item)
                     except OSError:
                         # Files can disappear or become unreadable during a scan.
                         continue
         except OSError:
             continue
 
-    if order == 'name':
-        found.sort(key=lambda item: (item.name.casefold(), str(item).casefold()))
-    elif order == 'date':
-        def modified(path: Path) -> tuple[float, str]:
-            try:
-                return (-path.stat(follow_symlinks=False).st_mtime, str(path).casefold())
-            except OSError:
-                return (0.0, str(path).casefold())
-        found.sort(key=modified)
+    if candidate_count > MAX_CATALOG_PHOTOS:
+        truncated = True
+    if order == 'random':
+        rng.shuffle(reservoir)
+        selected = reservoir
     else:
-        random.Random(random_seed).shuffle(found)
-    return found
+        selected = [item.path for item in sorted(heap, key=lambda item: item.key)]
+    return PhotoCatalog((Path(path) for path in selected), truncated=truncated)
 
 
 def _bounded_size(target: QSize) -> QSize:
@@ -164,6 +209,7 @@ class PhotoLibrary(QObject):
         self.enabled = enabled
         self.random_seed = random_seed
         self.photos: list[Path] = []
+        self.catalog_truncated = False
         self.message = EMPTY_LIBRARY_MESSAGE
         self._executor: ThreadPoolExecutor | None = None
         self._lock = threading.RLock()
@@ -205,6 +251,7 @@ class PhotoLibrary(QObject):
             if self._closed:
                 return
             self.photos = photos
+            self.catalog_truncated = bool(getattr(photos, 'truncated', False))
             self.message = '' if photos else EMPTY_LIBRARY_MESSAGE
         self.scan_finished.emit(photos)
 

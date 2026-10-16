@@ -51,6 +51,10 @@ KCMUtils.SimpleKCM {
                 id: photoFolderField
                 objectName: "photoFolderField"
                 Kirigami.FormData.label: i18nc("@label", "Photo folder:")
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
+                Layout.maximumWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
                 text: kcm.photoFolder
                 enabled: kcm.theme === "photos"
                 Accessible.name: i18nc("@label", "Local photo folder")
@@ -122,10 +126,14 @@ KCMUtils.SimpleKCM {
                 onActivated: function(index) { kcm.photoFit = values[index] }
             }
             Controls.Label {
+                objectName: "photoPrivacyLabel"
                 Layout.fillWidth: true
-                Layout.maximumWidth: parent.width
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
+                Layout.maximumWidth: Math.max(0, parent.width - x - Kirigami.Units.largeSpacing)
                 Kirigami.FormData.label: i18nc("@label Photo privacy", "Privacy:")
                 text: i18nc("@info Photo slideshow privacy", "Photos are read only from this local folder when My photos is selected. Hidden entries are skipped, and images are never uploaded. Remember that people nearby can see the photos while the screensaver is running.")
+                color: Kirigami.Theme.textColor
                 wrapMode: Text.WordWrap
                 opacity: kcm.theme === "photos" ? 1.0 : 0.45
             }

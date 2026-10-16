@@ -45,11 +45,12 @@ def seeded_random(seed: int | None = None) -> random.Random:
 
 
 def make_saver(theme: str, *, bobos: bool = False, photo_folder: Path | None = None,
-               photo_fit: str = "fill") -> Saver:
+               photo_fit: str = "fill", preview: bool = False,
+               show_clock: bool = False) -> Saver:
     """Use isolated settings with networking, locking, and the clock disabled."""
     settings = configparser.ConfigParser()
     settings["Screensaver"] = {
-        "theme": theme, "show_clock": "false", "password_lock": "false",
+        "theme": theme, "show_clock": str(show_clock).lower(), "password_lock": "false",
         "live_sky_enabled": "false", "bobos_enabled": "false",
     }
     if photo_folder is not None:
@@ -58,7 +59,7 @@ def make_saver(theme: str, *, bobos: bool = False, photo_folder: Path | None = N
     with patch("screenbot.app.read_settings", return_value=settings), \
          patch("screensaver.random.Random", side_effect=seeded_random), \
          patch("screensaver.time.monotonic", return_value=0.):
-        saver = Saver(preview_bobos=bobos)
+        saver = Saver(preview=preview, preview_bobos=bobos)
         saver.timer.stop()
         saver.resize(1280, 720)
         saver.show()
@@ -191,7 +192,7 @@ def main() -> None:
         saver.close()
 
         missing_folder = folder / "missing-user-folder"
-        saver = make_saver("photos", photo_folder=missing_folder)
+        saver = make_saver("photos", photo_folder=missing_folder, preview=True, show_clock=True)
         deadline = time.monotonic() + 5
         while (saver.photo_slideshow is not None
                and saver.photo_slideshow.message == "Loading photos…"

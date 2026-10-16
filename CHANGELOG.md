@@ -5,6 +5,7 @@
 ### Added
 - Added an opt-in My photos theme with staged folder, recursion, interval, ordering, and fit settings; asynchronous local photo discovery/decoding, EXIF orientation, bounded cache, slow pan/zoom, cross-fades, and a friendly fallback.
 - Fixed photo-folder selection in KDE Settings, kept fit-whole photos fully visible, smoothed the blurred backdrop, and moved the empty-folder notice above Bob.
+- Capped photo discovery at 5,000 retained images and 1,024 folders; placed empty-folder notices below the top clock and preview banner, and constrained photo settings to the available KCM width.
 - Added an opt-in primary-screen Now playing card with background MPRIS metadata updates, pause fade-out, safe title shortening, and a translated KDE Clock setting that respects Apply/Discard. Media stays hidden in previews and when the session bus is unavailable.
 - Added Bob Camera with a bounded, in-memory selfie of the current theme and Live Sky, plus Bob Pet with animated snack and play scenes. Both apps respect Reduce motion and flashes. Camera photos appear in fictional Bob Files; neither app accesses devices, personal files, or external services.
 - BobOS now selects 4–6 apps per adventure without repeating the same selection consecutively. Seeded schedules keep timing reproducible, the complete preview includes every app, and an adventure starts only if its full selected duration fits before KDE locks.

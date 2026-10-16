@@ -10,7 +10,12 @@ from PyQt6.QtCore import Qt, QSize, QRectF
 from PyQt6.QtGui import QColor, QFont, QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import QGraphicsBlurEffect, QGraphicsPixmapItem, QGraphicsScene
 
-from screenbot.photos import EMPTY_LIBRARY_MESSAGE, PhotoLibrary, default_photo_folder
+from screenbot.photos import (
+    CATALOG_LIMIT_MESSAGE,
+    EMPTY_LIBRARY_MESSAGE,
+    PhotoLibrary,
+    default_photo_folder,
+)
 
 
 CROSSFADE_SECONDS = 2.0
@@ -52,6 +57,7 @@ class PhotoSlideshowRenderer:
         self._decode_size = QSize(1, 1)
         self._closed = False
         self._blurred_backdrops: dict[tuple[int, int, int], QImage] = {}
+        self.catalog_truncated = False
 
         self.library = PhotoLibrary(
             self.folder,
@@ -90,12 +96,13 @@ class PhotoSlideshowRenderer:
         )
 
     def _scan_finished(self, paths: object) -> None:
-        self.paths = list(paths)
+        self.paths = paths if isinstance(paths, list) else []
+        self.catalog_truncated = bool(getattr(paths, 'truncated', False))
         if not self.paths:
             self.message = EMPTY_LIBRARY_MESSAGE
             self.owner.update()
             return
-        self.message = 'Loading photos…'
+        self.message = CATALOG_LIMIT_MESSAGE if self.catalog_truncated else 'Loading photos…'
         self._current_index = 0
         self._current_path = self.paths[0]
 
@@ -201,9 +208,9 @@ class PhotoSlideshowRenderer:
         if self._current_image is None:
             if self.paths and self._current_path is not None:
                 self._request(self._current_path)
-                self._draw_fallback(painter, width, height, elapsed, 'Loading photos…')
+                self._draw_fallback(painter, width, height, elapsed)
             else:
-                self._draw_fallback(painter, width, height, elapsed, self.message or EMPTY_LIBRARY_MESSAGE)
+                self._draw_fallback(painter, width, height, elapsed)
             return
 
         now = self.clock()
@@ -279,22 +286,47 @@ class PhotoSlideshowRenderer:
         return output
 
     def _draw_fallback(self, painter: QPainter, width: int, height: int,
-                       elapsed: float, message: str) -> None:
+                       elapsed: float) -> None:
         # Keep the regular landscape/Bob/clock layers alive when the library is
-        # empty or unavailable, while making the reason visible to the user.
+        # empty or unavailable. The notice is drawn last by Saver so it can
+        # avoid the clock and preview hint.
         self.owner._draw_photo_fallback_landscape(painter, width, height, elapsed)
+
+    def draw_notice(self, painter: QPainter, width: int, height: int, elapsed: float) -> None:
+        """Draw an empty/corrupt-folder notice after all normal screen layers."""
+        if (self._current_image is not None or self._current_path is not None
+                or self.message in ('', 'Loading photos…', CATALOG_LIMIT_MESSAGE)):
+            return
+        box = self.notice_geometry(width, height, elapsed)
         painter.save()
-        box_height = 72
-        box = QRectF(width * .12, max(18, height * .05), width * .76, box_height)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(4, 14, 27, 205))
-        painter.drawRoundedRect(box, 18, 18)
+        painter.setBrush(QColor(4, 14, 27, 220))
+        painter.drawRoundedRect(box, 15, 15)
         painter.setPen(QColor('#f1f8ff'))
-        painter.setFont(QFont('Sans Serif', max(13, min(24, width // 60)), QFont.Weight.DemiBold))
-        painter.drawText(box.adjusted(16, 8, -16, -8),
+        painter.setFont(QFont('Sans Serif', max(12, min(22, width // 60)), QFont.Weight.DemiBold))
+        painter.drawText(box.adjusted(14, 6, -14, -6),
                          Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap,
-                         message or EMPTY_LIBRARY_MESSAGE)
+                         self.message or EMPTY_LIBRARY_MESSAGE)
         painter.restore()
+
+    def notice_geometry(self, width: int, height: int, elapsed: float) -> QRectF:
+        """Reserve the space below a top clock and temporary preview banner."""
+        box_height = min(72, max(46, height * .10))
+        notice_y = max(16, height * .03)
+        if getattr(self.owner, 'quick_preview', False) and elapsed < 8:
+            # preview_hint occupies the first 90px at y=2% of screen height.
+            notice_y = max(notice_y, height * .02 + 90 + 12)
+        if (getattr(self.owner, 'show_clock', False)
+                and getattr(self.owner, 'clock_position', 'top-center').startswith('top')):
+            clock_bottom = height * .08 + getattr(self.owner, 'clock_font_size', 48) * 1.5
+            if getattr(self.owner, 'show_date', False):
+                clock_bottom += getattr(self.owner, 'clock_font_size', 48) * .62
+            if (getattr(self.owner, 'live_sky_enabled', False)
+                    and getattr(self.owner, 'live_sky_conditions', False)):
+                clock_bottom += getattr(self.owner, 'clock_font_size', 48) * .62
+            notice_y = max(notice_y, clock_bottom + 12)
+        box_width = min(width * .82, 900)
+        return QRectF((width - box_width) / 2, notice_y, box_width, box_height)
 
     def close(self) -> None:
         self._closed = True

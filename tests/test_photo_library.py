@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QApplication
 
 from screenbot.photos import (
     EMPTY_LIBRARY_MESSAGE,
+    MAX_CATALOG_PHOTOS,
     MAX_DECODED_IMAGES,
     MAX_IMAGE_HEIGHT,
     MAX_IMAGE_WIDTH,
@@ -119,6 +120,22 @@ def test_five_thousand_photos_scan_off_thread_and_complete_quickly(tmp_path: Pat
     assert len(library.photos) == 5000
     assert time.monotonic() - started < 1.0
     library.close()
+
+
+def test_thirty_thousand_entry_catalog_retains_bounded_metadata(tmp_path: Path) -> None:
+    import tracemalloc
+
+    for index in range(30_000):
+        (tmp_path / f'{index:05}.jpg').touch()
+    tracemalloc.start()
+    catalog = discover_photos(tmp_path, order='name')
+    _current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert len(catalog) == MAX_CATALOG_PHOTOS
+    assert catalog.truncated
+    assert catalog[0].name == '00000.jpg'
+    assert catalog[-1].name == f'{MAX_CATALOG_PHOTOS - 1:05}.jpg'
+    assert peak < 12 * 1024 * 1024
 
 
 def test_exif_rotated_phone_photo_is_returned_upright(tmp_path: Path) -> None:

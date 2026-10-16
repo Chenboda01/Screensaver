@@ -81,6 +81,7 @@ def _frame(renderer: PhotoSlideshowRenderer, width: int = 120, height: int = 80)
     image.fill(Qt.GlobalColor.black)
     painter = QPainter(image)
     renderer.draw(painter, width, height, 0.)
+    renderer.draw_notice(painter, width, height, 0.)
     painter.end()
     return image
 
@@ -211,23 +212,14 @@ def test_unreadable_photo_is_skipped_and_missing_folder_has_friendly_fallback(tm
     image = QImage(320, 180, QImage.Format.Format_ARGB32_Premultiplied)
     painter = QPainter(image)
     saver.photo_slideshow.draw(painter, 320, 180, 0.)
+    saver.photo_slideshow.draw_notice(painter, 320, 180, 5.)
     painter.end()
     assert not image.isNull()
     assert saver.photo_slideshow.message == 'No photos found in this folder.'
-    top_text_pixels = sum(
-        1 for y in range(10, 90) for x in range(45, 275)
-        if image.pixelColor(x, y).red() > 200
-        and image.pixelColor(x, y).green() > 200
-        and image.pixelColor(x, y).blue() > 200
-    )
-    center_text_pixels = sum(
-        1 for y in range(100, 170) for x in range(45, 275)
-        if image.pixelColor(x, y).red() > 200
-        and image.pixelColor(x, y).green() > 200
-        and image.pixelColor(x, y).blue() > 200
-    )
-    assert top_text_pixels > 0
-    assert center_text_pixels == 0
+    assert saver.photo_slideshow.notice_geometry(320, 180, 5.).top() > 90
+    notice = saver.photo_slideshow.notice_geometry(1280, 720, 5.)
+    assert notice.top() > max(720 * .02 + 90, 720 * .08 + 48 * 1.5)
+    assert notice.bottom() < 720 * .34
     saver.photo_slideshow.close()
     saver.close()
 
