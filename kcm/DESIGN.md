@@ -15,6 +15,12 @@ Use Kirigami.Units.smallSpacing and largeSpacing. SimpleKCM owns vertical scroll
 ## 5. Components
 CollapsibleSection: full-width native ToolButton header, arrow, title, pending-change dot, one-line collapsed summary, and a clipped FormLayout body. States: expanded, collapsed, pending, hovered, pressed, keyboard focused. Tab reaches headers; Space/Enter toggles; Left/Right collapses/expands. Hidden fields leave the focus chain. Accessible expandable/expanded state and full summary are announced. CitySearch and other controls retain their existing behavior.
 
+## Location search
+
+Use a native TextField with the existing FormLayout label column. Suggestions use ItemDelegate rows in a bounded ListView, with native highlighted selection. The search field owns arrow-key navigation and Enter selection; Escape dismisses suggestions. Mouse and keyboard must select the same stored place. Search status and the selected place use wrapping Labels. All widths follow the form, and spacing uses Kirigami.Units.
+
+Typing is transient. Selecting a result changes pending settings; Apply persists and Discard reloads. Disabled Live Sky disables the field and cancels network activity. No bespoke colors, motion, icons, or typography are introduced.
+
 ## 6. Motion & Interaction
 Disclosure height transitions use Kirigami.Units.shortDuration, which respects KDE animation speed including disabled animations. First render does not animate. UI expansion persists immediately in a separate settings file; product values still require Apply.
 

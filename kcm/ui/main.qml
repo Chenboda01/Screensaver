@@ -13,6 +13,23 @@ KCMUtils.SimpleKCM {
             text: "Choose how Bob appears and when KDE locks your screen."
             wrapMode: Text.WordWrap
         }
+        Controls.Button {
+            objectName: "themePreviewButton"
+            text: "Preview"
+            icon.name: "view-preview"
+            enabled: !kcm.previewRunning
+            onClicked: kcm.previewTheme(this)
+            Controls.ToolTip.text: "Preview current settings without applying them. Move the mouse or press any key to close."
+            Controls.ToolTip.visible: hovered
+        }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 30
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 30
+            visible: kcm.previewError.length > 0
+            text: kcm.previewError
+            type: Kirigami.MessageType.Error
+        }
         CollapsibleSection {
             id: themeSection
             settings: kcm
@@ -203,6 +220,7 @@ KCMUtils.SimpleKCM {
                 onActivated: function(index) { kcm.agentDetectionMode = ["ask", "start", "block"][index] }
             }
             Controls.Button {
+                objectName: "resetAgentChoiceButton"
                 Kirigami.FormData.label: "Remembered choice:"
                 text: "Reset to Always ask"
                 enabled: kcm.agentDetectionMode !== "ask"
@@ -261,9 +279,10 @@ KCMUtils.SimpleKCM {
                 onToggled: kcm.showWifiAnimation = checked
             }
             Controls.Button {
+                objectName: "bobosPreviewButton"
                 Kirigami.FormData.label: "BobOS preview:"
                 text: "Preview full adventure"
-                enabled: kcm.phoneEnabled && kcm.bobosEnabled
+                enabled: !kcm.previewRunning && kcm.phoneEnabled && kcm.bobosEnabled
                 opacity: enabled ? 1.0 : 0.4
                 onClicked: kcm.previewBobOS(kcm.showWifiAnimation)
             }

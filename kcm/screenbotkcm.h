@@ -3,9 +3,15 @@
 #include <QString>
 #include "locationsearch.h"
 
+class QProcess;
+class QQuickItem;
+class QSettings;
+
 class ScreenBotKcm : public KQuickConfigModule {
     Q_OBJECT
     Q_PROPERTY(QStringList modifiedSections READ modifiedSections NOTIFY modifiedSectionsChanged)
+    Q_PROPERTY(bool previewRunning READ previewRunning NOTIFY previewRunningChanged)
+    Q_PROPERTY(QString previewError READ previewError NOTIFY previewErrorChanged)
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(bool passwordLock READ passwordLock WRITE setPasswordLock NOTIFY passwordLockChanged)
     Q_PROPERTY(int lockMinutes READ lockMinutes WRITE setLockMinutes NOTIFY lockMinutesChanged)
@@ -38,6 +44,9 @@ public:
     QStringList modifiedSections() const;
     Q_INVOKABLE bool sectionExpanded(const QString &section) const;
     Q_INVOKABLE void setSectionExpanded(const QString &section, bool expanded);
+    bool previewRunning() const { return m_previewProcess != nullptr; }
+    QString previewError() const { return m_previewError; }
+    Q_INVOKABLE void previewTheme(QQuickItem *source = nullptr);
     QString theme() const { return m_theme; }
     bool passwordLock() const { return m_passwordLock; }
     int lockMinutes() const { return m_lockMinutes; }
@@ -96,6 +105,8 @@ public:
     void save() override;
 Q_SIGNALS:
     void modifiedSectionsChanged();
+    void previewRunningChanged();
+    void previewErrorChanged();
     void themeChanged();
     void passwordLockChanged();
     void lockMinutesChanged();
@@ -121,6 +132,10 @@ Q_SIGNALS:
     void bobosActivationDelayChanged();
     void showWifiAnimationChanged();
 private:
+    void writeSettings(QSettings &cfg) const;
+    void startPreview(bool bobos, bool wifiAnimation, QQuickItem *source = nullptr);
+    QProcess *m_previewProcess = nullptr;
+    QString m_previewError;
     void checkModified();
     QString m_theme = QStringLiteral("random");
     bool m_passwordLock = false;
