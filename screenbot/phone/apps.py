@@ -8,8 +8,8 @@ class PhoneAppsRenderer:
     def draw_home_screen(self, p: QPainter, t: float) -> None:
         p.setPen(QColor('#f0f8ff'))
         p.setFont(QFont('Sans Serif', 26, QFont.Weight.Bold))
-        p.drawText(QRectF(48, 65, 570, 45), Qt.AlignmentFlag.AlignVCenter, 'Good day, Bob!')
-        self.draw_phone_avatar(p, QRectF(795, 60, 54, 54), self.bob_mood(BobOSPhase.HOME, t))
+        p.drawText(QRectF(48, 65, 570, 45), Qt.AlignmentFlag.AlignVCenter, f'Good day, {self.bob_appearance.name}!')
+        self.draw_phone_avatar(p, QRectF(795, 60, 54, 54), self.bob_mood(BobOSPhase.HOME, t), self.bob_appearance.palette())
         p.setPen(QColor('#9eb8d6'))
         p.setFont(QFont('Sans Serif', 15))
         p.drawText(QRectF(50, 109, 600, 30), Qt.AlignmentFlag.AlignVCenter, 'BobOS 2.0  ·  Your tiny world is ready')
@@ -160,7 +160,7 @@ class PhoneAppsRenderer:
             p.drawText(QRectF(x-size, y-size, size*2, size*2), Qt.AlignmentFlag.AlignCenter, '★')
         avatar_x = field.x()+field.width()*.5 + math.sin(elapsed*1.2)*200
         avatar_y = field.y()+field.height()*.72 + math.sin(elapsed*3)*14
-        self.draw_phone_avatar(p, QRectF(avatar_x-24, avatar_y-24, 48, 48), self.bob_mood(BobOSPhase.GAMES, t))
+        self.draw_phone_avatar(p, QRectF(avatar_x-24, avatar_y-24, 48, 48), self.bob_mood(BobOSPhase.GAMES, t), self.bob_appearance.palette())
         self.draw_bob_reaction(p, t, 'surprised')
 
     def draw_phone_settings(self, p: QPainter, elapsed: float, t: float) -> None:

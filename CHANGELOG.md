@@ -7,6 +7,7 @@
 - Added Off, Standard, and Strong OLED burn-in protection. Standard slowly shifts the scene and clock; Strong fades to black over 30–60 minutes, with input closing the screensaver.
 - Suppressed rain, snow, thunderstorms, fog, and shooting-star overlays in the Space theme; manual weather and shooting-star settings remain available on landscape themes.
 - Added optional Live Sky reactions for Bob: a smoothly animated umbrella, sunglasses, wool hat, scarf, fog and lightning expressions, wind tilt, moon glances, and a longer deep-night sleepy expression. Added a staged KDE toggle and deterministic weather preview overrides.
+- Added staged Customize Bob settings for a display name, six color presets or a custom color picker, and seven optional accessories. Appearance choices persist through Apply/Discard; weather layers keep user headwear visible when their geometry overlaps.
 
 ## V22
 

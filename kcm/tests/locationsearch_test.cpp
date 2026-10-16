@@ -1,6 +1,8 @@
 #include "locationsearch.h"
 #include "screenbotkcm.h"
 #include <KPluginMetaData>
+#include <KQuickConfigModule>
+#include <KQuickConfigModuleLoader>
 #include <QApplication>
 #include <QFile>
 #include <QElapsedTimer>
@@ -213,14 +215,25 @@ private Q_SLOTS:
         kcm.setLiveSkyEnabled(false);
     }
     void fullSettingsQmlLoads() {
-        ScreenBotKcm kcm(nullptr, KPluginMetaData());
-        QQuickView view;
-        auto *translations = new KLocalizedContext(&view);
-        translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
-        view.rootContext()->setContextObject(translations);
-        view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
-        view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/ui/main.qml")));
-        QCOMPARE(view.status(), QQuickView::Ready);
+        // Load through KDE's real KCM loader so SimpleKCM supplies the same
+        // context and configuration object as System Settings. Loading main.qml
+        // into a bare QQuickView leaves KCM properties undefined and creates
+        // misleading warnings for otherwise valid settings bindings.
+        const QString plugin = qEnvironmentVariable("SCREENBOT_TEST_PLUGIN");
+        QVERIFY2(!plugin.isEmpty(), "Set SCREENBOT_TEST_PLUGIN to the built KCM plugin");
+        QTest::failOnWarning(QRegularExpression(QStringLiteral("kf\\.i18n:|QML Connections:|Unable to assign ")));
+        const auto result = KQuickConfigModuleLoader::loadModule(KPluginMetaData(plugin));
+        QVERIFY2(result, qPrintable(result.errorString));
+        std::unique_ptr<KQuickConfigModule> module(result.plugin);
+        auto *root = module->mainUi();
+        QVERIFY2(root, qPrintable(module->errorString()));
+        QVERIFY(root->findChild<QQuickItem *>(QStringLiteral("bobNameField")));
+        QVERIFY(root->findChild<QQuickItem *>(QStringLiteral("bobColorPreset")));
+        QVERIFY(root->findChild<QQuickItem *>(QStringLiteral("bobCustomColorButton")));
+        QVERIFY(root->findChild<QObject *>(QStringLiteral("bobColorDialog")));
+        const auto appearanceSection = root->findChild<QQuickItem *>(QStringLiteral("appearanceSection"));
+        QVERIFY(appearanceSection);
+        QCOMPARE(appearanceSection->property("title").toString(), QStringLiteral("Customize Bob"));
     }
     void onlineCoordinateApplyDiscard() {
         if (!qEnvironmentVariableIsSet("SCREENBOT_TEST_ONLINE")) QSKIP("Live API scenario requires SCREENBOT_TEST_ONLINE=1");

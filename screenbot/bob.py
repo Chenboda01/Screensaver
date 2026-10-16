@@ -134,7 +134,6 @@ class BobRenderer:
     def weather_tilt_degrees(self, status: BobOSStatus, t: float) -> float:
         """Optional weather-owned tilt, separate from the base Bob sway."""
         return 0.0
-
     @staticmethod
     def draw_custom_accessory(p: QPainter, accessory: str, palette: dict[str, tuple[int, int, int]]) -> None:
         """Paint only the user's chosen head accessory; weather layers stay separate."""
@@ -150,10 +149,10 @@ class BobRenderer:
         elif accessory == 'bow-tie':
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(accent)
-            p.drawPolygon([QPointF(-20, -104), QPointF(-2, -96), QPointF(-20, -88)])
-            p.drawPolygon([QPointF(20, -104), QPointF(2, -96), QPointF(20, -88)])
+            p.drawPolygon([QPointF(-20, 29), QPointF(-2, 37), QPointF(-20, 45)])
+            p.drawPolygon([QPointF(20, 29), QPointF(2, 37), QPointF(20, 45)])
             p.setBrush(QColor('#fff3d0'))
-            p.drawEllipse(QPointF(0, -96), 4, 4)
+            p.drawEllipse(QPointF(0, 37), 4, 4)
         elif accessory == 'headphones':
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawArc(QRectF(-81, -110, 162, 116), 0, 180 * 16)

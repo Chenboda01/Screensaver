@@ -108,18 +108,19 @@ class PhoneFrameRenderer:
             p.drawText(QRectF(240, 100, 600, 28), Qt.AlignmentFlag.AlignCenter, subtitle)
 
     @staticmethod
-    def draw_phone_avatar(p: QPainter, rect: QRectF, mood: str) -> None:
+    def draw_phone_avatar(p: QPainter, rect: QRectF, mood: str,
+                          palette: dict[str, tuple[int, int, int]]) -> None:
         p.save()
-        p.setPen(QPen(QColor('#66dfff'), 2))
-        p.setBrush(QColor('#12355f'))
+        p.setPen(QPen(QColor(*palette['outline']), 2))
+        p.setBrush(QColor(*palette['face']))
         p.drawRoundedRect(rect, rect.width()*.32, rect.width()*.32)
         eye_y = rect.y()+rect.height()*.44
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor('#6bf6ff'))
+        p.setBrush(QColor(*palette['eyes']))
         eye_size = rect.width()*.095
         p.drawEllipse(QPointF(rect.x()+rect.width()*.35, eye_y), eye_size, eye_size*1.3)
         p.drawEllipse(QPointF(rect.x()+rect.width()*.65, eye_y), eye_size, eye_size*1.3)
-        p.setPen(QPen(QColor('#6bf6ff'), max(1, rect.width()*.035), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.setPen(QPen(QColor(*palette['eyes']), max(1, rect.width()*.035), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         if mood == 'surprised':
             p.drawEllipse(QPointF(rect.center().x(), rect.y()+rect.height()*.68), eye_size*.7, eye_size)
         elif mood == 'confused':
@@ -131,7 +132,7 @@ class PhoneFrameRenderer:
         p.restore()
 
     def draw_bob_reaction(self, p: QPainter, t: float, mood: str) -> None:
-        self.draw_phone_avatar(p, QRectF(804, 462, 42, 38), mood)
+        self.draw_phone_avatar(p, QRectF(804, 462, 42, 38), mood, self.bob_appearance.palette())
 
     @staticmethod
     def draw_toast(p: QPainter, title: str, message: str, opacity: float) -> None:

@@ -13,6 +13,7 @@ from PyQt6.QtGui import QImage, QPainter
 from PyQt6.QtWidgets import QApplication
 
 from bobos import BobOSPhase, BobOSStatus
+from screenbot.appearance import BobAppearance
 from screensaver import Saver
 
 GOLDEN_DIR = Path(__file__).parent / 'golden_rendering'
@@ -100,3 +101,15 @@ def test_scenes_and_bobos_match_golden_rasters(tmp_path: Path, app: QApplication
         assert not expected.isNull(), f'missing or unreadable baseline {name}'
         assert expected.size() == image.size(), f'baseline dimensions changed for {name}'
         assert _pixels(image) == _pixels(expected), f'pixels changed from baseline: {name}'
+
+
+def test_custom_bob_palette_renders_across_all_themes_and_bobos(tmp_path: Path, app: QApplication) -> None:
+    del app
+    original = _renderer(tmp_path)
+    custom = _renderer(tmp_path)
+    custom.bob_appearance = BobAppearance(color_preset='purple')
+    for theme in SCENES:
+        assert _pixels(_scene_frame(original, theme)) != _pixels(_scene_frame(custom, theme))
+    assert _pixels(_bobos_frame(original)) != _pixels(_bobos_frame(custom))
+    original.close()
+    custom.close()
