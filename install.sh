@@ -38,7 +38,8 @@ screenbot_select_python
 for tool in cmake c++ make bash flock; do
  command -v "$tool" >/dev/null || { echo "Missing $tool; install CMake and build tools first." >&2; exit 1; }
 done
-"$SCREENBOT_PYTHON" -m py_compile "$ROOT/screensaver.py" "$ROOT/screen_session.py" "$ROOT/agent_prompt.py" "$ROOT/bobos.py" "$ROOT/live_sky.py" "$ROOT/live_sky_network.py" "$ROOT/live_sky_render.py"
+mapfile -d '' RUNTIME_MODULES < <(find "$ROOT/screenbot" -type f -name '*.py' -print0)
+"$SCREENBOT_PYTHON" -m py_compile "$ROOT/screensaver.py" "$ROOT/screen_session.py" "$ROOT/agent_prompt.py" "$ROOT/bobos.py" "$ROOT/live_sky.py" "$ROOT/live_sky_network.py" "$ROOT/live_sky_render.py" "${RUNTIME_MODULES[@]}"
 echo 'Building ScreenBot KDE Settings module...'
 cmake -S "$ROOT/kcm" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PREFIX" -DBUILD_TESTING=OFF
 cmake --build "$BUILD" --parallel 2
@@ -57,6 +58,10 @@ install -m 644 "$ROOT/bobos.py" "$DEST/bobos.py"
 install -m 644 "$ROOT/live_sky.py" "$DEST/live_sky.py"
 install -m 644 "$ROOT/live_sky_network.py" "$DEST/live_sky_network.py"
 install -m 644 "$ROOT/live_sky_render.py" "$DEST/live_sky_render.py"
+while IFS= read -r -d '' MODULE; do
+ RELATIVE_PATH="${MODULE#"$ROOT"/}"
+ install -D -m 644 "$MODULE" "$DEST/$RELATIVE_PATH"
+done < <(find "$ROOT/screenbot" -type f -name '*.py' -print0)
 install -m 644 "$ROOT/countries_and_cities.txt" "$DEST/countries_and_cities.txt"
 install -m 755 "$ROOT/start.sh" "$DEST/start.sh"
 install -m 755 "$ROOT/idle-trigger.sh" "$DEST/idle-trigger.sh"

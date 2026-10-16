@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """Ask before the screensaver covers a terminal running an AI agent."""
 import configparser
-import json
 import os
-import sqlite3
-import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -16,282 +13,35 @@ from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
 
-
-AGENT_NAMES: Final[frozenset[str]] = frozenset(
-    {"codex", "claude", "claude-code", "opencode", "gemini", "aider", "goose", "amp", "cline", "cursor-agent"}
+from screenbot.agent_detection import (
+    AGENT_NAMES, INTERPRETER_NAMES, MIN_AGENT_CPU_TICKS,
+    SESSION_ACTIVITY_WINDOW_SECONDS, DetectionHooks, DetectionResult, Process,
+    _codex_turn_is_active, _cpu_ticks, _is_agent_process,
+    _is_idle_agent_service, _opencode_turn_is_active, _read_processes,
+    detect_terminal_agents,
 )
-INTERPRETER_NAMES: Final[frozenset[str]] = frozenset({"bun", "deno", "node", "python", "python3", "uv"})
-MIN_AGENT_CPU_TICKS: Final[int] = max(1, int(os.sysconf("SC_CLK_TCK") * 0.25))
-SESSION_ACTIVITY_WINDOW_SECONDS: Final[int] = 5 * 60
+
 CONFIG_FILE: Final[Path] = Path.home() / ".config" / "screenbot-screensaver.ini"
-
-
-class DetectionResult(StrEnum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    UNKNOWN = "unknown"
-
 
 class AgentMode(StrEnum):
     ALWAYS_ASK = "ask"
     ALWAYS_START = "start"
     NEVER_START_WHILE_ACTIVE = "block"
 
-
 class TimeoutAction(StrEnum):
     START = "start"
     CANCEL = "cancel"
-
 
 @dataclass(frozen=True, slots=True)
 class PromptSettings:
     timeout_seconds: int = 10
     action: TimeoutAction = TimeoutAction.START
 
-
 @dataclass(frozen=True, slots=True)
 class PromptResult:
     start: bool
     remember: bool
     automatic: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class Process:
-    pid: int
-    parent_pid: int
-    terminal: str
-    state: str
-    elapsed_seconds: int
-    name: str
-    command: str
-
-
-def _is_agent_process(pid: int, process_name: str) -> bool | None:
-    """Match the executable or launcher entry point, not arbitrary arguments."""
-    normalized_name = process_name.lower()
-    if normalized_name in AGENT_NAMES:
-        return True
-    normalized_name = normalized_name.split("-", maxsplit=1)[0]
-    if normalized_name not in INTERPRETER_NAMES:
-        return False
-
-    try:
-        arguments = Path(f"/proc/{pid}/cmdline").read_bytes().decode(errors="replace").split("\0")
-    except OSError:
-        return None
-
-    for argument in arguments[1:]:
-        name = Path(argument).name.lower()
-        if name.removesuffix(".js").removesuffix(".mjs").removesuffix(".cjs") in AGENT_NAMES:
-            return True
-        if "/claude-code/" in argument.lower() or "/gemini-cli/" in argument.lower():
-            return True
-    for index, argument in enumerate(arguments[:-1]):
-        if argument == "-m" and arguments[index + 1].lower() in AGENT_NAMES:
-            return True
-    return False
-
-
-def _cpu_ticks(pid: int) -> int | None:
-    """Return a process's accumulated user and system CPU ticks."""
-    try:
-        stat = Path(f"/proc/{pid}/stat").read_text()
-        fields = stat[stat.rfind(")") + 2 :].split()
-        return int(fields[11]) + int(fields[12])
-    except (OSError, ValueError, IndexError):
-        return None
-
-
-def _read_processes() -> list[Process] | None:
-    """Read process relationships and terminal assignments from procps."""
-    try:
-        result = subprocess.run(
-            ["ps", "-eo", "pid=,ppid=,tty=,stat=,etimes=,comm=,args="],
-            capture_output=True,
-            check=False,
-            text=True,
-            timeout=3,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if result.returncode != 0:
-        return None
-
-    processes: list[Process] = []
-    for line in result.stdout.splitlines():
-        fields = line.split(maxsplit=6)
-        if len(fields) != 7:
-            continue
-        pid_text, parent_text, terminal, state, elapsed_text, name, command = fields
-        try:
-            processes.append(
-                Process(
-                    pid=int(pid_text),
-                    parent_pid=int(parent_text),
-                    terminal=terminal,
-                    state=state,
-                    elapsed_seconds=int(elapsed_text),
-                    name=name,
-                    command=command,
-                )
-            )
-        except ValueError:
-            continue
-    return processes
-
-
-def _is_idle_agent_service(process: Process) -> bool:
-    """Skip long-lived language and application services attached to an agent."""
-    command = process.command.lower()
-    return any(
-        service in command
-        for service in ("lsp-daemon", "codex app-server", "codex-code-mode-host")
-    )
-
-
-def _codex_turn_is_active() -> bool | None:
-    """Read Codex turn status events without loading session message contents."""
-    session_root = Path.home() / ".codex" / "sessions"
-    now = time.time()
-    try:
-        recent_logs = [
-            path
-            for path in session_root.rglob("*.jsonl")
-            if now - path.stat().st_mtime <= SESSION_ACTIVITY_WINDOW_SECONDS
-        ]
-    except OSError:
-        return None
-
-    for path in recent_logs:
-        try:
-            latest_turn: str | None = None
-            with path.open("rb") as log_file:
-                for line in log_file:
-                    # Ignore message and tool payloads; only decode turn-status events.
-                    if b'"type":"event_msg"' not in line:
-                        continue
-                    try:
-                        record = json.loads(line)
-                    except ValueError:
-                        continue
-                    payload = record.get("payload") or {}
-                    turn_id = payload.get("turn_id")
-                    if not turn_id:
-                        continue
-                    if payload.get("type") == "task_started":
-                        latest_turn = turn_id
-                    elif payload.get("type") in {
-                        "task_complete",
-                        "task_failed",
-                        "turn_aborted",
-                        "turn_failed",
-                    } and turn_id == latest_turn:
-                        latest_turn = None
-        except OSError:
-            return None
-        if latest_turn is not None:
-            return True
-    return False
-
-
-def _opencode_turn_is_active() -> bool | None:
-    """Check for a recently updated, incomplete OpenCode assistant message."""
-    database = Path.home() / ".local" / "share" / "opencode" / "opencode.db"
-    if not database.is_file():
-        return None
-    try:
-        with sqlite3.connect(f"file:{database}?mode=ro", uri=True, timeout=0.25) as connection:
-            message = connection.execute(
-                "SELECT time_updated, json_type(data, '$.time.completed') "
-                "FROM message WHERE json_extract(data, '$.role') = 'assistant' "
-                "ORDER BY time_updated DESC LIMIT 1"
-            ).fetchone()
-            if message is None:
-                return None
-            updated_ms, completed_type = message
-            return (
-                time.time() - updated_ms / 1000 <= SESSION_ACTIVITY_WINDOW_SECONDS
-                and completed_type is None
-            )
-    except (OSError, sqlite3.Error):
-        return None
-    return False
-
-
-def terminal_agent_status() -> DetectionResult:
-    """Report active, inactive, or uncertain agent status without guessing."""
-    processes = _read_processes()
-    if processes is None:
-        return DetectionResult.UNKNOWN
-    agents: list[Process] = []
-    uncertain_agent_candidate = False
-    for process in processes:
-        if process.pid == os.getpid() or process.terminal in ("?", "??"):
-            continue
-        agent_match = _is_agent_process(process.pid, process.name)
-        if agent_match is True:
-            agents.append(process)
-        elif agent_match is None:
-            uncertain_agent_candidate = True
-    if not agents:
-        return DetectionResult.UNKNOWN if uncertain_agent_candidate else DetectionResult.INACTIVE
-    for agent in agents:
-        if agent.name.lower() == "codex":
-            turn_active = _codex_turn_is_active()
-            if turn_active is True:
-                return DetectionResult.ACTIVE
-            if turn_active is None:
-                uncertain_agent_candidate = True
-        elif agent.name.lower() == "opencode":
-            turn_active = _opencode_turn_is_active()
-            if turn_active is True:
-                return DetectionResult.ACTIVE
-            if turn_active is None:
-                uncertain_agent_candidate = True
-
-    children: dict[int, list[Process]] = {}
-    for process in processes:
-        children.setdefault(process.parent_pid, []).append(process)
-
-    work_processes: list[Process] = []
-    visited: set[int] = set()
-    for agent in agents:
-        pending = list(children.get(agent.pid, []))
-        while pending:
-            process = pending.pop()
-            if process.pid in visited:
-                continue
-            visited.add(process.pid)
-            pending.extend(children.get(process.pid, []))
-            if not _is_idle_agent_service(process):
-                work_processes.append(process)
-
-    # Include sustained CPU activity from the terminal UI itself: an agent can
-    # be working on a response between child commands. The threshold filters
-    # the lower CPU use measured from idle terminal redraws and polling.
-    process_ids = {process.pid for process in work_processes}
-    process_ids.update(agent.pid for agent in agents)
-    before = {pid: _cpu_ticks(pid) for pid in process_ids}
-    time.sleep(1)
-    for agent in agents:
-        initial_ticks = before[agent.pid]
-        current_ticks = _cpu_ticks(agent.pid)
-        if initial_ticks is None or current_ticks is None:
-            uncertain_agent_candidate = True
-        elif current_ticks - initial_ticks >= MIN_AGENT_CPU_TICKS:
-            return DetectionResult.ACTIVE
-    for process in work_processes:
-        if process.state.startswith("R") or process.elapsed_seconds <= 2:
-            return DetectionResult.ACTIVE
-        initial_ticks = before[process.pid]
-        current_ticks = _cpu_ticks(process.pid)
-        if initial_ticks is None or current_ticks is None:
-            uncertain_agent_candidate = True
-        elif current_ticks > initial_ticks:
-            return DetectionResult.ACTIVE
-    return DetectionResult.UNKNOWN if uncertain_agent_candidate else DetectionResult.INACTIVE
-
 
 def _read_mode() -> AgentMode:
     """Read the committed KDE setting; malformed values safely ask each time."""
@@ -307,7 +57,6 @@ def _read_mode() -> AgentMode:
         return AgentMode(config.get("Screensaver", "agent_detection_mode", fallback="ask"))
     except (configparser.Error, ValueError):
         return AgentMode.ALWAYS_ASK
-
 
 def _save_mode(mode: AgentMode) -> bool:
     """Persist a remembered answer without replacing settings on write failure."""
@@ -331,7 +80,6 @@ def _save_mode(mode: AgentMode) -> bool:
         return False
     return True
 
-
 def _read_prompt_settings() -> PromptSettings:
     """Parse committed timeout settings; zero means wait for a human answer."""
     config = configparser.ConfigParser()
@@ -349,7 +97,6 @@ def _read_prompt_settings() -> PromptSettings:
     except (configparser.Error, ValueError):
         action = TimeoutAction.START
     return PromptSettings(0 if seconds == 0 else max(5, min(120, seconds)), action)
-
 
 class AgentPromptDialog(QMessageBox):
     """Own the mutable countdown and pause it while the user makes a choice."""
@@ -436,7 +183,6 @@ class AgentPromptDialog(QMessageBox):
             automatic=self.automatic,
         )
 
-
 def user_wants_agent_in_background() -> PromptResult:
     """Ask with the committed countdown policy and a separate remember choice."""
     app = QApplication.instance() or QApplication(sys.argv[:1])
@@ -444,6 +190,19 @@ def user_wants_agent_in_background() -> PromptResult:
     dialog.exec()
     return dialog.prompt_result()
 
+
+def terminal_agent_status() -> DetectionResult:
+    """Return a safe detection result using this facade's patchable helpers."""
+    return detect_terminal_agents(DetectionHooks(
+        read_processes=_read_processes,
+        is_agent_process=_is_agent_process,
+        cpu_ticks=_cpu_ticks,
+        codex_turn_is_active=_codex_turn_is_active,
+        opencode_turn_is_active=_opencode_turn_is_active,
+        is_idle_agent_service=_is_idle_agent_service,
+        process_id=os.getpid(),
+        sleep=time.sleep,
+    ))
 
 def main() -> int:
     if "--manual" in sys.argv[1:]:
@@ -468,6 +227,14 @@ def main() -> int:
         _save_mode(AgentMode.ALWAYS_START if answer.start else AgentMode.NEVER_START_WHILE_ACTIVE)
     return 0 if answer.start else 1
 
+__all__ = [
+    "AGENT_NAMES", "INTERPRETER_NAMES", "MIN_AGENT_CPU_TICKS", "SESSION_ACTIVITY_WINDOW_SECONDS",
+    "AgentMode", "AgentPromptDialog", "DetectionHooks", "DetectionResult", "Process",
+    "PromptResult", "PromptSettings", "TimeoutAction", "CONFIG_FILE", "_cpu_ticks",
+    "_codex_turn_is_active", "_is_agent_process", "_is_idle_agent_service", "_opencode_turn_is_active",
+    "_read_mode", "_read_processes", "_read_prompt_settings", "_save_mode", "main",
+    "terminal_agent_status", "user_wants_agent_in_background",
+]
 
 if __name__ == "__main__":
     raise SystemExit(main())

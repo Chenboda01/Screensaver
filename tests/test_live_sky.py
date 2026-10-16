@@ -207,7 +207,7 @@ class QtSkyTests(unittest.TestCase):
         for theme in ('mountains', 'forest', 'snow', 'city', 'space'):
             settings = configparser.ConfigParser()
             settings['Screensaver'] = {'theme': theme, 'live_sky_enabled': 'true', 'rain_enabled': 'true'}
-            with patch('screensaver.read_settings', return_value=settings), patch.object(LiveWeather, 'refresh'):
+            with patch('screenbot.app.read_settings', return_value=settings), patch.object(LiveWeather, 'refresh'):
                 saver = Saver()
                 saver.resize(640,360)
                 image = QImage(640,360,QImage.Format.Format_ARGB32)
@@ -228,7 +228,7 @@ class QtSkyTests(unittest.TestCase):
                 'shooting_stars_enabled': 'true',
             }
             with self.subTest(live_sky=live_sky), \
-                 patch('screensaver.read_settings', return_value=settings), \
+                 patch('screenbot.app.read_settings', return_value=settings), \
                  patch.object(LiveWeather, 'refresh'):
                 saver = Saver()
                 image = QImage(640, 360, QImage.Format.Format_ARGB32)
@@ -254,7 +254,7 @@ class QtSkyTests(unittest.TestCase):
             'theme': 'forest', 'live_sky_enabled': 'false',
             'shooting_stars_enabled': 'true',
         }
-        with patch('screensaver.read_settings', return_value=settings), \
+        with patch('screenbot.app.read_settings', return_value=settings), \
              patch.object(LiveWeather, 'refresh'):
             saver = Saver()
             image = QImage(640, 360, QImage.Format.Format_ARGB32)

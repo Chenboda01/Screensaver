@@ -28,6 +28,8 @@ run_home env SCREENBOT_PYTHON=/missing bash "$ROOT/install.sh" --help > "$EVIDEN
 run_home bash "$ROOT/uninstall.sh" --help > "$EVIDENCE/uninstall-help.log"
 run_home bash "$ROOT/install.sh" --no-idle > "$EVIDENCE/install-declined.log" 2>&1
 [[ -f "$SANDBOX/ScreenBot/screensaver/uninstall.sh" && -s "$SANDBOX/ScreenBot/install_manifest.txt" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/screenbot/app.py" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/screenbot/themes/space.py" ]]
 [[ ! -e "$SANDBOX/.config/powerdevilrc" ]]
 while IFS= read -r entry; do [[ -z "$entry" || -f "$entry" ]]; done < "$SANDBOX/ScreenBot/install_manifest.txt"
 echo 'PASS actual user-prefix install, persisted manifest, no-idle leaves PowerDevil untouched'
@@ -72,6 +74,7 @@ for profile in AC LowBattery; do [[ -z "$(read_key "$profile" IdleTimeoutCommand
 echo 'PASS interactive uninstall removes every installed artifact and trigger, restores old timeout, retains personal data'
 run_home bash "$ROOT/install.sh" --no-idle > "$EVIDENCE/install-after-uninstall.log" 2>&1
 [[ -f "$SANDBOX/ScreenBot/screensaver/screensaver.py" ]]
+[[ -f "$SANDBOX/ScreenBot/screensaver/screenbot/phone/apps.py" ]]
 cp "$SANDBOX/ScreenBot/install_manifest.txt" "$EVIDENCE/clean-manifest.txt"
 printf '%s\n' "$SANDBOX/.local/keep-me" >> "$SANDBOX/ScreenBot/install_manifest.txt"
 if run_home bash "$ROOT/uninstall.sh" --yes > "$EVIDENCE/unsafe-manifest.log" 2>&1; then exit 1; fi

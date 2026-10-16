@@ -158,7 +158,7 @@ def test_space_frames_ignore_weather_and_manual_overlays(live: str) -> None:
     settings['Screensaver'] = {'theme': 'space', 'live_sky_enabled': live,
         'rain_enabled': 'true', 'snow_enabled': 'true', 'fog_enabled': 'true',
         'thunderstorms_enabled': 'true', 'shooting_stars_enabled': 'true'}
-    with patch('screensaver.read_settings', return_value=settings), patch.object(LiveWeather, 'refresh'):
+    with patch('screenbot.app.read_settings', return_value=settings), patch.object(LiveWeather, 'refresh'):
         saver = Saver()
     saver.timer.stop()
     saver.resize(1000, 1000)
@@ -185,7 +185,7 @@ def test_random_space_uses_live_sky_and_preserves_foreground_phone() -> None:
     # Given Random selects Space and a BobOS phone preview overlays it.
     settings = configparser.ConfigParser()
     settings['Screensaver'] = {'theme': 'random', 'live_sky_enabled': 'true', 'show_clock': 'false'}
-    with patch('screensaver.read_settings', return_value=settings), patch('screensaver.random.choice', return_value='space'), patch.object(LiveWeather, 'refresh'):
+    with patch('screenbot.app.read_settings', return_value=settings), patch('screensaver.random.choice', return_value='space'), patch.object(LiveWeather, 'refresh'):
         saver = Saver(preview_bobos=True)
     saver.timer.stop()
     saver.resize(1000, 1000)
