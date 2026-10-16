@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import QApplication, QWidget
 
 from live_sky import SkyPosition, sky_position
 from live_sky_network import LiveWeather
-from live_sky_render import draw_sky
+from live_sky_render import SpaceSky, draw_sky
 
 from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
 
@@ -102,7 +102,8 @@ class Saver(QWidget):
         self.live_sky_location = settings.get('Screensaver', 'live_sky_location', fallback='').strip()
         self.live_sky_sample_time = 0.
         self.live_sky_position = None
-        self.live_weather = LiveWeather(self, enabled=self.live_sky_enabled and self.theme != 'space',
+        self.space_sky = SpaceSky()
+        self.live_weather = LiveWeather(self, enabled=self.live_sky_enabled,
                                        location=self.live_sky_location, interval=interval)
 
         self.password_lock = settings.getboolean('Screensaver', 'password_lock', fallback=False)
@@ -224,7 +225,11 @@ class Saver(QWidget):
             p.drawEllipse(QPointF((x*w + t*size*1.3) % max(w, 1), y*h), size, size)
         unit = min(w, h)
         self.planet(p, w*.77, h*.31, unit*.105, '#d78350', '#f6c678', '#56385a', ring=True)
-        self.planet(p, w*.19, h*.43, unit*.047, '#347cbe', '#92e4f4', '#253e85')
+        if self.live_sky_enabled:
+            coordinates = (self.live_weather.latitude, self.live_weather.longitude) if self.live_weather.located else None
+            self.space_sky.draw(p, w, h, time.time(), coordinates)
+        else:
+            self.planet(p, w*.19, h*.43, unit*.047, '#347cbe', '#92e4f4', '#253e85')
         self.planet(p, w*.81, h*.68, unit*.032, '#a85576', '#f3a3b2', '#4c397f')
 
     @staticmethod

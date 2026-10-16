@@ -214,7 +214,7 @@ class QtSkyTests(unittest.TestCase):
                 saver.render(image)
                 self.assertFalse(image.isNull())
                 self.assertTrue(saver.rain_enabled)
-                if theme == 'space': self.assertFalse(saver.live_weather.enabled)
+                if theme == 'space': self.assertTrue(saver.live_weather.enabled)
                 saver.close()
                 saver.deleteLater()
 

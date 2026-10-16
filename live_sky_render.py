@@ -1,8 +1,9 @@
-"""Layered sky painting: landscape callers paint their terrain on top."""
+"""Layered landscape skies and a cached, atmosphere-free orbital scene."""
+from datetime import datetime, timezone
 import math
 from PyQt6.QtCore import QPointF, QRectF, Qt
-from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QRadialGradient
-from live_sky import SkyPosition, Weather
+from PyQt6.QtGui import QColor, QImage, QLinearGradient, QPainter, QPainterPath, QPen, QRadialGradient
+from live_sky import SkyPosition, Weather, sky_position
 
 
 def blend(a: tuple[int, int, int], b: tuple[int, int, int], amount: float) -> QColor:
@@ -73,6 +74,12 @@ def _glow(p: QPainter, center: QPointF, radius: float, color: QColor) -> None:
 
 
 def _moon(p: QPainter, center: QPointF, radius: float, phase: float, color: QColor) -> None:
+    p.setBrush(color)
+    p.drawPath(_phase_path(center, radius, phase))
+
+
+def _phase_path(center: QPointF, radius: float, phase: float) -> QPainterPath:
+    """Project the illuminated portion of a sphere onto a circular disc."""
     # A lit limb and elliptical terminator produce waxing/waning crescents/gibbous.
     waxing = phase < .5
     side = 1 if waxing else -1
@@ -89,5 +96,115 @@ def _moon(p: QPainter, center: QPointF, radius: float, phase: float, color: QCol
         x = side*terminator*math.sqrt(max(0., 1-y*y))
         path.lineTo(QPointF(center.x()+x*radius, center.y()+y*radius))
     path.closeSubpath()
-    p.setBrush(color)
-    p.drawPath(path)
+    return path
+
+
+def earth_phase(altitude: float, morning: bool) -> float:
+    """Place the disc center on the local day/night side of the terminator.
+
+    The visible lit fraction is (1 + sin(sun altitude)) / 2: a half-disc
+    at the horizon, fully lit at the zenith, and dark at the nadir.
+    """
+    phase = .25 + altitude / 360
+    return phase if morning else 1 - phase
+
+
+class SpaceSky:
+    """Mutable single-frame cache, rebuilt once a minute or on location/size change."""
+
+    def __init__(self) -> None:
+        self._key: tuple[int, int, tuple[float, float] | None] | None = None
+        self._image = QImage()
+
+    def draw(self, p: QPainter, w: int, h: int, now: float,
+             coordinates: tuple[float, float] | None) -> None:
+        """Draw Earth and the Moon behind Bob; unknown locations stay half-lit."""
+        radius = max(1, round(min(w, h) * .12))
+        key = (radius, math.floor(now / 60), coordinates)
+        if key != self._key:
+            sky = sky_position(datetime.fromtimestamp(now, timezone.utc), *(coordinates or (0., 0.)))
+            phase = earth_phase(sky.sun_altitude, sky.morning) if coordinates is not None else .25
+            self._image = self._render(radius, phase, sky.moon_phase)
+            self._key = key
+        p.drawImage(QPointF(w * .19 - radius * 1.15, h * .43 - radius * 1.7), self._image)
+
+    @staticmethod
+    def _render(radius: int, phase: float, moon_phase: float) -> QImage:
+        """Rasterize the decorative continents, night lights, and phase masks."""
+        image = QImage(radius * 4, radius * 3, QImage.Format.Format_ARGB32_Premultiplied)
+        image.fill(Qt.GlobalColor.transparent)
+        p = QPainter(image)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setPen(Qt.PenStyle.NoPen)
+        center = QPointF(radius * 1.15, radius * 1.7)
+        _glow(p, center, radius * 1.14, QColor(80, 169, 247, 100))
+        disc = QPainterPath()
+        disc.addEllipse(center, radius, radius)
+        continents = QPainterPath()
+        for outline in (
+            ((-.84,-.56),(-.54,-.79),(-.2,-.65),(-.12,-.39),(-.31,-.18),(-.23,.02),(-.39,.13),(-.57,-.1),(-.8,-.19)),
+            ((-.35,.13),(-.1,.18),(.02,.37),(-.17,.71),(-.32,.85),(-.4,.46)),
+            ((.06,-.55),(.29,-.72),(.69,-.55),(.88,-.25),(.64,-.04),(.4,-.16),(.29,.06),(.08,-.07),(-.03,-.32)),
+            ((.1,-.04),(.4,.02),(.48,.26),(.25,.59),(.1,.4),(-.02,.15)),
+            ((.59,.42),(.84,.37),(.9,.59),(.64,.68),(.51,.56)),
+        ):
+            continents.moveTo(center + QPointF(outline[0][0]*radius, outline[0][1]*radius))
+            for x, y in outline[1:]:
+                continents.lineTo(center + QPointF(x*radius, y*radius))
+            continents.closeSubpath()
+        p.setClipPath(disc)
+        p.fillPath(disc, QColor('#081529'))
+        p.fillPath(continents, QColor('#112836'))
+        p.setBrush(QColor('#ffce80'))
+        for index in range(300):
+            point = center + QPointF((((index*.618033989)%1)*2-1)*radius,
+                                     (((index*.414213562)%1)*2-1)*radius)
+            if continents.contains(point):
+                p.drawEllipse(point, max(.6, radius*.006), max(.6, radius*.006))
+        p.save()
+        p.setClipPath(_phase_path(center, radius, phase), Qt.ClipOperation.IntersectClip)
+        p.fillPath(disc, QColor('#287fc0'))
+        p.fillPath(continents, QColor('#69a788'))
+        p.setBrush(QColor('#d6e9ed'))
+        p.drawEllipse(center + QPointF(0, -radius), radius*.48, radius*.12)
+        p.drawEllipse(center + QPointF(0, radius), radius*.48, radius*.09)
+        p.restore()
+        rim = QRadialGradient(center, radius)
+        rim.setColorAt(0, QColor(0, 10, 30, 0))
+        rim.setColorAt(.72, QColor(0, 10, 30, 0))
+        rim.setColorAt(1, QColor(0, 10, 30, 160))
+        p.fillPath(disc, rim)
+        terminator = QPainterPath()
+        side = 1 if phase < .5 else -1
+        for index in range(65):
+            y = -1 + index / 32
+            x = side * math.cos(phase*math.tau) * math.sqrt(max(0., 1-y*y))
+            point = center + QPointF(x*radius, y*radius)
+            if index == 0:
+                terminator.moveTo(point)
+            else:
+                terminator.lineTo(point)
+        warmth = max(0., 1 - abs(math.cos(phase*math.tau))*4)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(QColor(255, 169, 91, round(150*warmth)), max(1., radius*.025)))
+        p.drawPath(terminator)
+        p.setClipping(False)
+        p.setPen(QPen(QColor(104, 187, 245, 160), max(1., radius*.012)))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawPath(disc)
+        moon = QPointF(radius*2.9, radius*.8)
+        moon_radius = radius*.3
+        illumination = (1-math.cos(moon_phase*math.tau))/2
+        p.setPen(Qt.PenStyle.NoPen)
+        _glow(p, moon, moon_radius*1.7, QColor(193, 217, 244, round(45*illumination)))
+        p.setPen(QPen(QColor('#65728c'), max(.7, radius*.006)))
+        p.setBrush(QColor('#182136'))
+        p.drawEllipse(moon, moon_radius, moon_radius)
+        p.setPen(Qt.PenStyle.NoPen)
+        _moon(p, moon, moon_radius, moon_phase, QColor('#dce5ef'))
+        p.setClipPath(_phase_path(moon, moon_radius, moon_phase))
+        p.setBrush(QColor(82, 101, 129, 55))
+        for x, y, size in ((-.4,-.3,.22), (.3,.2,.27), (-.2,.5,.14)):
+            p.drawEllipse(moon+QPointF(x*moon_radius, y*moon_radius), size*moon_radius, size*moon_radius)
+        p.end()
+        return image
