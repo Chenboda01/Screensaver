@@ -102,6 +102,24 @@ def test_dismissed_dialog_does_not_save_checked_preference(app: QApplication) ->
     assert not dialog.timer.isActive()
 
 
+def test_escape_dismisses_without_remembering(app: QApplication) -> None:
+    dialog = agent_prompt.AgentPromptDialog(agent_prompt.PromptSettings())
+    dialog.remember_checkbox.setChecked(True)
+
+    QTest.keyClick(dialog, Qt.Key.Key_Escape)
+
+    assert dialog.prompt_result() == agent_prompt.PromptResult(False, False)
+
+
+def test_enter_selects_the_default_answer(app: QApplication) -> None:
+    dialog = agent_prompt.AgentPromptDialog(agent_prompt.PromptSettings())
+    dialog.remember_checkbox.setChecked(True)
+
+    QTest.keyClick(dialog, Qt.Key.Key_Return)
+
+    assert dialog.prompt_result() == agent_prompt.PromptResult(True, True)
+
+
 @pytest.mark.parametrize("content, seconds, action", [
     ("", 10, agent_prompt.TimeoutAction.START),
     ("agent_prompt_timeout_seconds=invalid\nagent_prompt_timeout_action=invalid", 10, agent_prompt.TimeoutAction.START),

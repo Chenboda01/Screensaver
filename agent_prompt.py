@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Final
 
 from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
 
 
@@ -420,6 +421,12 @@ class AgentPromptDialog(QMessageBox):
         }:
             self.pause_countdown()
         return super().eventFilter(watched, event)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()
+        else:
+            super().keyPressEvent(event)
 
     def prompt_result(self) -> PromptResult:
         selected = self.result() in (int(QMessageBox.StandardButton.Yes), int(QMessageBox.StandardButton.No))
