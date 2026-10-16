@@ -18,7 +18,7 @@
 
 class SectionsTest : public QObject {
     Q_OBJECT
-    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("lock") };
+    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock") };
     QString configPath() const { return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation); }
     QByteArray savedBytes() {
         QFile file(configPath() + QStringLiteral("/screenbot-screensaver.ini"));
@@ -58,7 +58,8 @@ private Q_SLOTS:
             {QStringLiteral("liveSkyEnabled"), true}, {QStringLiteral("liveSkyUnits"), QStringLiteral("f")}, {QStringLiteral("liveSkyInterval"), 60}, {QStringLiteral("liveSkyConditions"), false},
             {QStringLiteral("agentDetectionMode"), QStringLiteral("block")}, {QStringLiteral("phoneEnabled"), false}, {QStringLiteral("bobosEnabled"), false},
             {QStringLiteral("bobosActivationDelay"), 7}, {QStringLiteral("showWifiAnimation"), false}, {QStringLiteral("passwordLock"), true},
-            {QStringLiteral("lockMinutes"), 5}, {QStringLiteral("showTimer"), true}
+            {QStringLiteral("lockMinutes"), 5}, {QStringLiteral("showTimer"), true},
+            {QStringLiteral("performanceMode"), QStringLiteral("battery-saver")}, {QStringLiteral("reduceMotion"), true}
         };
         QVariantMap defaults;
         for (auto it = changes.cbegin(); it != changes.cend(); ++it) {
@@ -178,6 +179,16 @@ private Q_SLOTS:
         QVERIFY(!item(QStringLiteral("bobosPreviewButton"))->isEnabled());
         kcm.setPhoneEnabled(true);
         item(QStringLiteral("bobosSection"))->setProperty("expanded", false);
+        item(QStringLiteral("performanceSection"))->setProperty("expanded", true);
+        QVERIFY(item(QStringLiteral("performanceMode")));
+        QVERIFY(item(QStringLiteral("reduceMotion")));
+        kcm.setPerformanceMode(QStringLiteral("smooth"));
+        QVERIFY(item(QStringLiteral("performanceSection"))->property("modified").toBool());
+        QCOMPARE(item(QStringLiteral("performanceSection"))->property("summary").toString(), QStringLiteral("Smooth"));
+        kcm.load();
+        QCOMPARE(kcm.performanceMode(), QStringLiteral("balanced"));
+        QVERIFY(!kcm.reduceMotion());
+        item(QStringLiteral("performanceSection"))->setProperty("expanded", false);
         const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
         QVERIFY(!evidence.isEmpty());
         QDir().mkpath(evidence);

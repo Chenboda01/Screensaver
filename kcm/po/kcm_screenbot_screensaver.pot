@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 13:23-0400\n"
+"POT-Creation-Date: 2026-10-16 13:33-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -531,13 +531,13 @@ msgctxt "@label"
 msgid "Enable Live Sky:"
 msgstr ""
 
-#: ui/main.qml:180 ui/main.qml:368
+#: ui/main.qml:180 ui/main.qml:400
 #, kde-format
 msgctxt "@label"
 msgid "On"
 msgstr ""
 
-#: ui/main.qml:180 ui/main.qml:368
+#: ui/main.qml:180 ui/main.qml:400
 #, kde-format
 msgctxt "@label"
 msgid "Off"
@@ -772,7 +772,7 @@ msgctxt "@label"
 msgid "BobOS Activation Delay:"
 msgstr ""
 
-#: ui/main.qml:335 ui/main.qml:382
+#: ui/main.qml:335 ui/main.qml:414
 #, kde-format
 msgctxt "@label Duration"
 msgid "%1 minute"
@@ -813,10 +813,78 @@ msgstr ""
 #: ui/main.qml:362
 #, kde-format
 msgctxt "@label"
-msgid "Lock"
+msgid "Performance"
 msgstr ""
 
 #: ui/main.qml:363
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Smooth"
+msgstr ""
+
+#: ui/main.qml:363 ui/main.qml:378
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Balanced"
+msgstr ""
+
+#: ui/main.qml:363
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Battery saver"
+msgstr ""
+
+#: ui/main.qml:369
+#, kde-format
+msgctxt "@label"
+msgid "Frame pacing:"
+msgstr ""
+
+#: ui/main.qml:370
+#, kde-format
+msgctxt "@info"
+msgid ""
+"Balanced runs at 30 fps on AC power, then 15 fps on battery or after 15 "
+"minutes. Battery saver uses 10 fps."
+msgstr ""
+
+#: ui/main.qml:377
+#, kde-format
+msgctxt "@label"
+msgid "Performance mode:"
+msgstr ""
+
+#: ui/main.qml:378
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Smooth (30 fps)"
+msgstr ""
+
+#: ui/main.qml:378
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Battery saver (10 fps)"
+msgstr ""
+
+#: ui/main.qml:384
+#, kde-format
+msgctxt "@label"
+msgid "Motion:"
+msgstr ""
+
+#: ui/main.qml:385
+#, kde-format
+msgctxt "@label"
+msgid "Reduce motion and flashes"
+msgstr ""
+
+#: ui/main.qml:394
+#, kde-format
+msgctxt "@label"
+msgid "Lock"
+msgstr ""
+
+#: ui/main.qml:395
 #, kde-format
 msgctxt "@info Lock delay summary"
 msgid "Password after %1 min"
@@ -824,49 +892,49 @@ msgid_plural "Password after %1 min"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ui/main.qml:363
+#: ui/main.qml:395
 #, kde-format
 msgctxt "@info"
 msgid "Screensaver password countdown off"
 msgstr ""
 
-#: ui/main.qml:367
+#: ui/main.qml:399
 #, kde-format
 msgctxt "@label"
 msgid "Password unlock:"
 msgstr ""
 
-#: ui/main.qml:373
+#: ui/main.qml:405
 #, kde-format
 msgctxt "@label"
 msgid "Require password after:"
 msgstr ""
 
-#: ui/main.qml:389
+#: ui/main.qml:421
 #, kde-format
 msgctxt "@label"
 msgid "Show countdown:"
 msgstr ""
 
-#: ui/main.qml:390
+#: ui/main.qml:422
 #, kde-format
 msgctxt "@label"
 msgid "Display time until password is required"
 msgstr ""
 
-#: ui/main.qml:400
+#: ui/main.qml:432
 #, kde-format
 msgctxt "@label"
 msgid "Countdown color preview (elapsed time)"
 msgstr ""
 
-#: ui/main.qml:401
+#: ui/main.qml:433
 #, kde-format
 msgctxt "@label"
 msgid "Color transition:"
 msgstr ""
 
-#: ui/main.qml:420
+#: ui/main.qml:452
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -874,7 +942,7 @@ msgid ""
 "yellow → orange → red as time runs out. KDE handles the actual password lock."
 msgstr ""
 
-#: ui/main.qml:427
+#: ui/main.qml:459
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -883,7 +951,7 @@ msgid ""
 "option does not disable KDE's separate automatic locking or suspend locks."
 msgstr ""
 
-#: ui/main.qml:433
+#: ui/main.qml:465
 #, kde-format
 msgctxt "@label"
 msgid ""
@@ -912,31 +980,31 @@ msgstr ""
 msgid "No matches. Check the spelling, or try a nearby larger town."
 msgstr ""
 
-#: screenbotkcm.cpp:525
+#: screenbotkcm.cpp:557
 #, kde-format
 msgid ""
 "Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure "
 "Bash is available on PATH."
 msgstr ""
 
-#: screenbotkcm.cpp:532
+#: screenbotkcm.cpp:564
 #, kde-format
 msgid "Could not create temporary preview settings."
 msgstr ""
 
-#: screenbotkcm.cpp:543
+#: screenbotkcm.cpp:575
 #, kde-format
 msgid "Could not write temporary preview settings."
 msgstr ""
 
-#: screenbotkcm.cpp:560
+#: screenbotkcm.cpp:592
 #, kde-format
 msgid ""
 "Could not start the preview. Check the ScreenBot installation and Python 3 "
 "dependencies."
 msgstr ""
 
-#: screenbotkcm.cpp:566
+#: screenbotkcm.cpp:598
 #, kde-format
 msgid ""
 "The preview stopped unexpectedly. Check the ScreenBot installation and "

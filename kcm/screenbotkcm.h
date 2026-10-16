@@ -41,6 +41,8 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool bobosEnabled READ bobosEnabled WRITE setBobosEnabled NOTIFY bobosEnabledChanged)
     Q_PROPERTY(int bobosActivationDelay READ bobosActivationDelay WRITE setBobosActivationDelay NOTIFY bobosActivationDelayChanged)
     Q_PROPERTY(bool showWifiAnimation READ showWifiAnimation WRITE setShowWifiAnimation NOTIFY showWifiAnimationChanged)
+    Q_PROPERTY(QString performanceMode READ performanceMode WRITE setPerformanceMode NOTIFY performanceModeChanged)
+    Q_PROPERTY(bool reduceMotion READ reduceMotion WRITE setReduceMotion NOTIFY reduceMotionChanged)
 public:
     ScreenBotKcm(QObject *parent, const KPluginMetaData &data);
     QStringList modifiedSections() const;
@@ -79,6 +81,8 @@ public:
     bool bobosEnabled() const { return m_bobosEnabled; }
     int bobosActivationDelay() const { return m_bobosActivationDelay; }
     bool showWifiAnimation() const { return m_showWifiAnimation; }
+    QString performanceMode() const { return m_performanceMode; }
+    bool reduceMotion() const { return m_reduceMotion; }
     void setTheme(const QString &value);
     void setPasswordLock(bool value);
     void setLockMinutes(int value);
@@ -107,6 +111,8 @@ public:
     void setBobosEnabled(bool value);
     void setBobosActivationDelay(int value);
     void setShowWifiAnimation(bool value);
+    void setPerformanceMode(const QString &value);
+    void setReduceMotion(bool value);
     void load() override;
     void save() override;
 Q_SIGNALS:
@@ -139,6 +145,8 @@ Q_SIGNALS:
     void bobosEnabledChanged();
     void bobosActivationDelayChanged();
     void showWifiAnimationChanged();
+    void performanceModeChanged();
+    void reduceMotionChanged();
 private:
     void writeSettings(QSettings &cfg) const;
     void startPreview(bool bobos, bool wifiAnimation, QQuickItem *source = nullptr);
@@ -197,8 +205,12 @@ private:
     bool m_bobosEnabled = true;
     int m_bobosActivationDelay = 3;
     bool m_showWifiAnimation = true;
+    QString m_performanceMode = QStringLiteral("balanced");
+    bool m_reduceMotion = false;
     bool m_savedPhoneEnabled = true;
     bool m_savedBobosEnabled = true;
     int m_savedBobosActivationDelay = 3;
     bool m_savedShowWifiAnimation = true;
+    QString m_savedPerformanceMode = QStringLiteral("balanced");
+    bool m_savedReduceMotion = false;
 };

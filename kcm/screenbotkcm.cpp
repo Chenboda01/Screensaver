@@ -69,6 +69,8 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_bobosEnabled != m_savedBobosEnabled
         || m_bobosActivationDelay != m_savedBobosActivationDelay
         || m_showWifiAnimation != m_savedShowWifiAnimation) sections.append(QStringLiteral("bobos"));
+    if (m_performanceMode != m_savedPerformanceMode || m_reduceMotion != m_savedReduceMotion)
+        sections.append(QStringLiteral("performance"));
     if (m_passwordLock != m_savedPasswordLock
         || m_lockMinutes != m_savedLockMinutes
         || m_showTimer != m_savedShowTimer) sections.append(QStringLiteral("lock"));
@@ -88,7 +90,8 @@ bool ScreenBotKcm::sectionExpanded(const QString &section) const {
 
 void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
     const QStringList sections{QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"),
-        QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("lock")};
+        QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"),
+        QStringLiteral("performance"), QStringLiteral("lock")};
     if (!sections.contains(section)) return;
     QSettings state(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
                     + QStringLiteral("/screenbot-kcm-state.ini"), QSettings::IniFormat);
@@ -159,6 +162,11 @@ void ScreenBotKcm::load() {
     const bool bobos = cfg.value(QStringLiteral("Screensaver/bobos_enabled"), true).toBool();
     const int bobosDelay = qBound(1, cfg.value(QStringLiteral("Screensaver/bobos_activation_delay"), 3).toInt(), 30);
     const bool wifiAnimation = cfg.value(QStringLiteral("Screensaver/show_wifi_animation"), true).toBool();
+    const QString requestedPerformanceMode = cfg.value(QStringLiteral("Screensaver/performance_mode"), QStringLiteral("balanced")).toString();
+    const QString performanceMode = requestedPerformanceMode == QLatin1String("smooth")
+        || requestedPerformanceMode == QLatin1String("battery-saver")
+        ? requestedPerformanceMode : QStringLiteral("balanced");
+    const bool reduceMotion = cfg.value(QStringLiteral("Screensaver/reduce_motion"), false).toBool();
     if (m_theme != validTheme) { m_theme = validTheme; Q_EMIT themeChanged(); }
     if (m_passwordLock != lock) { m_passwordLock = lock; Q_EMIT passwordLockChanged(); }
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
@@ -186,6 +194,8 @@ void ScreenBotKcm::load() {
     if (m_bobosEnabled != bobos) { m_bobosEnabled = bobos; Q_EMIT bobosEnabledChanged(); }
     if (m_bobosActivationDelay != bobosDelay) { m_bobosActivationDelay = bobosDelay; Q_EMIT bobosActivationDelayChanged(); }
     if (m_showWifiAnimation != wifiAnimation) { m_showWifiAnimation = wifiAnimation; Q_EMIT showWifiAnimationChanged(); }
+    if (m_performanceMode != performanceMode) { m_performanceMode = performanceMode; Q_EMIT performanceModeChanged(); }
+    if (m_reduceMotion != reduceMotion) { m_reduceMotion = reduceMotion; Q_EMIT reduceMotionChanged(); }
     m_savedTheme = m_theme;
     m_savedPasswordLock = m_passwordLock;
     m_savedLockMinutes = m_lockMinutes;
@@ -213,6 +223,8 @@ void ScreenBotKcm::load() {
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
+    m_savedPerformanceMode = m_performanceMode;
+    m_savedReduceMotion = m_reduceMotion;
     checkModified();
 }
 
@@ -248,6 +260,8 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/bobos_enabled"), m_bobosEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_activation_delay"), m_bobosActivationDelay);
     cfg.setValue(QStringLiteral("Screensaver/show_wifi_animation"), m_showWifiAnimation);
+    cfg.setValue(QStringLiteral("Screensaver/performance_mode"), m_performanceMode);
+    cfg.setValue(QStringLiteral("Screensaver/reduce_motion"), m_reduceMotion);
 }
 
 void ScreenBotKcm::save() {
@@ -285,6 +299,8 @@ void ScreenBotKcm::save() {
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
     m_savedShowWifiAnimation = m_showWifiAnimation;
+    m_savedPerformanceMode = m_performanceMode;
+    m_savedReduceMotion = m_reduceMotion;
     checkModified();
 }
 
@@ -504,6 +520,22 @@ void ScreenBotKcm::setShowWifiAnimation(bool value) {
     if (value == m_showWifiAnimation) return;
     m_showWifiAnimation = value;
     Q_EMIT showWifiAnimationChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setPerformanceMode(const QString &value) {
+    if (value != QLatin1String("smooth") && value != QLatin1String("balanced")
+        && value != QLatin1String("battery-saver")) return;
+    if (value == m_performanceMode) return;
+    m_performanceMode = value;
+    Q_EMIT performanceModeChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setReduceMotion(bool value) {
+    if (value == m_reduceMotion) return;
+    m_reduceMotion = value;
+    Q_EMIT reduceMotionChanged();
     checkModified();
 }
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 13:23-0400\n"
+"POT-Creation-Date: 2026-10-16 13:33-0400\n"
 "PO-Revision-Date: 2026-10-16 13:20-0400\n"
 "Last-Translator: ScreenBot contributors\n"
 "Language-Team: Spanish\n"
@@ -92,8 +92,12 @@ msgstr "Vista previa"
 #: ui/main.qml:22
 #, kde-format
 msgctxt "@label"
-msgid "Preview current settings without applying them. Move the mouse or press any key to close."
-msgstr "Vea la configuración actual sin aplicarla. Mueva el ratón o pulse cualquier tecla para cerrar."
+msgid ""
+"Preview current settings without applying them. Move the mouse or press any "
+"key to close."
+msgstr ""
+"Vea la configuración actual sin aplicarla. Mueva el ratón o pulse cualquier "
+"tecla para cerrar."
 
 #: ui/main.qml:37
 #, kde-format
@@ -440,8 +444,12 @@ msgstr "Tiempo animado:"
 #: ui/main.qml:119
 #, kde-format
 msgctxt "@label"
-msgid "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes."
-msgstr "Los efectos meteorológicos y las estrellas fugaces están desactivados en Espacio. Las estrellas fugaces están disponibles en los temas de paisajes."
+msgid ""
+"Weather and shooting-star effects are disabled in Space. Shooting stars are "
+"available on the landscape themes."
+msgstr ""
+"Los efectos meteorológicos y las estrellas fugaces están desactivados en "
+"Espacio. Las estrellas fugaces están disponibles en los temas de paisajes."
 
 #: ui/main.qml:123
 #, kde-format
@@ -514,8 +522,15 @@ msgstr "Cielo en vivo:"
 #: ui/main.qml:175
 #, kde-format
 msgctxt "@label"
-msgid "Adapt landscape skies and weather to local conditions. In Space, Live Sky shows Earth’s day/night and the Moon phase, without weather effects or shooting stars. Manual weather effects are dimmed while Live Sky is enabled."
-msgstr "Adapte el cielo y el tiempo de los paisajes a las condiciones locales. En Espacio, Cielo en vivo muestra el día y la noche de la Tierra y la fase lunar, sin efectos meteorológicos ni estrellas fugaces. Los efectos manuales se desactivan mientras Cielo en vivo está activo."
+msgid ""
+"Adapt landscape skies and weather to local conditions. In Space, Live Sky "
+"shows Earth’s day/night and the Moon phase, without weather effects or "
+"shooting stars. Manual weather effects are dimmed while Live Sky is enabled."
+msgstr ""
+"Adapte el cielo y el tiempo de los paisajes a las condiciones locales. En "
+"Espacio, Cielo en vivo muestra el día y la noche de la Tierra y la fase "
+"lunar, sin efectos meteorológicos ni estrellas fugaces. Los efectos manuales "
+"se desactivan mientras Cielo en vivo está activo."
 
 #: ui/main.qml:179
 #, kde-format
@@ -523,13 +538,13 @@ msgctxt "@label"
 msgid "Enable Live Sky:"
 msgstr "Activar Cielo en vivo:"
 
-#: ui/main.qml:180 ui/main.qml:368
+#: ui/main.qml:180 ui/main.qml:400
 #, kde-format
 msgctxt "@label"
 msgid "On"
 msgstr "Activado"
 
-#: ui/main.qml:180 ui/main.qml:368
+#: ui/main.qml:180 ui/main.qml:400
 #, kde-format
 msgctxt "@label"
 msgid "Off"
@@ -538,8 +553,15 @@ msgstr "Desactivado"
 #: ui/main.qml:193
 #, kde-format
 msgctxt "@label"
-msgid "Typed searches are sent to Open-Meteo only while Live Sky is enabled. Choose a suggestion to set your location; Apply saves it. Offline search uses the bundled city catalog. No IP-based lookup is used."
-msgstr "Las búsquedas se envían a Open-Meteo solo cuando Cielo en vivo está activo. Elija una sugerencia para establecer su ubicación y pulse Aplicar para guardarla. La búsqueda sin conexión usa el catálogo de ciudades incluido. No se busca por dirección IP."
+msgid ""
+"Typed searches are sent to Open-Meteo only while Live Sky is enabled. Choose "
+"a suggestion to set your location; Apply saves it. Offline search uses the "
+"bundled city catalog. No IP-based lookup is used."
+msgstr ""
+"Las búsquedas se envían a Open-Meteo solo cuando Cielo en vivo está activo. "
+"Elija una sugerencia para establecer su ubicación y pulse Aplicar para "
+"guardarla. La búsqueda sin conexión usa el catálogo de ciudades incluido. No "
+"se busca por dirección IP."
 
 #: ui/main.qml:199
 #, kde-format
@@ -624,8 +646,12 @@ msgstr "Detección de agentes de IA:"
 #: ui/main.qml:237
 #, kde-format
 msgctxt "@label"
-msgid "Choose what happens when an active terminal agent is detected. Manual launches always remain available."
-msgstr "Elija qué ocurre cuando se detecta un agente activo en la terminal. Siempre podrá iniciar el salvapantallas manualmente."
+msgid ""
+"Choose what happens when an active terminal agent is detected. Manual "
+"launches always remain available."
+msgstr ""
+"Elija qué ocurre cuando se detecta un agente activo en la terminal. Siempre "
+"podrá iniciar el salvapantallas manualmente."
 
 #: ui/main.qml:243
 #, kde-format
@@ -684,8 +710,12 @@ msgstr "Mantener el escritorio visible (No)"
 #: ui/main.qml:284
 #, kde-format
 msgctxt "@label"
-msgid "Interacting with the prompt pauses its countdown. Automatic answers never remember a choice."
-msgstr "Interactuar con el aviso pausa la cuenta atrás. Las respuestas automáticas nunca guardan una preferencia."
+msgid ""
+"Interacting with the prompt pauses its countdown. Automatic answers never "
+"remember a choice."
+msgstr ""
+"Interactuar con el aviso pausa la cuenta atrás. Las respuestas automáticas "
+"nunca guardan una preferencia."
 
 #: ui/main.qml:289
 #, kde-format
@@ -734,8 +764,12 @@ msgstr "El teléfono de Bob y BobOS 2.0"
 #: ui/main.qml:307
 #, kde-format
 msgctxt "@label"
-msgid "Bob's Phone contains a fictional mobile operating system. Its apps, messages, places, and games are animated drawings only."
-msgstr "El teléfono de Bob contiene un sistema operativo móvil ficticio. Sus aplicaciones, mensajes, lugares y juegos son solo dibujos animados."
+msgid ""
+"Bob's Phone contains a fictional mobile operating system. Its apps, "
+"messages, places, and games are animated drawings only."
+msgstr ""
+"El teléfono de Bob contiene un sistema operativo móvil ficticio. Sus "
+"aplicaciones, mensajes, lugares y juegos son solo dibujos animados."
 
 #: ui/main.qml:311
 #, kde-format
@@ -755,7 +789,7 @@ msgctxt "@label"
 msgid "BobOS Activation Delay:"
 msgstr "Espera antes de activar BobOS:"
 
-#: ui/main.qml:335 ui/main.qml:382
+#: ui/main.qml:335 ui/main.qml:414
 #, kde-format
 msgctxt "@label Duration"
 msgid "%1 minute"
@@ -796,10 +830,80 @@ msgstr "Ver la aventura completa"
 #: ui/main.qml:362
 #, kde-format
 msgctxt "@label"
+msgid "Performance"
+msgstr "Rendimiento"
+
+#: ui/main.qml:363
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Smooth"
+msgstr "Fluido"
+
+#: ui/main.qml:363 ui/main.qml:378
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Balanced"
+msgstr "Equilibrado"
+
+#: ui/main.qml:363
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Battery saver"
+msgstr "Ahorro de batería"
+
+#: ui/main.qml:369
+#, kde-format
+msgctxt "@label"
+msgid "Frame pacing:"
+msgstr "Frecuencia de fotogramas:"
+
+#: ui/main.qml:370
+#, kde-format
+msgctxt "@info"
+msgid ""
+"Balanced runs at 30 fps on AC power, then 15 fps on battery or after 15 "
+"minutes. Battery saver uses 10 fps."
+msgstr ""
+"El modo equilibrado funciona a 30 fps con corriente y a 15 fps con batería "
+"o tras 15 minutos. El ahorro de batería usa 10 fps."
+
+#: ui/main.qml:377
+#, kde-format
+msgctxt "@label"
+msgid "Performance mode:"
+msgstr "Modo de rendimiento:"
+
+#: ui/main.qml:378
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Smooth (30 fps)"
+msgstr "Fluido (30 fps)"
+
+#: ui/main.qml:378
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Battery saver (10 fps)"
+msgstr "Ahorro de batería (10 fps)"
+
+#: ui/main.qml:384
+#, kde-format
+msgctxt "@label"
+msgid "Motion:"
+msgstr "Movimiento:"
+
+#: ui/main.qml:385
+#, kde-format
+msgctxt "@label"
+msgid "Reduce motion and flashes"
+msgstr "Reducir el movimiento y los destellos"
+
+#: ui/main.qml:394
+#, kde-format
+msgctxt "@label"
 msgid "Lock"
 msgstr "Bloqueo"
 
-#: ui/main.qml:363
+#: ui/main.qml:395
 #, kde-format
 msgctxt "@info Lock delay summary"
 msgid "Password after %1 min"
@@ -807,65 +911,81 @@ msgid_plural "Password after %1 min"
 msgstr[0] "Contraseña tras %1 min"
 msgstr[1] "Contraseña tras %1 min"
 
-#: ui/main.qml:363
+#: ui/main.qml:395
 #, kde-format
 msgctxt "@info"
 msgid "Screensaver password countdown off"
 msgstr "Cuenta atrás de contraseña desactivada"
 
-#: ui/main.qml:367
+#: ui/main.qml:399
 #, kde-format
 msgctxt "@label"
 msgid "Password unlock:"
 msgstr "Desbloqueo con contraseña:"
 
-#: ui/main.qml:373
+#: ui/main.qml:405
 #, kde-format
 msgctxt "@label"
 msgid "Require password after:"
 msgstr "Pedir contraseña después de:"
 
-#: ui/main.qml:389
+#: ui/main.qml:421
 #, kde-format
 msgctxt "@label"
 msgid "Show countdown:"
 msgstr "Mostrar cuenta atrás:"
 
-#: ui/main.qml:390
+#: ui/main.qml:422
 #, kde-format
 msgctxt "@label"
 msgid "Display time until password is required"
 msgstr "Mostrar el tiempo restante hasta pedir contraseña"
 
-#: ui/main.qml:400
+#: ui/main.qml:432
 #, kde-format
 msgctxt "@label"
 msgid "Countdown color preview (elapsed time)"
 msgstr "Vista previa del color de la cuenta atrás (tiempo transcurrido)"
 
-#: ui/main.qml:401
+#: ui/main.qml:433
 #, kde-format
 msgctxt "@label"
 msgid "Color transition:"
 msgstr "Transición de color:"
 
-#: ui/main.qml:420
+#: ui/main.qml:452
 #, kde-format
 msgctxt "@label"
-msgid "The countdown begins when Bob appears. Its color smoothly changes green → yellow → orange → red as time runs out. KDE handles the actual password lock."
-msgstr "La cuenta atrás comienza cuando aparece Bob. Su color cambia suavemente de verde a amarillo, naranja y rojo al agotarse el tiempo. KDE se encarga del bloqueo real con contraseña."
+msgid ""
+"The countdown begins when Bob appears. Its color smoothly changes green → "
+"yellow → orange → red as time runs out. KDE handles the actual password lock."
+msgstr ""
+"La cuenta atrás comienza cuando aparece Bob. Su color cambia suavemente de "
+"verde a amarillo, naranja y rojo al agotarse el tiempo. KDE se encarga del "
+"bloqueo real con contraseña."
 
-#: ui/main.qml:427
+#: ui/main.qml:459
 #, kde-format
 msgctxt "@label"
-msgid "For password protection, configure KDE Screen Locking to require the password immediately and disable any unlock grace period. Disabling this option does not disable KDE's separate automatic locking or suspend locks."
-msgstr "Para proteger la sesión con contraseña, configure el bloqueo de pantalla de KDE para pedirla inmediatamente y desactive el periodo de gracia. Desactivar esta opción no desactiva el bloqueo automático de KDE ni el bloqueo al suspender."
+msgid ""
+"For password protection, configure KDE Screen Locking to require the "
+"password immediately and disable any unlock grace period. Disabling this "
+"option does not disable KDE's separate automatic locking or suspend locks."
+msgstr ""
+"Para proteger la sesión con contraseña, configure el bloqueo de pantalla de "
+"KDE para pedirla inmediatamente y desactive el periodo de gracia. Desactivar "
+"esta opción no desactiva el bloqueo automático de KDE ni el bloqueo al "
+"suspender."
 
-#: ui/main.qml:433
+#: ui/main.qml:465
 #, kde-format
 msgctxt "@label"
-msgid "Press Apply to save your changes. Changes take effect the next time Bob starts."
-msgstr "Pulse Aplicar para guardar los cambios. Se harán efectivos la próxima vez que se inicie Bob."
+msgid ""
+"Press Apply to save your changes. Changes take effect the next time Bob "
+"starts."
+msgstr ""
+"Pulse Aplicar para guardar los cambios. Se harán efectivos la próxima vez "
+"que se inicie Bob."
 
 #: locationsearch.cpp:127
 #, kde-format
@@ -874,40 +994,59 @@ msgstr "Buscando en línea…"
 
 #: locationsearch.cpp:163
 #, kde-format
-msgid "Additional online matches unavailable. Showing the results already received."
-msgstr "No hay más resultados en línea disponibles. Se muestran los resultados ya recibidos."
+msgid ""
+"Additional online matches unavailable. Showing the results already received."
+msgstr ""
+"No hay más resultados en línea disponibles. Se muestran los resultados ya "
+"recibidos."
 
 #: locationsearch.cpp:166
 #, kde-format
 msgid "Online search unavailable. Showing offline catalog matches."
-msgstr "La búsqueda en línea no está disponible. Se muestran las coincidencias del catálogo local."
+msgstr ""
+"La búsqueda en línea no está disponible. Se muestran las coincidencias del "
+"catálogo local."
 
 #: locationsearch.cpp:183
 #, kde-format
 msgid "No matches. Check the spelling, or try a nearby larger town."
-msgstr "Sin coincidencias. Revise la ortografía o pruebe con una ciudad cercana más grande."
+msgstr ""
+"Sin coincidencias. Revise la ortografía o pruebe con una ciudad cercana más "
+"grande."
 
-#: screenbotkcm.cpp:525
+#: screenbotkcm.cpp:557
 #, kde-format
-msgid "Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure Bash is available on PATH."
-msgstr "Vista previa no disponible. Instale ScreenBot en ~/ScreenBot/screensaver y compruebe que Bash esté disponible en PATH."
+msgid ""
+"Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure "
+"Bash is available on PATH."
+msgstr ""
+"Vista previa no disponible. Instale ScreenBot en ~/ScreenBot/screensaver y "
+"compruebe que Bash esté disponible en PATH."
 
-#: screenbotkcm.cpp:532
+#: screenbotkcm.cpp:564
 #, kde-format
 msgid "Could not create temporary preview settings."
 msgstr "No se pudo crear la configuración temporal de la vista previa."
 
-#: screenbotkcm.cpp:543
+#: screenbotkcm.cpp:575
 #, kde-format
 msgid "Could not write temporary preview settings."
 msgstr "No se pudo escribir la configuración temporal de la vista previa."
 
-#: screenbotkcm.cpp:560
+#: screenbotkcm.cpp:592
 #, kde-format
-msgid "Could not start the preview. Check the ScreenBot installation and Python 3 dependencies."
-msgstr "No se pudo iniciar la vista previa. Revise la instalación de ScreenBot y las dependencias de Python 3."
+msgid ""
+"Could not start the preview. Check the ScreenBot installation and Python 3 "
+"dependencies."
+msgstr ""
+"No se pudo iniciar la vista previa. Revise la instalación de ScreenBot y las "
+"dependencias de Python 3."
 
-#: screenbotkcm.cpp:566
+#: screenbotkcm.cpp:598
 #, kde-format
-msgid "The preview stopped unexpectedly. Check the ScreenBot installation and Python 3 dependencies."
-msgstr "La vista previa se detuvo inesperadamente. Revise la instalación de ScreenBot y las dependencias de Python 3."
+msgid ""
+"The preview stopped unexpectedly. Check the ScreenBot installation and "
+"Python 3 dependencies."
+msgstr ""
+"La vista previa se detuvo inesperadamente. Revise la instalación de "
+"ScreenBot y las dependencias de Python 3."
