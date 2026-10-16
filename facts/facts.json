@@ -124,8 +124,8 @@
     {"id":"forest-26","text":"Photosynthesis uses sunlight, carbon dioxide from air, and water from soil to make plant food.","source":"https://www.nps.gov/common/uploads/teachers/lessonplans/Plant%20and%20Animal%20Detectives%20508.pdf"},
     {"id":"forest-27","text":"A sapling is a young tree with a slender trunk.","source":"https://www.nps.gov/common/uploads/teachers/lessonplans/%5BEXTERNAL%5D%20Teacher%20Supplementary%20Document%20Plant%20Program3.pdf"},
     {"id":"forest-28","text":"Glucose is a sugar plants make during photosynthesis and use as an energy source.","source":"https://www.nps.gov/common/uploads/teachers/lessonplans/%5BEXTERNAL%5D%20Teacher%20Supplementary%20Document%20Plant%20Program3.pdf"},
-    {"id":"forest-29","text":"Mushrooms and other fungi are part of the diversity of life found in national parks.","source":"https://www.nps.gov/learnandexplore/plants-animals-more.htm"},
-    {"id":"forest-30","text":"Bees are pollinators, and pollinators help support plant life.","source":"https://www.nps.gov/learnandexplore/plants-animals-more.htm"}
+    {"id":"forest-29","text":"Mushrooms and fungi are important parts of park ecosystems, with thousands of species in national parks.","source":"https://www.nps.gov/subjects/fungi/index.htm"},
+    {"id":"forest-30","text":"More than 75 percent of Earth's flowering plants depend on pollinators, including bees.","source":"https://www.nps.gov/subjects/pollinators/index.htm"}
   ],
   "technology": [
     {"id":"tech-01","text":"A telegraph sent electrical signals over wires to communicate across distance.","source":"https://www.loc.gov/classroom-materials/inventions-and-innovations/"},
@@ -146,9 +146,9 @@
     {"id":"tech-16","text":"Steam engines move pistons using steam from boiling water.","source":"https://www.loc.gov/classroom-materials/inventions-and-innovations/"},
     {"id":"tech-17","text":"A touch screen can detect a finger by sensing a change in an electrical current.","source":"https://www.loc.gov/everyday-mysteries/technology/"},
     {"id":"tech-18","text":"The Library of Congress describes Velcro as an example of design inspired by nature.","source":"https://www.loc.gov/everyday-mysteries/technology/"},
-    {"id":"tech-19","text":"Edison received a patent for an electric vote recorder in 1868, but it did not sell.","source":"https://americanhistory.si.edu/lighting/19thcent/invent19.htm"},
-    {"id":"tech-20","text":"Edison patented a quadruplex telegraph that could send four messages over one wire at once.","source":"https://americanhistory.si.edu/lighting/scripts/s19b.htm"},
-    {"id":"tech-21","text":"Edison patented a phonograph in 1877.","source":"https://americanhistory.si.edu/lighting/scripts/s19b.htm"},
+    {"id":"tech-19","text":"Edison received U.S. patent 90,646 for an electric vote recorder on June 1, 1869; it was never used.","source":"https://edison.rutgers.edu/life-of-edison/inventions?catid=91&id=543&view=article"},
+    {"id":"tech-20","text":"Edison developed a quadruplex telegraph in 1874 that could send four messages over one wire at once.","source":"https://americanhistory.si.edu/lighting/scripts/s19b.htm"},
+    {"id":"tech-21","text":"Edison filed his phonograph patent in 1877; it was granted on February 19, 1878.","source":"https://patents.google.com/patent/US200521A/en"},
     {"id":"tech-22","text":"Edison worked on motion pictures starting in the late 1880s.","source":"https://americanhistory.si.edu/lighting/scripts/s19b.htm"},
     {"id":"tech-23","text":"Edison's laboratory team helped test and improve inventions; invention is often collaborative.","source":"https://americanhistory.si.edu/lighting/scripts/s19b.htm"},
     {"id":"tech-24","text":"The Library of Congress notes that inventions often build on earlier technologies and ideas.","source":"https://www.loc.gov/classroom-materials/inventions-and-innovations/"},

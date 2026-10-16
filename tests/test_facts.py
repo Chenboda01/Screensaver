@@ -6,8 +6,8 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PyQt6.QtWidgets import QApplication
 
-from screenbot.fact_overlay import FactPreferences, fact_card_rect, wrap_two_lines
-from screenbot.facts import FactCycler, category_for_scene, load_catalog, load_quotes
+from screenbot.fact_overlay import FactPreferences, fact_card_rect, fact_font_size, wrap_complete_text
+from screenbot.facts import FactCycler, category_for_scene, load_catalog, load_quotes, localized_labels
 from PyQt6.QtGui import QFont
 
 
@@ -112,18 +112,71 @@ class FactCatalogTests(unittest.TestCase):
         self.assertEqual(spanish_quote["source"], english_quote["source"])
         self.assertEqual(load_catalog(locale="fr-FR")["space"][0]["text"], english["text"])
 
+    def test_card_headings_are_localized_with_english_fallback(self):
+        self.assertEqual(localized_labels("es-MX"), {
+            "did_you_know": "¿Sabías que?", "bob_says": "BOB DICE",
+        })
+        self.assertEqual(localized_labels("fr-FR"), {
+            "did_you_know": "DID YOU KNOW?", "bob_says": "BOB SAYS",
+        })
+
     def test_layout_avoids_obstacles_and_suppresses_when_every_safe_slot_is_blocked(self):
         from PyQt6.QtCore import QRectF
-        rect = fact_card_rect(1280, 720, (QRectF(0, 0, 1280, 200),))
+        rect = fact_card_rect(1280, 720, (QRectF(0, 0, 1280, 200),),
+                              "This card avoids every visible element safely.")
         self.assertIsNotNone(rect)
         self.assertFalse(rect.intersects(QRectF(0, 0, 1280, 200)))
         all_blocked = (QRectF(0, 0, 1280, 720),)
-        self.assertIsNone(fact_card_rect(1280, 720, all_blocked))
+        self.assertIsNone(fact_card_rect(1280, 720, all_blocked, "No safe room remains."))
 
-    def test_long_text_is_visually_wrapped_to_at_most_two_lines(self):
-        lines = wrap_two_lines("A wonderfully curious robot explores many fascinating stars above a peaceful mountain forest every evening.", QFont("Sans Serif", 12), 170)
-        self.assertLessEqual(len(lines), 2)
-        self.assertTrue(lines)
+    def test_every_english_and_spanish_fact_fits_without_losing_words_at_supported_sizes(self):
+        sizes = ((800, 600), (1280, 720), (1920, 1080))
+        for locale in ("en", "es"):
+            catalog = load_catalog(locale=locale)
+            for width, height in sizes:
+                for category, records in catalog.items():
+                    for record in records:
+                        with self.subTest(locale=locale, size=(width, height), fact=record["id"]):
+                            rect = fact_card_rect(width, height, text=record["text"])
+                            self.assertIsNotNone(rect)
+                            font = QFont("Sans Serif", fact_font_size(rect.width()))
+                            lines = wrap_complete_text(record["text"], font, rect.width() - 28)
+                            self.assertEqual(" ".join(lines), " ".join(record["text"].split()))
+                            metrics = __import__("PyQt6.QtGui", fromlist=["QFontMetricsF"]).QFontMetricsF(font)
+                            self.assertTrue(all(metrics.horizontalAdvance(line) <= rect.width() - 28
+                                                for line in lines))
+                for quote in load_quotes(locale=locale):
+                    rect = fact_card_rect(width, height, text=quote["text"])
+                    self.assertIsNotNone(rect, (locale, width, quote["id"]))
+                    font = QFont("Sans Serif", fact_font_size(rect.width()))
+                    lines = wrap_complete_text(quote["text"], font, rect.width() - 28)
+                    self.assertEqual(" ".join(lines), " ".join(quote["text"].split()))
+
+    def test_electric_vote_recorder_and_phonograph_claims_match_patent_records(self):
+        technology = {fact["id"]: fact for fact in self.catalog["technology"]}
+        vote = technology["tech-19"]
+        self.assertIn("90,646", vote["text"])
+        self.assertIn("June 1, 1869", vote["text"])
+        self.assertEqual(vote["source"], "https://edison.rutgers.edu/life-of-edison/inventions?catid=91&id=543&view=article")
+        phonograph = technology["tech-21"]
+        self.assertIn("filed", phonograph["text"])
+        self.assertIn("February 19, 1878", phonograph["text"])
+        self.assertEqual(phonograph["source"], "https://patents.google.com/patent/US200521A/en")
+        developed = technology["tech-20"]
+        self.assertIn("developed", developed["text"])
+        self.assertEqual(developed["source"], "https://americanhistory.si.edu/lighting/scripts/s19b.htm")
+
+        spanish = load_catalog(locale="es")
+        translated = {fact["id"]: fact["text"] for fact in spanish["technology"]}
+        self.assertIn("90.646", translated["tech-19"])
+        self.assertIn("1869", translated["tech-19"])
+        self.assertIn("19 de febrero de 1878", translated["tech-21"])
+        self.assertIn("desarrolló", translated["tech-20"])
+
+    def test_forest_index_claims_link_to_the_specific_supporting_pages(self):
+        forest = {fact["id"]: fact for fact in self.catalog["forest"]}
+        self.assertEqual(forest["forest-29"]["source"], "https://www.nps.gov/subjects/fungi/index.htm")
+        self.assertEqual(forest["forest-30"]["source"], "https://www.nps.gov/subjects/pollinators/index.htm")
 
 
 if __name__ == "__main__":

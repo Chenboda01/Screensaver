@@ -1,4 +1,8 @@
 {
+  "labels": {
+    "did_you_know": "¿Sabías que?",
+    "bob_says": "BOB DICE"
+  },
   "facts": {
   "space-01":"El sistema solar tiene una estrella, ocho planetas, cinco planetas enanos con nombre oficial y miles de cometas y asteroides.",
   "space-02":"El sistema solar se formó hace unos 4.600 millones de años a partir de una nube densa de gas y polvo.",
@@ -118,8 +122,8 @@
   "forest-26":"La fotosíntesis usa luz solar, dióxido de carbono del aire y agua del suelo para producir alimento vegetal.",
   "forest-27":"Un retoño es un árbol joven con un tronco delgado.",
   "forest-28":"La glucosa es un azúcar que las plantas producen en la fotosíntesis y usan como energía.",
-  "forest-29":"Las setas y otros hongos forman parte de la diversidad de vida en los parques nacionales.",
-  "forest-30":"Las abejas polinizan y ayudan a que las plantas se reproduzcan.",
+  "forest-29":"Los hongos son partes importantes de los ecosistemas de los parques; hay miles de especies en los parques nacionales.",
+  "forest-30":"Más del 75 % de las plantas con flores de la Tierra depende de los polinizadores, incluidas las abejas.",
   "tech-01":"El telégrafo enviaba señales eléctricas por cables para comunicarse a distancia.",
   "tech-02":"En 1844, Samuel Morse envió un mensaje histórico por telégrafo entre Washington y Baltimore.",
   "tech-03":"El código Morse usa señales cortas y largas para representar letras y números.",
@@ -138,9 +142,9 @@
   "tech-16":"Las máquinas de vapor mueven pistones con vapor producido al hervir agua.",
   "tech-17":"Una pantalla táctil puede detectar un dedo al notar un cambio en la corriente eléctrica.",
   "tech-18":"La Biblioteca del Congreso presenta el velcro como un ejemplo de diseño inspirado en la naturaleza.",
-  "tech-19":"Edison patentó un registrador eléctrico de votos en 1868, pero no logró venderlo.",
-  "tech-20":"Edison patentó un telégrafo cuádruple que podía enviar cuatro mensajes por un cable a la vez.",
-  "tech-21":"Edison patentó el fonógrafo en 1877.",
+  "tech-19":"Edison recibió la patente estadounidense 90.646 para un registrador de votos el 1 de junio de 1869; nunca se usó.",
+  "tech-20":"Edison desarrolló en 1874 un telégrafo cuádruplex que podía enviar cuatro mensajes a la vez por un cable.",
+  "tech-21":"Edison solicitó la patente del fonógrafo en 1877; se concedió el 19 de febrero de 1878.",
   "tech-22":"Edison trabajó en imágenes en movimiento desde finales de la década de 1880.",
   "tech-23":"El equipo de laboratorio de Edison ayudaba a probar y mejorar inventos; inventar suele ser colaborativo.",
   "tech-24":"La Biblioteca del Congreso señala que muchos inventos se apoyan en tecnologías e ideas anteriores.",

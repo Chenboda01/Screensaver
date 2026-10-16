@@ -225,10 +225,10 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             elapsed_seconds=elapsed_seconds,
             lock_seconds=self.lock_seconds,
         )
-        return self.bobos_timeline.status_at(
+        return self.pause_facts_for_bobos_status(self.bobos_timeline.status_at(
             elapsed_seconds, enabled=enabled,
             lock_deadline_seconds=self.lock_seconds if self.password_lock else None,
-        )
+        ), elapsed_seconds)
 
     def paintEvent(self, event):
         p = QPainter(self)

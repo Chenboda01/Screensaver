@@ -19,6 +19,7 @@ VALID_CATEGORIES = frozenset({
     "space", "moon", "mountain_weather", "forest", "technology", "water_cycle",
 })
 CONTENT_MODES = frozenset({"facts", "quotes", "both"})
+DEFAULT_LABELS = {"did_you_know": "DID YOU KNOW?", "bob_says": "BOB SAYS"}
 
 
 def _localized_texts(locale: str, root: str | Path, group: str) -> dict[str, str]:
@@ -113,6 +114,16 @@ def load_quotes(
     if unknown_translations:
         raise ValueError(f"translations refer to unknown quote ids: {sorted(unknown_translations)[:3]}")
     return tuple(checked)
+
+
+def localized_labels(
+    locale: str = "en", *, translations_root: str | Path = DEFAULT_TRANSLATIONS,
+) -> dict[str, str]:
+    """Return localized overlay labels, falling back to English per label."""
+    translated = _localized_texts(locale, translations_root, "labels")
+    if set(translated) - set(DEFAULT_LABELS):
+        raise ValueError("fact UI translations contain unknown labels")
+    return {key: translated.get(key, value) for key, value in DEFAULT_LABELS.items()}
 
 
 def category_for_scene(theme: str, weather: str = "clear", full_moon: bool = False) -> str:

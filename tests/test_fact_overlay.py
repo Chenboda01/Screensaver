@@ -2,6 +2,7 @@
 import configparser
 import os
 from pathlib import Path
+import random
 import time
 import unittest
 from unittest.mock import patch
@@ -13,8 +14,9 @@ from PyQt6.QtWidgets import QApplication
 
 from bobos import BobOSPhase
 from screenbot.app import Saver
-from screenbot.burnin import burn_in_clock_drift, burn_in_scene_scale, burn_in_scene_shift
-from screenbot.fact_overlay import FACT_CARD_MAX_CHARS
+from screenbot.burnin import burn_in_scene_scale, burn_in_scene_shift
+from screenbot.fact_overlay import FACT_CARD_MAX_CHARS, fact_font_size, wrap_complete_text
+from screenbot.facts import FactCycler, load_catalog
 
 
 THEMES = ("space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater")
@@ -51,30 +53,79 @@ class FactOverlayIntegrationTests(unittest.TestCase):
         saver._scenery_cache_key = None
         return saver
 
-    def test_real_saver_draws_a_safe_fact_card_for_each_theme(self):
+    @staticmethod
+    def alpha_bounds(image: QImage) -> QRectF | None:
+        xs, ys = [], []
+        for y in range(image.height()):
+            for x in range(image.width()):
+                if image.pixelColor(x, y).alpha() > 0:
+                    xs.append(x)
+                    ys.append(y)
+        if not xs:
+            return None
+        return QRectF(min(xs), min(ys), max(xs) - min(xs) + 1, max(ys) - min(ys) + 1)
+
+    def test_real_saver_draws_complete_localized_cards_at_supported_sizes(self):
         evidence = Path(os.environ.get(
             "SCREENBOT_FACT_EVIDENCE_DIR",
-            Path(__file__).resolve().parents[1] / ".omo" / "evidence" / "issue-27" / "themes",
+            Path(__file__).resolve().parents[1] / ".omo" / "evidence" / "issue-27" / "responsive",
         ))
         evidence.mkdir(parents=True, exist_ok=True)
-        saver = self.make_saver()
-        for theme in THEMES:
-            with self.subTest(theme=theme):
-                saver.theme = theme
-                saver._scenery_cache = None
-                saver._scenery_cache_key = None
-                image = QImage(1280, 720, QImage.Format.Format_ARGB32_Premultiplied)
-                image.fill(Qt.GlobalColor.transparent)
-                saver.render(image)
-                self.assertFalse(image.isNull())
-                self.assertIsNotNone(saver._fact_current)
-                self.assertLessEqual(len(saver._fact_current["text"]), FACT_CARD_MAX_CHARS)
-                rect = saver.fact_card_geometry(1280, 720, time.monotonic() - saver.start_time)
-                self.assertIsNotNone(rect)
-                self.assertTrue(image.save(str(evidence / f"{theme}.png")))
-        saver.close()
+        for locale in ("en", "es"):
+            with patch.dict(os.environ, {"LANGUAGE": locale}):
+                saver = self.make_saver()
+            saver.fact_cycler = FactCycler(rng=random.Random(19), locale=locale)
+            catalog = load_catalog(locale=locale)
+            longest = max((fact for facts in catalog.values() for fact in facts),
+                          key=lambda fact: len(fact["text"]))
+            for width, height in ((800, 600), (1280, 720), (1920, 1080)):
+                with self.subTest(locale=locale, size=(width, height)):
+                    saver.resize(width, height)
+                    saver.theme = "forest"
+                    saver._scenery_cache = None
+                    saver._scenery_cache_key = None
+                    elapsed = time.monotonic() - saver.start_time
+                    displayed = {**longest, "category": "forest", "kind": "fact"}
+                    saver._fact_category = "forest"
+                    saver._fact_current = displayed
+                    saver._fact_next = displayed
+                    saver._fact_started_at = elapsed
+                    saver._fact_states["forest"] = {
+                        "current": displayed, "next": displayed, "phase": 0.0,
+                    }
+                    image = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
+                    image.fill(Qt.GlobalColor.transparent)
+                    saver.render(image)
+                    self.assertFalse(image.isNull())
+                    self.assertIsNotNone(saver._fact_current)
+                    fact = longest["text"]
+                    self.assertLessEqual(len(fact), FACT_CARD_MAX_CHARS)
+                    rect = saver.fact_card_geometry(width, height, elapsed, fact)
+                    self.assertIsNotNone(rect)
+                    from PyQt6.QtGui import QFont, QFontMetricsF
+                    font = QFont("Sans Serif", fact_font_size(rect.width()))
+                    lines = wrap_complete_text(fact, font, rect.width() - 28)
+                    self.assertEqual(" ".join(lines), " ".join(fact.split()))
+                    metrics = QFontMetricsF(font)
+                    self.assertTrue(all(metrics.horizontalAdvance(line) <= rect.width() - 28
+                                        for line in lines))
+                    self.assertEqual(saver.fact_labels["did_you_know"],
+                                     "¿Sabías que?" if locale == "es" else "DID YOU KNOW?")
+                    self.assertTrue(image.save(str(evidence / f"{locale}-{width}x{height}.png")))
+            saver.resize(1280, 720)
+            for theme in THEMES:
+                with self.subTest(locale=locale, theme=theme):
+                    saver.theme = theme
+                    saver._scenery_cache = None
+                    saver._scenery_cache_key = None
+                    image = QImage(1280, 720, QImage.Format.Format_ARGB32_Premultiplied)
+                    image.fill(Qt.GlobalColor.transparent)
+                    saver.render(image)
+                    self.assertFalse(image.isNull())
+                    self.assertIsNotNone(saver._fact_current)
+            saver.close()
 
-    def test_card_avoids_every_clock_position_and_bob_bounds(self):
+    def test_card_avoids_actual_rendered_bob_and_clock_pixels(self):
         saver = self.make_saver()
         positions = (
             "top-left", "top-center", "top-right", "center-left", "center-center",
@@ -82,34 +133,34 @@ class FactOverlayIntegrationTests(unittest.TestCase):
         )
         for position in positions:
             saver.clock_position = position
-            rect = saver.fact_card_geometry(1280, 720, 37)
+            saver._advance_facts(37, "clear", False)
+            rect = saver.fact_card_geometry(1280, 720, 37, saver._fact_current["text"])
             with self.subTest(position=position):
                 self.assertIsNotNone(rect)
-                scale = min(1280 / 1250, 720 / 800, 1.35)
-                sway = min(1280 * .075, 85)
-                bob = __import__("PyQt6.QtCore", fromlist=["QRectF"]).QRectF(
-                    1280 * .5 - sway - 210 * scale,
-                    720 * .56 - 9 - 200 * scale,
-                    2 * sway + 420 * scale,
-                    18 + 320 * scale,
-                )
-                self.assertFalse(rect.intersects(bob))
-                self.assertLess(rect.bottom(), 720 * .78)
-                row, column = position.split("-")
-                clock_x = {"left": .035, "center": .29, "right": .545}[column] * 1280
-                clock_y = {"top": .08, "center": .38, "bottom": .65}[row] * 720
+                bob_image = QImage(1280, 720, QImage.Format.Format_ARGB32_Premultiplied)
+                bob_image.fill(Qt.GlobalColor.transparent)
+                bob_painter = QPainter(bob_image)
+                saver.bob(bob_painter, 1280, 720, 37, saver.bobos_status(37))
+                bob_painter.end()
+                bob_pixels = self.alpha_bounds(bob_image)
+                self.assertIsNotNone(bob_pixels)
+                self.assertFalse(rect.intersects(bob_pixels))
+
+                clock_image = QImage(1280, 720, QImage.Format.Format_ARGB32_Premultiplied)
+                clock_image.fill(Qt.GlobalColor.transparent)
+                clock_painter = QPainter(clock_image)
                 scene_offset = burn_in_scene_shift("standard", 37)
                 scene_scale = burn_in_scene_scale(1280, 720)
-                drift_x, drift_y = burn_in_clock_drift(
-                    "standard", 37, 1280, 720, position, saver.clock_font_size,
-                    saver.show_date, False, scene_offset, scene_scale,
-                )
-                clock = QRectF(clock_x + drift_x, clock_y + drift_y, 1280 * .42,
-                               saver.clock_font_size * (1.5 + .62 * saver.show_date))
-                self.assertFalse(rect.intersects(clock))
+                saver.clock(clock_painter, 1280, 720, "standard", 37,
+                            scene_offset, scene_scale)
+                clock_painter.end()
+                clock_pixels = self.alpha_bounds(clock_image)
+                self.assertIsNotNone(clock_pixels)
+                self.assertFalse(rect.intersects(clock_pixels))
         saver.now_playing_enabled = True
         saver.now_playing = object()
-        rect = saver.fact_card_geometry(1280, 720, 37)
+        saver._advance_facts(37, "clear", False)
+        rect = saver.fact_card_geometry(1280, 720, 37, saver._fact_current["text"])
         self.assertIsNotNone(rect)
         self.assertFalse(rect.intersects(saver.media_card_rect()))
         saver.close()
@@ -141,9 +192,60 @@ class FactOverlayIntegrationTests(unittest.TestCase):
         saver._fact_next = None
         saver._fact_category = None
         saver._fact_started_at = None
+        saver._fact_states.clear()
         fact_frame(90, BobOSPhase.HOME)
         self.assertIsNone(saver._fact_current)
         saver._fact_current = current
+        saver.close()
+
+    def test_category_switch_preserves_pending_fact_and_pauses_its_display_interval(self):
+        saver = self.make_saver()
+        saver.fact_cycler = FactCycler(rng=random.Random(4815))
+        saver.facts_interval_minutes = 1
+        saver.theme = "forest"
+        saver._advance_facts(0, "clear", False)
+        first_forest = saver._fact_current["id"]
+        pending_forest = saver._fact_next["id"]
+        shown = [("forest", saver._fact_current["id"])]
+
+        saver.rain_enabled = True
+        saver._advance_facts(25, "rain", False)
+        first_water = saver._fact_current["id"]
+        shown.append(("water_cycle", saver._fact_current["id"]))
+        self.assertEqual(saver._fact_category, "water_cycle")
+        saver.rain_enabled = False
+        saver._advance_facts(50, "clear", False)
+        self.assertEqual(saver._fact_category, "forest")
+        self.assertEqual(saver._fact_current["id"], first_forest)
+        self.assertEqual(saver._fact_next["id"], pending_forest)
+        shown.append(("forest", saver._fact_current["id"]))
+        saver.rain_enabled = True
+        saver._advance_facts(85, "rain", False)
+        self.assertEqual(saver._fact_current["id"], first_water)
+        shown.append(("water_cycle", saver._fact_current["id"]))
+        saver.rain_enabled = False
+        saver._advance_facts(110, "clear", False)
+        self.assertEqual(saver._fact_current["id"], pending_forest)
+        shown.append(("forest", saver._fact_current["id"]))
+        self.assertEqual(shown, [
+            ("forest", first_forest), ("water_cycle", first_water),
+            ("forest", first_forest), ("water_cycle", first_water),
+            ("forest", pending_forest),
+        ])
+        saver.close()
+
+    def test_hidden_bobos_minutes_do_not_consume_a_fact(self):
+        saver = self.make_saver()
+        saver.facts_interval_minutes = 1
+        saver._advance_facts(0, "clear", False)
+        first = saver._fact_current["id"]
+        pending = saver._fact_next["id"]
+        saver.pause_fact_overlay(15)
+        saver._advance_facts(180, "clear", False, visible=False)
+        saver._advance_facts(180, "clear", False, visible=True)
+        self.assertEqual(saver._fact_current["id"], first)
+        self.assertEqual(saver._fact_next["id"], pending)
+        self.assertEqual(saver._fact_states["forest"]["phase"], 15)
         saver.close()
 
     def test_interval_crossfades_and_advances_without_a_boundary_flash(self):

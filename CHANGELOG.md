@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Added
-- Added an offline, source-noted "Did you know?" card with 30 kid-friendly facts per scene category, theme/weather/full-Moon matching, original Bob quotes, no-repeat cycles, smooth fades, bounded text, and Spanish translations. KDE settings control visibility, a 2–5 minute interval, and Facts/Quotes/Both; the card avoids Bob, the clock, BobOS, captions, and other overlays while following burn-in shifts.
+- Added an offline, source-noted "Did you know?" card with 30 kid-friendly facts per scene category, theme/weather/full-Moon matching, original Bob quotes, no-repeat cycles, smooth fades, complete adaptive text layout, localized headings, and Spanish translations. Corrected Edison patent dates and linked claims to the patent records. KDE settings control visibility, a 2–5 minute interval, and Facts/Quotes/Both; the card avoids Bob, the clock, BobOS, captions, and other overlays while following burn-in shifts.
 - Added an opt-in primary-screen Now playing card with background MPRIS metadata updates, pause fade-out, safe title shortening, and a translated KDE Clock setting that respects Apply/Discard. Media stays hidden in previews and when the session bus is unavailable.
 - Added Bob Camera with a bounded, in-memory selfie of the current theme and Live Sky, plus Bob Pet with animated snack and play scenes. Both apps respect Reduce motion and flashes. Camera photos appear in fictional Bob Files; neither app accesses devices, personal files, or external services.
 - BobOS now selects 4–6 apps per adventure without repeating the same selection consecutively. Seeded schedules keep timing reproducible, the complete preview includes every app, and an adventure starts only if its full selected duration fits before KDE locks.
