@@ -49,7 +49,7 @@ def make_saver(theme: str, *, bobos: bool = False) -> Saver:
         "theme": theme, "show_clock": "false", "password_lock": "false",
         "live_sky_enabled": "false", "bobos_enabled": "false",
     }
-    with patch("screensaver.read_settings", return_value=settings), \
+    with patch("screenbot.app.read_settings", return_value=settings), \
          patch("screensaver.random.Random", side_effect=seeded_random), \
          patch("screensaver.time.monotonic", return_value=0.):
         saver = Saver(preview_bobos=bobos)
