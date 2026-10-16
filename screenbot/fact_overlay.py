@@ -224,6 +224,7 @@ class FactOverlayMixin:
                 old_state = self._fact_states[self._fact_category]
                 if old_state.get("last_visible", False):
                     old_state["phase"] = max(0.0, elapsed - self._fact_started_at)
+                old_state["last_visible"] = False
             self._fact_category = category
             state = self._fact_states.get(category)
             if state is None:
@@ -238,6 +239,8 @@ class FactOverlayMixin:
             self._fact_started_at = elapsed - float(state["phase"])
         assert self._fact_started_at is not None and self._fact_current is not None
         state = self._fact_states[category]
+        if visible is not False and not state.get("last_visible", False):
+            self._fact_started_at = elapsed - float(state["phase"])
         if visible is None:
             # Preparation selects/restores a category before layout, without
             # turning a visible interval into a paused interval on every paint.

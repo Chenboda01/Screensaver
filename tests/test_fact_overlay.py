@@ -290,6 +290,37 @@ class FactOverlayIntegrationTests(unittest.TestCase):
         self.assertNotEqual(alphas[30], alphas[59])
         saver.close()
 
+    def test_real_paint_resumes_fact_phase_after_bobos_visibility(self):
+        saver = self.make_saver()
+        saver.facts_interval_minutes = 1
+        saver.fact_cycler = FactCycler(rng=random.Random(9127))
+
+        def paint(elapsed: float, phase: BobOSPhase):
+            image = QImage(800, 600, QImage.Format.Format_ARGB32_Premultiplied)
+            image.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(image)
+            alpha = saver.draw_fact_overlay(painter, 800, 600, elapsed, phase)
+            painter.end()
+            return alpha
+
+        paint(0, BobOSPhase.EXPLORING)
+        original_id = saver._fact_current["id"]
+        pending_id = saver._fact_next["id"]
+        paint(15, BobOSPhase.HOME)
+        self.assertEqual(saver._fact_states["forest"]["phase"], 15)
+
+        resumed_alpha = paint(180, BobOSPhase.EXPLORING)
+        self.assertEqual(saver._fact_current["id"], original_id)
+        self.assertEqual(saver._fact_next["id"], pending_id)
+        self.assertEqual(saver._fact_states["forest"]["phase"], 15)
+        self.assertEqual(resumed_alpha, (1.0, 0.0))
+
+        paint(224, BobOSPhase.EXPLORING)
+        self.assertEqual(saver._fact_current["id"], original_id)
+        paint(225, BobOSPhase.EXPLORING)
+        self.assertEqual(saver._fact_current["id"], pending_id)
+        saver.close()
+
     def test_off_switch_disables_card_without_advancing_the_cycler(self):
         saver = self.make_saver()
         saver.facts_enabled = False
