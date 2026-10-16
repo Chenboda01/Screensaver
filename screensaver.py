@@ -15,9 +15,9 @@ import time
 from pathlib import Path
 from typing import Final
 
-from PyQt6.QtCore import QDateTime, QPointF, QRectF, QSettings, Qt, QTimer
+from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QDateTime, QPointF, QRectF, QSettings, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
-from PyQt6.QtGui import QShowEvent
+from PyQt6.QtGui import QCursor, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 
 from live_sky import SkyPosition, sky_position
@@ -52,9 +52,9 @@ PHONE_UI_PHASES: Final[frozenset[BobOSPhase]] = frozenset(
 )
 
 
-def read_settings():
+def read_settings(config_path: Path | None = None) -> configparser.ConfigParser:
     settings = configparser.ConfigParser()
-    path = Path.home() / '.config' / 'screenbot-screensaver.ini'
+    path = config_path if config_path is not None else Path.home() / '.config' / 'screenbot-screensaver.ini'
     settings.read(path)
     if settings.has_section('Screensaver'):
         settings.set('Screensaver', 'live_sky_location', read_location_setting(QSettings(str(path), QSettings.Format.IniFormat)))
@@ -69,15 +69,19 @@ def selected_theme(settings):
 
 
 class Saver(QWidget):
-    def __init__(self, *, preview_bobos: bool = False, preview_wifi_animation: bool | None = None):
+    def __init__(self, *, preview: bool = False, config_path: Path | None = None,
+                 preview_bobos: bool = False, preview_wifi_animation: bool | None = None):
         super().__init__()
         self.setWindowTitle('ScreenBot Screensaver')
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMouseTracking(True)
         self.setCursor(Qt.CursorShape.BlankCursor)
-        settings = read_settings()
+        self.quick_preview = preview
+        self.is_preview = preview or preview_bobos
+        settings = read_settings(config_path)
         self.theme = selected_theme(settings)
+        self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
         self.clock_format = settings.get('Screensaver', 'clock_format', fallback='12h').strip()
         if self.clock_format not in ('12h', '24h'):
@@ -115,9 +119,9 @@ class Saver(QWidget):
                                        location=self.live_sky_location, interval=interval,
                                        coordinates=coordinates,
                                        timezone_name=settings.get('Screensaver', 'live_sky_timezone', fallback=''),
-                                       config_path=Path.home() / '.config' / 'screenbot-screensaver.ini')
+                                       config_path=None if self.is_preview else Path.home() / '.config' / 'screenbot-screensaver.ini')
 
-        self.password_lock = settings.getboolean('Screensaver', 'password_lock', fallback=False)
+        self.password_lock = not self.is_preview and settings.getboolean('Screensaver', 'password_lock', fallback=False)
         try:
             minutes = settings.getint('Screensaver', 'lock_minutes', fallback=2)
         except ValueError:
@@ -133,6 +137,8 @@ class Saver(QWidget):
         self.bobos_enabled = settings.getboolean('Screensaver', 'bobos_enabled', fallback=True)
         if preview_bobos:
             self.bobos_enabled = True
+        if preview:
+            self.bobos_enabled = False
         try:
             bobos_delay_minutes = settings.getint('Screensaver', 'bobos_activation_delay', fallback=3)
         except ValueError:
@@ -169,6 +175,7 @@ class Saver(QWidget):
     def showEvent(self, event: QShowEvent) -> None:
         """Start all screensaver-relative timers when Bob first becomes visible."""
         self.start_time = time.monotonic()
+        self.preview_mouse_origin = QCursor.pos()
         super().showEvent(event)
 
     def bobos_status(self, elapsed_seconds: float) -> BobOSStatus:
@@ -213,10 +220,40 @@ class Saver(QWidget):
             self.draw_phone_zoom(p, w, h, bobos_status, t)
         if self.show_timer:
             self.countdown(p, w, h, t)
+        if self.quick_preview:
+            self.preview_hint(p, w, h, t)
         p.end()
         if self.password_lock and t >= self.lock_seconds and t >= self.next_lock_attempt:
             self.next_lock_attempt = t + 5
             QTimer.singleShot(0, self.request_kde_lock)
+
+    def preview_hint(self, painter: QPainter, width: int, height: int, elapsed: float) -> None:
+        """Explain the temporary view, including missing Live Sky data, independently of the clock."""
+        if elapsed >= 8:
+            return
+        theme_name = 'Futuristic City' if self.theme == 'city' else self.theme.title()
+        selection = f'Random → {theme_name}' if self.random_theme else theme_name
+        lines = [f'Preview: {selection} · Move the mouse or press any key to close']
+        if self.live_sky_enabled:
+            if not self.live_sky_location:
+                lines.append('Live Sky: choose a city in Settings · showing time and moon only')
+            elif not self.live_weather.located:
+                lines.append('Live Sky: location loading or unavailable · showing time and moon only')
+            elif self.theme != 'space' and not self.live_weather.fresh:
+                lines.append('Live Sky: weather loading or unavailable · showing time and moon only')
+        painter.save()
+        painter.setOpacity(min(1., max(0., (8-elapsed)/2)))
+        painter.setFont(QFont('Sans Serif', 12))
+        bounds = QRectF(width*.05, height*.02, width*.9, 90)
+        flags = Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap
+        text = '\n'.join(lines)
+        bounds = painter.boundingRect(bounds, flags, text).adjusted(-14, -8, 14, 8)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(0, 0, 0, 190))
+        painter.drawRoundedRect(bounds, 8, 8)
+        painter.setPen(QColor('#ecf7ff'))
+        painter.drawText(bounds, flags, text)
+        painter.restore()
 
     def space(self, p, w, h, t):
         bg = QLinearGradient(0, 0, w, h)
@@ -475,10 +512,15 @@ class Saver(QWidget):
     def live_background(self, p: QPainter, w: int, h: int, t: float) -> None:
         now = time.time()
         if self.live_sky_position is None or abs(now-self.live_sky_sample_time) >= 1:
-            self.live_sky_position = sky_position(datetime.now(timezone.utc), self.live_weather.latitude, self.live_weather.longitude)
+            latitude, longitude = self.live_weather.latitude, self.live_weather.longitude
+            if self.quick_preview and not self.live_weather.located:
+                offset = datetime.now().astimezone().utcoffset()
+                latitude = 0.
+                longitude = offset.total_seconds()/240 if offset is not None else 0.
+            self.live_sky_position = sky_position(datetime.now(timezone.utc), latitude, longitude)
             self.live_sky_sample_time = now
         sky = self.live_sky_position
-        if not self.live_weather.located:
+        if not self.live_weather.located and not self.quick_preview:
             sky = SkyPosition(-20, 0, -90, 0, 0, False)
         draw_sky(p, w, h, t, sky, self.live_weather.weather)
         p.setPen(Qt.PenStyle.NoPen)
@@ -1251,7 +1293,7 @@ class Saver(QWidget):
         p.restore()
 
     def request_kde_lock(self):
-        if self.lock_attempted:
+        if self.is_preview or self.lock_attempted:
             return
         self.lock_attempted = True
         try:
@@ -1270,6 +1312,10 @@ class Saver(QWidget):
         self.update()
 
     def mouseMoveEvent(self, event):
+        if self.is_preview:
+            if event.globalPosition().toPoint() != self.preview_mouse_origin:
+                QApplication.quit()
+            return
         pos = event.position()
         if self.old_mouse is not None and time.monotonic() - self.start_time > 1.5:
             d = pos - self.old_mouse
@@ -1285,20 +1331,46 @@ class Saver(QWidget):
 
 
 def main(arguments: list[str] | None = None) -> int:
-    """Launch the screensaver, optionally in its lock-safe short BobOS preview."""
+    """Launch the screensaver or a deliberate, lock-free settings preview."""
     command_arguments = sys.argv[1:] if arguments is None else arguments
-    preview = '--preview-bobos' in command_arguments
+    app = QApplication(sys.argv[:1])
+    parser = QCommandLineParser()
+    parser.addHelpOption()
+    parser.addOptions([
+        QCommandLineOption('preview', 'Preview the theme without locking or starting BobOS.'),
+        QCommandLineOption('preview-bobos', 'Preview the full BobOS adventure without locking.'),
+        QCommandLineOption('config', 'Read temporary settings for a preview.', 'path'),
+        QCommandLineOption('screen', 'Show on the named display.', 'name'),
+        QCommandLineOption('wifi-animation', 'Show the BobOS connection animation.'),
+        QCommandLineOption('no-wifi-animation', 'Skip the BobOS connection animation.'),
+    ])
+    parser.process([sys.argv[0], *command_arguments])
+    preview = parser.isSet('preview')
+    preview_bobos = parser.isSet('preview-bobos')
+    if (preview and preview_bobos) or (parser.isSet('config') and not (preview or preview_bobos)):
+        parser.showHelp(2)
     if '--wifi-animation' in command_arguments:
         wifi_override = True
     elif '--no-wifi-animation' in command_arguments:
         wifi_override = False
     else:
         wifi_override = None
-    app = QApplication(sys.argv[:1])
-    saver = Saver(
-        preview_bobos=preview,
-        preview_wifi_animation=wifi_override,
-    )
+    try:
+        saver = Saver(
+            preview=preview,
+            config_path=Path(parser.value('config')) if parser.isSet('config') else None,
+            preview_bobos=preview_bobos,
+            preview_wifi_animation=wifi_override,
+        )
+    except (OSError, configparser.Error, ValueError) as error:
+        print(f'Could not read ScreenBot settings: {error}', file=sys.stderr)
+        return 1
+    if parser.isSet('screen'):
+        for screen in app.screens():
+            if screen.name() == parser.value('screen'):
+                saver.setScreen(screen)
+                saver.move(screen.geometry().topLeft())
+                break
     saver.showFullScreen()
     saver.activateWindow()
     return app.exec()
