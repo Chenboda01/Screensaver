@@ -6,6 +6,18 @@ import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCMUtils
 
 KCMUtils.SimpleKCM {
+    component ThemedSwitch: Controls.Switch {
+        id: control
+        contentItem: Controls.Label {
+            text: control.text
+            font: control.font
+            color: Kirigami.Theme.textColor
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+            leftPadding: control.indicator.width + control.spacing
+        }
+    }
+
     ColumnLayout {
         width: parent.width
         spacing: Kirigami.Units.largeSpacing
@@ -86,7 +98,7 @@ KCMUtils.SimpleKCM {
                 }
                 onAccepted: stageSelectedFolder(selectedFolder)
             }
-            Controls.Switch {
+            ThemedSwitch {
                 objectName: "photoIncludeSubfolders"
                 Kirigami.FormData.label: i18nc("@label", "Subfolders:")
                 text: checked ? i18nc("@label", "Include subfolders") : i18nc("@label", "Only this folder")
