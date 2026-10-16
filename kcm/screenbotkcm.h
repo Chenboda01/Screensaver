@@ -26,6 +26,7 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool thunderstormsEnabled READ thunderstormsEnabled WRITE setThunderstormsEnabled NOTIFY thunderstormsEnabledChanged)
     Q_PROPERTY(bool fogEnabled READ fogEnabled WRITE setFogEnabled NOTIFY fogEnabledChanged)
     Q_PROPERTY(bool shootingStarsEnabled READ shootingStarsEnabled WRITE setShootingStarsEnabled NOTIFY shootingStarsEnabledChanged)
+    Q_PROPERTY(bool bobWeatherEnabled READ bobWeatherEnabled WRITE setBobWeatherEnabled NOTIFY bobWeatherEnabledChanged)
     Q_PROPERTY(bool liveSkyEnabled READ liveSkyEnabled WRITE setLiveSkyEnabled NOTIFY liveSkyEnabledChanged)
     Q_PROPERTY(QStringList liveSkyLocations READ liveSkyLocations CONSTANT)
     Q_PROPERTY(QString liveSkyLocation READ liveSkyLocation WRITE setLiveSkyLocation NOTIFY liveSkyLocationChanged)
@@ -67,6 +68,7 @@ public:
     bool thunderstormsEnabled() const { return m_thunderstormsEnabled; }
     bool fogEnabled() const { return m_fogEnabled; }
     bool shootingStarsEnabled() const { return m_shootingStarsEnabled; }
+    bool bobWeatherEnabled() const { return m_bobWeatherEnabled; }
     bool liveSkyEnabled() const { return m_liveSkyEnabled; }
     QStringList liveSkyLocations() const { return m_liveSkyLocations; }
     QString liveSkyLocation() const { return m_liveSkyLocation; }
@@ -101,6 +103,7 @@ public:
     void setThunderstormsEnabled(bool value);
     void setFogEnabled(bool value);
     void setShootingStarsEnabled(bool value);
+    void setBobWeatherEnabled(bool value);
     void setLiveSkyEnabled(bool value);
     void setLiveSkyLocation(const QString &value);
     void setLiveSkyUnits(const QString &value);
@@ -139,6 +142,7 @@ Q_SIGNALS:
     void thunderstormsEnabledChanged();
     void fogEnabledChanged();
     void shootingStarsEnabledChanged();
+    void bobWeatherEnabledChanged();
     void liveSkyEnabledChanged();
     void liveSkyLocationChanged();
     void liveSkyUnitsChanged();
@@ -179,6 +183,7 @@ private:
     bool m_thunderstormsEnabled = false;
     bool m_fogEnabled = false;
     bool m_shootingStarsEnabled = false;
+    bool m_bobWeatherEnabled = true;
     bool m_liveSkyEnabled = false;
     QStringList m_liveSkyLocations;
     QString m_liveSkyLocation;
@@ -202,6 +207,7 @@ private:
     bool m_savedThunderstormsEnabled = false;
     bool m_savedFogEnabled = false;
     bool m_savedShootingStarsEnabled = false;
+    bool m_savedBobWeatherEnabled = true;
     bool m_savedLiveSkyEnabled = false;
     QString m_savedLiveSkyLocation;
     QString m_savedLiveSkyUnits = QStringLiteral("c");

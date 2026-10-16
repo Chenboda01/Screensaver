@@ -10,7 +10,9 @@ from screenbot.weather_accessories import (
     WeatherConditions,
     WeatherPreview,
     WeatherReaction,
+    compose_weather_accessories,
     parse_weather_category,
+    parse_weather_preview,
     resolve_weather_look,
     transition_accessories,
 )
@@ -142,6 +144,22 @@ def test_space_suppresses_weather_items_but_keeps_time_reactions() -> None:
     assert actual.sleepy_extension_seconds == 8.0
 
 
+def test_offline_weather_has_no_accessories_but_keeps_known_moon_reaction() -> None:
+    # Given expired weather with a locally known sky position
+    request = _request(
+        WeatherCategory.RAIN,
+        fresh=False,
+        sun_altitude=12.0,
+        moon_altitude=20.0,
+        elapsed=23.5,
+    )
+    # When the current sky is resolved
+    actual = resolve_weather_look(request)
+    # Then stale rain is ignored while the local moon reaction remains available
+    assert actual.accessories == ()
+    assert actual.reaction is WeatherReaction.LOOK_UP
+
+
 def test_weather_reactions_cover_fog_lightning_wind_moon_and_deep_night() -> None:
     # Given visible weather and astronomy conditions
     fog = resolve_weather_look(_request(WeatherCategory.FOG))
@@ -204,6 +222,59 @@ def test_preview_override_respects_disabled_accessory_setting() -> None:
     actual = resolve_weather_look(request)
     # Then the preview cannot bypass the appearance setting
     assert actual.accessories == ()
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("rain", WeatherPreview.RAIN),
+        ("snow", WeatherPreview.SNOW),
+        ("clear-noon", WeatherPreview.CLEAR_NOON),
+        ("invalid", None),
+        (None, None),
+    ],
+)
+def test_preview_argument_is_allowlisted_once(
+    value: str | None,
+    expected: WeatherPreview | None,
+) -> None:
+    # Given a user-supplied preview argument
+    # When it is parsed at the command boundary
+    actual = parse_weather_preview(value)
+    # Then only documented conditions reach the rendering model
+    assert actual is expected
+
+
+@pytest.mark.parametrize(
+    ("custom", "weather", "expected"),
+    [
+        (
+            "cap",
+            (WeatherAccessory.WOOL_HAT, WeatherAccessory.SCARF, WeatherAccessory.UMBRELLA),
+            (WeatherAccessory.SCARF, WeatherAccessory.UMBRELLA),
+        ),
+        (
+            "crown",
+            (WeatherAccessory.NIGHTCAP, WeatherAccessory.SUNGLASSES),
+            (WeatherAccessory.SUNGLASSES,),
+        ),
+        (
+            "bow-tie",
+            (WeatherAccessory.WOOL_HAT, WeatherAccessory.SCARF),
+            (WeatherAccessory.WOOL_HAT, WeatherAccessory.SCARF),
+        ),
+    ],
+)
+def test_custom_headwear_only_replaces_conflicting_weather_headwear(
+    custom: str,
+    weather: tuple[WeatherAccessory, ...],
+    expected: tuple[WeatherAccessory, ...],
+) -> None:
+    # Given a custom accessory and a separate weather accessory result
+    # When their geometric layers are composed
+    actual = compose_weather_accessories(custom, weather)
+    # Then custom headwear remains visible while nonconflicting weather items stack
+    assert actual == expected
 
 
 @pytest.mark.parametrize("progress", [-1.0, 0.0, 0.5, 1.0, 2.0])

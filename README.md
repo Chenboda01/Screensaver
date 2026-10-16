@@ -138,6 +138,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
 - Individually enabled rain, snow, thunderstorms, and fog on landscape themes; optional shooting stars are limited to landscapes, and Space stays free of weather overlays
 - Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
+- Optional head-local Bob weather reactions while Live Sky is on: a rain umbrella, snow hat and scarf, strong-sun sunglasses, fog squint, lightning surprise, wind response, moon glances, and a deep-night sleepy expression. Use `--preview-weather rain`, `snow`, or `clear-noon` with a quick preview to see the accessories without waiting for live conditions
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
 - Optional primary-screen AI agent status badge with elapsed work time, confirmed finish time, and one short Bob celebration; uncertain states remain hidden and no prompts, filenames, or output appear on screen
 - Manual launches remain available regardless of the automatic agent policy
@@ -150,6 +151,8 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 ### Live Sky location and network privacy
 
 Live Sky is off by default and makes no network requests while disabled. When enabled, choose a country and city from `countries_and_cities.txt` in KDE Settings. Only that selected place is sent to Open-Meteo to resolve coordinates and request current weather; the app does not send your public IP to a location provider. Weather observations and resolved coordinates are cached locally in `~/.cache/screenbot/live-sky.json`; weather is ignored after three hours. If weather is unavailable, the screensaver keeps rendering from its local sky calculations and the last resolved coordinates; on a first offline run with no cached coordinates it uses a neutral fallback sky. Solar and lunar positions are approximate visual calculations, not navigation-grade astronomy.
+
+Bob's weather accessories are enabled by default and can be turned off in KDE Settings → Weather. The toggle only becomes available when Live Sky is enabled and a non-Space theme is selected. Force an accessory for a quick local preview with, for example, `bash ~/ScreenBot/screensaver/start.sh --preview --preview-weather snow`; the supported preview values are `rain`, `snow`, `thunderstorm`, `fog`, `clear-noon`, and `unknown`. Preview overrides do not request network data, and Space always suppresses weather accessories.
 
 ## Requirements
 

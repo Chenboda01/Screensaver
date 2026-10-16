@@ -120,6 +120,17 @@ KCMUtils.SimpleKCM {
                 wrapMode: Text.WordWrap
             }
             Controls.Switch {
+                objectName: "bobWeatherEnabledSwitch"
+                Kirigami.FormData.label: i18nc("@label", "Bob's weather accessories:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
+                checked: kcm.bobWeatherEnabled
+                enabled: kcm.liveSkyEnabled && kcm.theme !== "space"
+                opacity: enabled ? 1.0 : 0.7
+                onToggled: kcm.bobWeatherEnabled = checked
+                Controls.ToolTip.text: i18nc("@info:tooltip", "Bob can wear weather accessories when Live Sky is enabled.")
+                Controls.ToolTip.visible: hovered
+            }
+            Controls.Switch {
                 Kirigami.FormData.label: i18nc("@label", "Rain:")
                 text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.rainEnabled

@@ -28,6 +28,7 @@ class BobRenderer:
         p.translate(x, y)
         p.scale(scale, scale)
         rotation = math.sin(pose_time*.72)*2.4
+        rotation += self.weather_tilt_degrees(status, t)
         if celebration_elapsed is not None:
             rotation += math.sin(celebration_elapsed*math.tau*.72)*13
         p.rotate(rotation)
@@ -54,10 +55,10 @@ class BobRenderer:
         if celebrating and celebration_elapsed is not None:
             confetti = ('#ffcf69', '#77e4a0', '#63d9ff', '#e89aff', '#ff8d88', '#fff1a6')
             p.setPen(Qt.PenStyle.NoPen)
-            for index, color in enumerate(confetti):
+            for index, confetti_color in enumerate(confetti):
                 angle = index * math.tau / len(confetti) + celebration_elapsed * 1.8
                 radius = 108 + 12 * math.sin(celebration_elapsed * 4.0 + index)
-                p.setBrush(QColor(color))
+                p.setBrush(QColor(confetti_color))
                 p.drawEllipse(QPointF(math.cos(angle) * radius,
                                       -24 + math.sin(angle) * radius), 4, 5)
         p.setPen(Qt.PenStyle.NoPen)
@@ -74,6 +75,13 @@ class BobRenderer:
             p.setPen(QPen(eyes, 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             p.drawLine(-35, -22, -12, -22)
             p.drawLine(12, -22, 35, -22)
+        elif mood == 'squint':
+            p.setPen(QPen(eyes, 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawLine(-38, -18, -12, -18)
+            p.drawLine(12, -18, 38, -18)
+        elif mood == 'look-up':
+            p.drawEllipse(QPointF(-24, -30), 10, 13)
+            p.drawEllipse(QPointF(24, -30), 10, 13)
         elif mood == 'curious':
             p.drawEllipse(QPointF(-24, -18), 11, 16)
             p.drawEllipse(QPointF(24, -18), 11, 16)
@@ -87,7 +95,7 @@ class BobRenderer:
             p.drawRoundedRect(QRectF(-37, -30, 26, 20), 9, 9)
             p.drawRoundedRect(QRectF(11, -30, 26, 20), 9, 9)
         p.setPen(QPen(eyes, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        if mood == 'curious':
+        if mood in ('curious', 'look-up'):
             p.drawEllipse(QPointF(0, 6), 5, 7)
         elif mood == 'confused':
             p.drawArc(QRectF(-16, 4, 32, 18), 20*16, 140*16)
@@ -122,6 +130,10 @@ class BobRenderer:
     def weather_mood_override(self, status: BobOSStatus, t: float) -> str | None:
         """Optional weather-owned expression, separate from the normal mood cycle."""
         return None
+
+    def weather_tilt_degrees(self, status: BobOSStatus, t: float) -> float:
+        """Optional weather-owned tilt, separate from the base Bob sway."""
+        return 0.0
 
     @staticmethod
     def draw_custom_accessory(p: QPainter, accessory: str, palette: dict[str, tuple[int, int, int]]) -> None:

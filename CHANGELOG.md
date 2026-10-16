@@ -6,6 +6,7 @@
 - Added an optional primary-screen AI agent status badge with elapsed work time and confirmed completion time. Status polling runs in a background thread, uncertain states stay hidden, and Bob celebrates once after a confirmed finish without displaying agent content.
 - Added Off, Standard, and Strong OLED burn-in protection. Standard slowly shifts the scene and clock; Strong fades to black over 30–60 minutes, with input closing the screensaver.
 - Suppressed rain, snow, thunderstorms, fog, and shooting-star overlays in the Space theme; manual weather and shooting-star settings remain available on landscape themes.
+- Added optional Live Sky reactions for Bob: a smoothly animated umbrella, sunglasses, wool hat, scarf, fog and lightning expressions, wind tilt, moon glances, and a longer deep-night sleepy expression. Added a staged KDE toggle and deterministic weather preview overrides.
 
 ## V22
 

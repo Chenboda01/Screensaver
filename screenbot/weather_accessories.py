@@ -100,6 +100,9 @@ DEFAULT_LOOK: Final[BobWeatherLook] = BobWeatherLook(
     scarf_flutter=0.0,
     sleepy_extension_seconds=0.0,
 )
+CUSTOM_HEADWEAR: Final[frozenset[str]] = frozenset({
+    "cap", "crown", "flower", "headphones", "antenna-ball",
+})
 
 
 def parse_weather_category(value: str | None) -> WeatherCategory:
@@ -110,6 +113,16 @@ def parse_weather_category(value: str | None) -> WeatherCategory:
         return WeatherCategory(value)
     except ValueError:
         return WeatherCategory.UNKNOWN
+
+
+def parse_weather_preview(value: str | None) -> WeatherPreview | None:
+    """Parse an explicit command-line preview value; absent/invalid means none."""
+    if value is None:
+        return None
+    try:
+        return WeatherPreview(value)
+    except ValueError:
+        return None
 
 
 def resolve_weather_look(request: WeatherAccessoryRequest) -> BobWeatherLook:
@@ -200,6 +213,19 @@ def transition_accessories(
         if opacity > 0.0:
             frames.append(AccessoryOpacity(accessory, opacity, (1.0 - opacity) * -18.0))
     return tuple(frames)
+
+
+def compose_weather_accessories(
+    custom_accessory: str,
+    weather_accessories: tuple[WeatherAccessory, ...],
+) -> tuple[WeatherAccessory, ...]:
+    """Keep user headwear when a weather hat would occupy the same head area."""
+    if custom_accessory in CUSTOM_HEADWEAR:
+        return tuple(
+            accessory for accessory in weather_accessories
+            if accessory not in (WeatherAccessory.WOOL_HAT, WeatherAccessory.NIGHTCAP)
+        )
+    return weather_accessories
 
 
 def _preview_values(override: WeatherPreview) -> tuple[WeatherCategory, float | None]:
