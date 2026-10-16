@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">ScreenBot icon</title>
+  <desc id="desc">A friendly floating robot head with cyan eyes and antennae.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#10243e"/>
+      <stop offset="1" stop-color="#07111f"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2=".9" y2="1">
+      <stop stop-color="#f6fbff"/>
+      <stop offset="1" stop-color="#b9d5e8"/>
+    </linearGradient>
+    <filter id="glow" x="-.5" y="-.5" width="2" height="2">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="66" fill="url(#bg)"/>
+  <circle cx="128" cy="128" r="91" fill="#12324c" opacity=".72"/>
+  <path d="M128 38v28" fill="none" stroke="#8cecff" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="128" cy="34" r="13" fill="#62def8" filter="url(#glow)"/>
+  <path d="M69 94q0-21 22-21h74q22 0 22 21v70q0 22-22 22H91q-22 0-22-22z" fill="url(#face)" stroke="#8cecff" stroke-width="5"/>
+  <path d="M69 119H53v26h16m118-26h16v26h-16" fill="none" stroke="#62def8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="88" y="108" width="28" height="31" rx="12" fill="#168eb7" filter="url(#glow)"/>
+  <rect x="140" y="108" width="28" height="31" rx="12" fill="#168eb7" filter="url(#glow)"/>
+  <path d="M105 157q23 22 46 0" fill="none" stroke="#397b99" stroke-width="6" stroke-linecap="round"/>
+  <path d="M93 199h70" stroke="#62def8" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+</svg>

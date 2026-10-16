@@ -1,6 +1,18 @@
-# ScreenBot Screensaver
+<div align="center">
+  <img src="assets/screenbot-icon.svg" width="128" height="128" alt="ScreenBot floating robot head icon">
+  <h1>ScreenBot Screensaver</h1>
+  <p>A little robot, a lot of worlds. A playful screensaver for KDE Plasma 6 on Wayland.</p>
+  <p>
+    <a href="https://github.com/Chenboda01/Screensaver/releases/tag/V20"><img alt="Latest release V20" src="https://img.shields.io/badge/release-V20-168eb7"></a>
+    <a href="https://github.com/Chenboda01/Screensaver/releases"><img alt="Downloads" src="https://img.shields.io/badge/downloads-V10%E2%80%93V20-263b52"></a>
+    <a href="#platform-support-and-installation"><img alt="Platform" src="https://img.shields.io/badge/platform-KDE%20Plasma%206%20%7C%20Wayland-512bd4"></a>
+    <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-4c9a70"></a>
+  </p>
+</div>
 
-ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows head-only animated Bob across themed backgrounds, optional weather, and fictional BobOS phone adventures. V10 through V20 are available downloads; V1 through V9 are currently unavailable.
+---
+
+ScreenBot shows head-only animated Bob exploring themed backgrounds, optional weather, and fictional BobOS phone adventures. V10 through V20 are available downloads; V1 through V9 are currently unavailable.
 
 ## Downloads
 
@@ -27,19 +39,34 @@ ScreenBot is a KDE Plasma 6 screensaver for Wayland. It shows head-only animated
 | V19 | [Download ScreenBot Screensaver V19 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V19.zip) |
 | V20 | [Download ScreenBot Screensaver V20 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V20.zip) |
 
-## Install V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, or V20
+## Platform support and installation
 
-1. Download the version ZIP and extract it into `~/Downloads`.
-2. Open a terminal in the extracted version folder, such as `ScreenBot-Screensaver-V20`.
-3. Run:
+The full screensaver and KDE System Settings module are supported on **Linux with KDE Plasma 6 and a Wayland session**. The installer builds a KDE settings component and uses Linux-specific Plasma, Wayland, and user-install paths.
+
+### CachyOS and other Linux distributions with KDE Plasma 6 on Wayland
+
+1. Confirm that KDE Plasma 6 is installed and you are using its Wayland session.
+2. Install your distribution's packages for Python 3 with PyQt6, CMake 3.20 or newer, a C++17 compiler, Make, ECM 6+, Qt 6.5+ (Core, Quick, and QML), and KDE Frameworks 6+ (KCMUtils, CoreAddons, and I18n). Package names vary by distribution.
+3. Download the [V20 ZIP release](https://github.com/Chenboda01/Screensaver/releases/download/V20/ScreenBot-Screensaver-V20.zip) (or another available version) and extract it, for example, into `~/Downloads`.
+4. Open a terminal in the extracted `ScreenBot-Screensaver-V20` folder and run:
 
    ```bash
    bash install.sh
    ```
 
-The installer builds the KDE Settings module and installs it to your user account without requiring `sudo`. Log out and back in once so Plasma can discover the module. Then open **System Settings → Screensaver**, choose a theme, and select **Apply**.
+5. Log out and back in so Plasma discovers the user-local settings module.
+6. Open **System Settings → Screensaver**, select a theme and options, then choose **Apply**.
+7. Configure Plasma's idle/screensaver trigger to run `~/ScreenBot/screensaver/start.sh` if it is not already configured.
 
-The installer copies the screensaver to `~/ScreenBot/screensaver` and preserves a backup of an existing installation. The existing Plasma idle trigger can invoke `~/ScreenBot/screensaver/start.sh`. Use **System Settings → Screensaver** to configure the clock and toggle each animated weather effect.
+The installer builds the KDE Settings module and installs it to your user account without `sudo`. It copies the screensaver to `~/ScreenBot/screensaver` and preserves a backup of an existing installation.
+
+### Windows and macOS
+
+The full ScreenBot screensaver is not currently supported on Windows or macOS. There is no native installation guide for those systems: `install.sh` requires Linux, KDE Plasma 6, and Wayland, and the settings module integrates with KDE System Settings. Running the Python animation by itself would not install the screensaver or its KDE settings.
+
+### Other operating systems
+
+There are no tested or supported installers for BSD or other non-Linux systems. On another Linux distribution, use the steps above only if it provides KDE Plasma 6 on Wayland and the listed Qt/KDE development dependencies.
 
 ## Features
 
