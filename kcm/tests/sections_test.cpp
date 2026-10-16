@@ -18,7 +18,7 @@
 
 class SectionsTest : public QObject {
     Q_OBJECT
-    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock") };
+    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock") };
     QString configPath() const { return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation); }
     QByteArray savedBytes() {
         QFile file(configPath() + QStringLiteral("/screenbot-screensaver.ini"));
@@ -53,9 +53,13 @@ private Q_SLOTS:
         const auto before = savedBytes();
         const QVariantMap changes{
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
-            {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
+            {QStringLiteral("nowPlayingEnabled"), true}, {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
             {QStringLiteral("bobWeatherEnabled"), false},
+            {QStringLiteral("bobName"), QStringLiteral("Pixel👩‍🚀")},
+            {QStringLiteral("bobColorPreset"), QStringLiteral("custom")},
+            {QStringLiteral("bobCustomColor"), QStringLiteral("#a06cff")},
+            {QStringLiteral("bobAccessory"), QStringLiteral("flower")},
             {QStringLiteral("liveSkyEnabled"), true}, {QStringLiteral("liveSkyUnits"), QStringLiteral("f")}, {QStringLiteral("liveSkyInterval"), 60}, {QStringLiteral("liveSkyConditions"), false},
             {QStringLiteral("agentDetectionMode"), QStringLiteral("block")}, {QStringLiteral("phoneEnabled"), false}, {QStringLiteral("bobosEnabled"), false},
             {QStringLiteral("bobosActivationDelay"), 7}, {QStringLiteral("showWifiAnimation"), false}, {QStringLiteral("passwordLock"), true},
@@ -80,6 +84,19 @@ private Q_SLOTS:
         ScreenBotKcm reopened(nullptr, KPluginMetaData());
         for (auto it = changes.cbegin(); it != changes.cend(); ++it) QCOMPARE(reopened.property(it.key().toUtf8().constData()).toString(), it.value().toString());
     }
+    void bobAppearanceNamesAndValuesAreValidated() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        kcm.setBobName(QStringLiteral("👩‍🚀").repeated(18));
+        QCOMPARE(kcm.bobName(), QStringLiteral("👩‍🚀").repeated(16));
+        kcm.setBobName(QString(QChar(0x202e)) + QStringLiteral("  "));
+        QCOMPARE(kcm.bobName(), QStringLiteral("Bob"));
+        kcm.setBobColorPreset(QStringLiteral("invalid"));
+        QCOMPARE(kcm.bobColorPreset(), QStringLiteral("cyan"));
+        kcm.setBobCustomColor(QStringLiteral("not-a-color"));
+        QCOMPARE(kcm.bobCustomColor(), QStringLiteral("#6bf6ff"));
+        kcm.setBobAccessory(QStringLiteral("runs-command"));
+        QCOMPARE(kcm.bobAccessory(), QStringLiteral("none"));
+    }
     void bobosPreviewInsideSection() {
         const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
         QDir().mkpath(evidence);
@@ -91,6 +108,10 @@ private Q_SLOTS:
         QVERIFY(QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/start.sh"), install + QStringLiteral("/start.sh")));
         QVERIFY(QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/python-runtime.sh"), install + QStringLiteral("/python-runtime.sh")));
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        kcm.setBobName(QStringLiteral("Pixel"));
+        kcm.setBobColorPreset(QStringLiteral("custom"));
+        kcm.setBobCustomColor(QStringLiteral("#a06cff"));
+        kcm.setBobAccessory(QStringLiteral("flower"));
         QQuickView view;
         auto *translations = new KLocalizedContext(&view);
         translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
@@ -117,6 +138,11 @@ private Q_SLOTS:
         QVERIFY(receipt.open(QIODevice::ReadOnly));
         const auto result = QJsonDocument::fromJson(receipt.readAll().trimmed().split('\n').last()).object();
         QVERIFY(result[QStringLiteral("bobos_enabled")].toBool());
+        const auto temporarySettings = result[QStringLiteral("config")].toObject();
+        QCOMPARE(temporarySettings[QStringLiteral("bob_name")].toString(), QStringLiteral("Pixel"));
+        QCOMPARE(temporarySettings[QStringLiteral("bob_color_preset")].toString(), QStringLiteral("custom"));
+        QCOMPARE(temporarySettings[QStringLiteral("bob_custom_color")].toString(), QStringLiteral("#a06cff"));
+        QCOMPARE(temporarySettings[QStringLiteral("bob_accessory")].toString(), QStringLiteral("flower"));
         QVERIFY(!result[QStringLiteral("password_lock")].toBool());
         QVERIFY(!result[QStringLiteral("show_timer")].toBool());
         QVERIFY(!QFile::exists(result[QStringLiteral("temporary_path")].toString()));
@@ -136,6 +162,11 @@ private Q_SLOTS:
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
         const auto item = [&](const QString &name) { return view.rootObject()->findChild<QQuickItem *>(name); };
+        QVERIFY(item(QStringLiteral("bobNameField")));
+        QVERIFY(item(QStringLiteral("bobColorPreset")));
+        QVERIFY(item(QStringLiteral("bobCustomColorButton")));
+        QVERIFY(item(QStringLiteral("bobAccessory")));
+        QVERIFY(view.rootObject()->findChild<QObject *>(QStringLiteral("bobColorDialog")));
         for (const auto &key : keys) {
             auto *section = item(key + QStringLiteral("Section"));
             auto *header = item(key + QStringLiteral("Header"));

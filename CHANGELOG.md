@@ -2,11 +2,18 @@
 
 ## Unreleased
 
+### Added
+- Added an opt-in primary-screen Now playing card with background MPRIS metadata updates, pause fade-out, safe title shortening, and a translated KDE Clock setting that respects Apply/Discard. Media stays hidden in previews and when the session bus is unavailable.
+- Added Bob Camera with a bounded, in-memory selfie of the current theme and Live Sky, plus Bob Pet with animated snack and play scenes. Both apps respect Reduce motion and flashes. Camera photos appear in fictional Bob Files; neither app accesses devices, personal files, or external services.
+- BobOS now selects 4–6 apps per adventure without repeating the same selection consecutively. Seeded schedules keep timing reproducible, the complete preview includes every app, and an adventure starts only if its full selected duration fits before KDE locks.
+- Added selectable Aurora, Ocean / Beach, Desert, and Underwater adventures, available individually or through Random.
+- Added Live Sky-aware Aurora visibility, underwater surface ripples for rain and snow, and Bob's scene-matched diving helmet.
 - Split the screensaver and agent prompt runtimes into small entrypoints and focused settings, theme, weather, clock, BobOS, and terminal detection modules. Added exact offscreen image baselines to protect the five themes and BobOS home screen during future changes.
 - Added an optional primary-screen AI agent status badge with elapsed work time and confirmed completion time. Status polling runs in a background thread, uncertain states stay hidden, and Bob celebrates once after a confirmed finish without displaying agent content.
 - Added Off, Standard, and Strong OLED burn-in protection. Standard slowly shifts the scene and clock; Strong fades to black over 30–60 minutes, with input closing the screensaver.
 - Suppressed rain, snow, thunderstorms, fog, and shooting-star overlays in the Space theme; manual weather and shooting-star settings remain available on landscape themes.
 - Added optional Live Sky reactions for Bob: a smoothly animated umbrella, sunglasses, wool hat, scarf, fog and lightning expressions, wind tilt, moon glances, and a longer deep-night sleepy expression. Added a staged KDE toggle and deterministic weather preview overrides.
+- Added staged Customize Bob settings for a display name, six color presets or a custom color picker, and seven optional accessories. Appearance choices persist through Apply/Discard; weather layers keep user headwear visible when their geometry overlaps.
 
 ## V22
 

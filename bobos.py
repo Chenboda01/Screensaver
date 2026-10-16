@@ -1,5 +1,7 @@
 """Deterministic timing for Bob's entirely fictional phone adventure."""
-from dataclasses import dataclass
+from collections.abc import Iterator
+from dataclasses import dataclass, field
+import random
 from enum import StrEnum
 from typing import Final
 
@@ -23,6 +25,8 @@ class BobOSPhase(StrEnum):
     WEATHER = "weather"
     CALENDAR = "calendar"
     APP_STORE = "app-store"
+    CAMERA = "camera"
+    PET = "pet"
     SHUTDOWN = "shutdown"
     ZOOM_OUT = "zoom-out"
     RETURN = "return"
@@ -47,6 +51,8 @@ NORMAL_SEQUENCE: Final[tuple[tuple[BobOSPhase, int], ...]] = (
     (BobOSPhase.WEATHER, 12),
     (BobOSPhase.CALENDAR, 12),
     (BobOSPhase.APP_STORE, 18),
+    (BobOSPhase.CAMERA, 24),
+    (BobOSPhase.PET, 24),
     (BobOSPhase.SHUTDOWN, 8),
     (BobOSPhase.ZOOM_OUT, 5),
     (BobOSPhase.RETURN, 3),
@@ -69,9 +75,16 @@ PREVIEW_SEQUENCE: Final[tuple[tuple[BobOSPhase, int], ...]] = (
     (BobOSPhase.WEATHER, 2),
     (BobOSPhase.CALENDAR, 2),
     (BobOSPhase.APP_STORE, 2),
+    (BobOSPhase.CAMERA, 3),
+    (BobOSPhase.PET, 3),
     (BobOSPhase.SHUTDOWN, 2),
     (BobOSPhase.ZOOM_OUT, 2),
     (BobOSPhase.RETURN, 1),
+)
+
+
+APP_PHASES: Final[tuple[BobOSPhase, ...]] = tuple(
+    phase for phase, _ in NORMAL_SEQUENCE[6:-3] if phase is not BobOSPhase.NOTIFICATION
 )
 
 
@@ -90,14 +103,29 @@ class BobOSTimeline:
     first_adventure_offset_seconds: int = 0
     cooldown_offset_seconds: int = 0
     preview_mode: bool = False
+    random_seed: int = field(default_factory=lambda: random.getrandbits(64))
+
+    def sequences(self) -> Iterator[tuple[tuple[BobOSPhase, int], ...]]:
+        """Replay seeded selections without retaining an ever-growing history."""
+        rng = random.Random(self.random_seed)
+        previous: frozenset[BobOSPhase] = frozenset()
+        durations = dict(NORMAL_SEQUENCE)
+        while True:
+            if self.preview_mode:
+                sequence = PREVIEW_SEQUENCE
+            else:
+                apps = rng.sample(APP_PHASES, rng.randint(4, 6))
+                if frozenset(apps) == previous:
+                    apps[-1] = rng.choice([phase for phase in APP_PHASES if phase not in previous])
+                previous = frozenset(apps)
+                sequence = NORMAL_SEQUENCE[:6] + tuple((phase, durations[phase]) for phase in apps) + NORMAL_SEQUENCE[-3:]
+            yield tuple(item for item in sequence
+                        if self.show_connection_animation or item[0] is not BobOSPhase.WIFI_CONNECTING)
 
     @property
     def adventure_sequence(self) -> tuple[tuple[BobOSPhase, int], ...]:
-        """Return the full fictional activity, omitting only optional Wi-Fi."""
-        sequence = PREVIEW_SEQUENCE if self.preview_mode else NORMAL_SEQUENCE
-        if self.show_connection_animation:
-            return sequence
-        return tuple(item for item in sequence if item[0] is not BobOSPhase.WIFI_CONNECTING)
+        """Return the first selected adventure (the full catalogue in preview)."""
+        return next(self.sequences())
 
     @property
     def sequence_duration_seconds(self) -> int:
@@ -107,18 +135,20 @@ class BobOSTimeline:
         """Return the phase at an elapsed screen time without performing real I/O."""
         return self.status_at(elapsed_seconds, enabled=enabled).phase
 
-    def status_at(self, elapsed_seconds: float, *, enabled: bool = True) -> BobOSStatus:
+    def status_at(self, elapsed_seconds: float, *, enabled: bool = True,
+                  lock_deadline_seconds: float | None = None) -> BobOSStatus:
         """Return the current phase and its elapsed time for animation drawing."""
         if not enabled or elapsed_seconds < 0:
             return BobOSStatus(BobOSPhase.EXPLORING, 0.0)
 
         delay = 0 if self.preview_mode else max(0, self.activation_delay_seconds)
         first_start = delay + (0 if self.preview_mode else max(0, self.first_adventure_offset_seconds))
-        sequence = self.adventure_sequence
-        cycle_offset = 0
+        sequence_start = first_start
         last_completed_at = 0.0
-        while True:
-            sequence_start = first_start + cycle_offset
+        for sequence in self.sequences():
+            duration_seconds = sum(duration for _, duration in sequence)
+            if lock_deadline_seconds is not None and sequence_start + duration_seconds >= lock_deadline_seconds:
+                return BobOSStatus(BobOSPhase.EXPLORING, max(0., elapsed_seconds - last_completed_at))
             if elapsed_seconds < sequence_start:
                 return BobOSStatus(BobOSPhase.EXPLORING, elapsed_seconds - last_completed_at)
 
@@ -134,7 +164,8 @@ class BobOSTimeline:
             if elapsed_seconds < next_start:
                 return BobOSStatus(BobOSPhase.EXPLORING, elapsed_seconds - completed_at)
             last_completed_at = completed_at
-            cycle_offset += self.sequence_duration_seconds + self.cooldown_seconds
+            sequence_start = next_start
+        raise AssertionError("The adventure sequence iterator must be infinite")
 
     @property
     def cooldown_seconds(self) -> int:

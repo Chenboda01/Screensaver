@@ -1,18 +1,22 @@
+import math
+import time
+from datetime import UTC, datetime
+
 from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QFont, QImage, QLinearGradient, QPainter, QPen
-import math
-from datetime import datetime, timezone
-import time
 
 from live_sky import SkyPosition, sky_position
 from live_sky_render import draw_sky
-from screenbot.themes import THEME_RENDERERS
 from screenbot.runtime import particle_count
+from screenbot.themes import THEME_MOTION_RENDERERS, THEME_RENDERERS
+from screenbot.themes.environment import ThemeEnvironment, ThemeFrame
 
 
 class SceneRenderer:
     def draw_scenery(self, p: QPainter, w: int, h: int, t: float) -> None:
         """Render a cached static scene beneath the live weather/effect layers."""
+        if self.theme in THEME_MOTION_RENDERERS:
+            self._update_live_sky_position()
         cache_key = (self.theme, w, h, self.live_sky_enabled,
                      self.live_weather.weather.category if self.live_sky_enabled else '',
                      math.floor(time.time() / 60) if self.live_sky_enabled else 0)
@@ -38,7 +42,7 @@ class SceneRenderer:
             if self.live_sky_enabled:
                 coordinates = (self.live_weather.latitude, self.live_weather.longitude) if self.live_weather.located else None
                 self.space_sky.draw(p, w, h, time.time(), coordinates)
-        if self.live_sky_enabled and self.theme != 'space' and self.live_sky_position is not None:
+        if self.live_sky_enabled and self.theme not in ('space', 'underwater') and self.live_sky_position is not None:
             self.live_landscape_light(p, w, h, t)
         self.weather(p, w, h, t)
 
@@ -67,6 +71,9 @@ class SceneRenderer:
     def _draw_scenery_motion(self, p: QPainter, w: int, h: int, t: float) -> None:
         """Draw foreground motion over the cached static theme layer."""
         scale = 0.3 if self.reduce_motion else (0.5 if self.performance_mode == 'battery-saver' else 1.0)
+        if self.theme in THEME_MOTION_RENDERERS:
+            THEME_MOTION_RENDERERS[self.theme](self, p, w, h, t)
+            return
         p.setPen(Qt.PenStyle.NoPen)
         if self.theme == 'space':
             for x, y, size, phase in self.particles[:particle_count(len(self.particles), scale)]:
@@ -121,6 +128,15 @@ class SceneRenderer:
         painter.restore()
 
     def live_background(self, p: QPainter, w: int, h: int, t: float) -> None:
+        self._update_live_sky_position()
+        sky = self.live_sky_position
+        if not self.live_weather.located and not self.quick_preview:
+            sky = SkyPosition(-20, 0, -90, 0, 0, False)
+        draw_sky(p, w, h, t, sky, self.live_weather.weather)
+        p.setPen(Qt.PenStyle.NoPen)
+
+    def _update_live_sky_position(self) -> None:
+        """Refresh the shared astronomy snapshot at most once per second."""
         now = time.time()
         if self.live_sky_position is None or abs(now-self.live_sky_sample_time) >= 1:
             latitude, longitude = self.live_weather.latitude, self.live_weather.longitude
@@ -128,13 +144,26 @@ class SceneRenderer:
                 offset = datetime.now().astimezone().utcoffset()
                 latitude = 0.
                 longitude = offset.total_seconds()/240 if offset is not None else 0.
-            self.live_sky_position = sky_position(datetime.now(timezone.utc), latitude, longitude)
+            self.live_sky_position = sky_position(datetime.now(UTC), latitude, longitude)
             self.live_sky_sample_time = now
-        sky = self.live_sky_position
-        if not self.live_weather.located and not self.quick_preview:
-            sky = SkyPosition(-20, 0, -90, 0, 0, False)
-        draw_sky(p, w, h, t, sky, self.live_weather.weather)
-        p.setPen(Qt.PenStyle.NoPen)
+
+    def theme_frame(self, width: int, height: int, elapsed: float) -> ThemeFrame:
+        """Build one immutable theme input snapshot from live scene settings."""
+        if self.live_sky_enabled:
+            self._update_live_sky_position()
+        motion_scale = .3 if self.reduce_motion else (
+            .5 if self.performance_mode == 'battery-saver' else 1.0
+        )
+        weather_enabled = self.rain_enabled or self.snow_enabled or self.thunderstorms_enabled
+        environment = ThemeEnvironment(
+            live_sky_enabled=self.live_sky_enabled,
+            sky=(SkyPosition(-20, 0, -90, 0, 0, False)
+                 if self.live_sky_enabled and not self.live_weather.located and not self.quick_preview
+                 else self.live_sky_position if self.live_sky_enabled else None),
+            weather=self.live_weather.weather,
+            manual_surface_precipitation=weather_enabled,
+        )
+        return ThemeFrame(width, height, elapsed, environment, motion_scale)
 
     def live_landscape_light(self, p: QPainter, w: int, h: int, t: float) -> None:
         sky = self.live_sky_position

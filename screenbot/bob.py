@@ -1,7 +1,10 @@
+import math
+
 from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient
-import math
+
 from bobos import BobOSPhase, BobOSStatus
+from screenbot.themes import underwater
 
 
 class BobRenderer:
@@ -113,6 +116,8 @@ class BobRenderer:
         p.drawEllipse(QPointF(44, 5), 5, 5)
         self.draw_custom_accessory(p, appearance.accessory, palette)
         self.draw_weather_accessory(p, t, palette)
+        if getattr(self, 'theme', None) == 'underwater':
+            underwater.draw_bob_diving_helmet(p, QPointF(0, -24), 83)
         if self.phone_enabled and status.phase in {
             BobOSPhase.EXPLORING,
             BobOSPhase.PHONE_ACTIVATION,
@@ -134,7 +139,6 @@ class BobRenderer:
     def weather_tilt_degrees(self, status: BobOSStatus, t: float) -> float:
         """Optional weather-owned tilt, separate from the base Bob sway."""
         return 0.0
-
     @staticmethod
     def draw_custom_accessory(p: QPainter, accessory: str, palette: dict[str, tuple[int, int, int]]) -> None:
         """Paint only the user's chosen head accessory; weather layers stay separate."""
@@ -150,10 +154,10 @@ class BobRenderer:
         elif accessory == 'bow-tie':
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(accent)
-            p.drawPolygon([QPointF(-20, -104), QPointF(-2, -96), QPointF(-20, -88)])
-            p.drawPolygon([QPointF(20, -104), QPointF(2, -96), QPointF(20, -88)])
+            p.drawPolygon([QPointF(-20, 29), QPointF(-2, 37), QPointF(-20, 45)])
+            p.drawPolygon([QPointF(20, 29), QPointF(2, 37), QPointF(20, 45)])
             p.setBrush(QColor('#fff3d0'))
-            p.drawEllipse(QPointF(0, -96), 4, 4)
+            p.drawEllipse(QPointF(0, 37), 4, 4)
         elif accessory == 'headphones':
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawArc(QRectF(-81, -110, 162, 116), 0, 180 * 16)
@@ -260,6 +264,10 @@ class BobRenderer:
             'snow': f'{name} is watching the snowfall…',
             'forest': f'{name} is exploring the forest…',
             'city': f'{name} is exploring the neon city…',
+            'aurora': f'{name} is watching the aurora…',
+            'ocean': f'{name} is exploring the coastline…',
+            'desert': f'{name} is exploring the desert…',
+            'underwater': f'{name} is exploring underwater…',
         }
         bobos_words = {
             BobOSPhase.CURIOUS: f'{name} spotted a new adventure!',

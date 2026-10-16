@@ -17,8 +17,11 @@ from screenbot.bob import BobRenderer
 from screenbot.agent_status import AgentBadgePhase, AgentStatusSnapshot, AgentStatusWorker, HIDDEN_SNAPSHOT
 from screenbot.burnin import burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
 from screenbot.clock import ClockRenderer
+from screenbot.mpris import HIDDEN as NO_MEDIA, MprisWorker
+from screenbot.media_overlay import MediaOverlayMixin
 from screenbot.effects import WeatherEffects
 from screenbot.phone.apps import PhoneAppsRenderer
+from screenbot.phone.camera_pet import CameraState
 from screenbot.phone.frame import PhoneFrameRenderer
 from screenbot.runtime import battery_powered, frame_interval_ms
 from screenbot.scene import SceneRenderer
@@ -32,7 +35,7 @@ from screenbot.weather_accessories import WeatherPreview
 from screenbot.weather_accessory_renderer import WeatherAccessoryAnimator, WeatherAccessoryRenderer
 
 
-class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer):
+class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, ForestTheme, CityTheme, WeatherEffects, WeatherAccessoryRenderer, BobRenderer, ClockRenderer, PhoneFrameRenderer, PhoneAppsRenderer, MediaOverlayMixin):
     def __init__(self, *, preview: bool = False, config_path: Path | None = None,
                  preview_bobos: bool = False, preview_wifi_animation: bool | None = None,
                  preview_weather: WeatherPreview | None = None):
@@ -52,6 +55,13 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.theme = selected_theme(settings)
         self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
+        self.now_playing_enabled = settings.getboolean('Screensaver', 'now_playing_enabled', fallback=False)
+        self.now_playing = NO_MEDIA
+        self.media_worker = None
+        self._closing = False
+        if self.now_playing_enabled and not self.is_preview:
+            self.media_worker = MprisWorker(self, enabled=True)
+            self.media_worker.changed.connect(self.set_now_playing)
         self.clock_format = settings.get('Screensaver', 'clock_format', fallback='12h').strip()
         if self.clock_format not in ('12h', '24h'):
             self.clock_format = '12h'
@@ -131,6 +141,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self._scenery_cache_time = 0.0
         self._space_foreground_cache = None
         self._space_foreground_key = None
+        self.bobos_camera = CameraState()
         schedule_random = random.Random()
         self.bobos_timeline = BobOSTimeline(
             activation_delay_seconds=self.bobos_activation_delay_seconds,
@@ -215,7 +226,10 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             elapsed_seconds=elapsed_seconds,
             lock_seconds=self.lock_seconds,
         )
-        return self.bobos_timeline.status_at(elapsed_seconds, enabled=enabled)
+        return self.bobos_timeline.status_at(
+            elapsed_seconds, enabled=enabled,
+            lock_deadline_seconds=self.lock_seconds if self.password_lock else None,
+        )
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -233,6 +247,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.draw_scenery(p, w, h, t)
         if self.show_clock:
             self.clock(p, w, h, protection, t, scene_offset, scene_scale)
+        self.draw_now_playing(p)
         bobos_status = self.bobos_status(t)
         phase = bobos_status.phase
         if phase not in PHONE_UI_PHASES:
@@ -339,6 +354,10 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
 
     def closeEvent(self, event) -> None:
         """Request polling shutdown without delaying the screensaver close animation."""
+        self._closing = True
+        self.now_playing = NO_MEDIA
+        if self.media_worker is not None:
+            self.media_worker.request_stop()
         if self.agent_status_worker is not None and self.agent_status_worker.isRunning():
             self.agent_status_worker.request_stop()
         super().closeEvent(event)

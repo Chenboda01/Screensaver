@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as Controls
+import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCMUtils
 
@@ -35,16 +36,88 @@ KCMUtils.SimpleKCM {
             settings: kcm
             sectionKey: "theme"
             title: i18nc("@label", "Theme")
-            summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City")][["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme)]
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City"), i18nc("@item:inlistbox Theme", "Aurora"), i18nc("@item:inlistbox Theme", "Ocean / Beach"), i18nc("@item:inlistbox Theme", "Desert"), i18nc("@item:inlistbox Theme", "Underwater")][["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"].indexOf(kcm.theme)]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.ComboBox {
                 implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
                 objectName: "themeChoice"
                 Kirigami.FormData.label: i18nc("@label", "Theme:")
-                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City")]
-                currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme))
-                onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city"][index] }
+                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City"), i18nc("@label", "Aurora"), i18nc("@label", "Ocean / Beach"), i18nc("@label", "Desert"), i18nc("@label", "Underwater")]
+                currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"].indexOf(kcm.theme))
+                onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater"][index] }
+            }
+        }
+        CollapsibleSection {
+            id: appearanceSection
+            settings: kcm
+            sectionKey: "appearance"
+            title: i18nc("@label", "Customize Bob")
+            summary: i18nc("@info Bob appearance summary", "%1 · %2", kcm.bobName, bobColorPreset.summaryLabels[bobColorPreset.currentIndex])
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            Controls.TextField {
+                id: bobNameField
+                objectName: "bobNameField"
+                Kirigami.FormData.label: i18nc("@label", "Bob's name:")
+                text: kcm.bobName
+                maximumLength: 64
+                Accessible.name: i18nc("@label", "Bob's display name")
+                onTextEdited: kcm.bobName = text
+                Connections {
+                    target: kcm
+                    function onBobNameChanged() {
+                        if (bobNameField.text !== kcm.bobName) bobNameField.text = kcm.bobName
+                    }
+                }
+            }
+            Controls.ComboBox {
+                id: bobColorPreset
+                objectName: "bobColorPreset"
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
+                Layout.maximumWidth: parent.width
+                Kirigami.FormData.label: i18nc("@label", "Bob's color:")
+                model: [i18nc("@item:inlistbox Bob color", "Cyan"), i18nc("@item:inlistbox Bob color", "Green"), i18nc("@item:inlistbox Bob color", "Purple"), i18nc("@item:inlistbox Bob color", "Orange"), i18nc("@item:inlistbox Bob color", "Pink"), i18nc("@item:inlistbox Bob color", "Gold"), i18nc("@item:inlistbox Bob color", "Custom")]
+                property var values: ["cyan", "green", "purple", "orange", "pink", "gold", "custom"]
+                property var summaryLabels: [i18nc("@label Bob color summary", "Cyan"), i18nc("@label Bob color summary", "Green"), i18nc("@label Bob color summary", "Purple"), i18nc("@label Bob color summary", "Orange"), i18nc("@label Bob color summary", "Pink"), i18nc("@label Bob color summary", "Gold"), i18nc("@label Bob color summary", "Custom color")]
+                currentIndex: Math.max(0, values.indexOf(kcm.bobColorPreset))
+                onActivated: function(index) { kcm.bobColorPreset = values[index] }
+            }
+            Controls.Button {
+                objectName: "bobCustomColorButton"
+                Kirigami.FormData.label: i18nc("@label", "Custom color:")
+                text: i18nc("@label", "Choose color…")
+                enabled: kcm.bobColorPreset === "custom"
+                opacity: enabled ? 1.0 : 0.4
+                icon.name: "color-picker"
+                onClicked: bobColorDialog.open()
+                Rectangle {
+                    width: 18
+                    height: 18
+                    radius: 4
+                    color: kcm.bobCustomColor
+                    border.color: Kirigami.Theme.textColor
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+            Controls.ComboBox {
+                id: bobAccessory
+                objectName: "bobAccessory"
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
+                Layout.maximumWidth: parent.width
+                Kirigami.FormData.label: i18nc("@label", "Accessory:")
+                model: [i18nc("@item:inlistbox Bob accessory", "None"), i18nc("@item:inlistbox Bob accessory", "Cap"), i18nc("@item:inlistbox Bob accessory", "Bow tie"), i18nc("@item:inlistbox Bob accessory", "Headphones"), i18nc("@item:inlistbox Bob accessory", "Flower"), i18nc("@item:inlistbox Bob accessory", "Crown"), i18nc("@item:inlistbox Bob accessory", "Antenna ball")]
+                property var values: ["none", "cap", "bow-tie", "headphones", "flower", "crown", "antenna-ball"]
+                currentIndex: Math.max(0, values.indexOf(kcm.bobAccessory))
+                onActivated: function(index) { kcm.bobAccessory = values[index] }
+            }
+            Controls.Label {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
+                Kirigami.FormData.label: i18nc("@label", "Preview:")
+                text: i18nc("@label", "Use Preview above to see Bob with these staged settings. Weather accessories can layer alongside your choice; your headwear stays visible when weather gear would overlap.")
+                wrapMode: Text.WordWrap
             }
         }
         CollapsibleSection {
@@ -53,7 +126,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "clock"
             title: i18nc("@label", "Clock")
             summary: kcm.clockVisible ? i18nc("@info Clock summary: format, position", "On · %1 · %2", kcm.clockFormat === "24h" ? i18nc("@label", "24-hour") : i18nc("@label", "12-hour"), clockPosition.summaryLabels[clockPosition.currentIndex]) : i18nc("@label Feature state", "Off")
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Switch {
                 Kirigami.FormData.label: i18nc("@label", "Clock:")
                 text: checked ? i18nc("@label", "Visible") : i18nc("@label", "Hidden")
@@ -88,6 +161,21 @@ KCMUtils.SimpleKCM {
                 enabled: kcm.clockVisible
                 onActivated: function(index) { kcm.clockPosition = values[index] }
             }
+            Controls.Switch {
+                objectName: "nowPlayingEnabled"
+                Kirigami.FormData.label: i18nc("@label", "Show what's playing:")
+                text: checked ? i18nc("@label", "Show media title and artist") : i18nc("@label", "Hidden")
+                checked: kcm.nowPlayingEnabled
+                onToggled: kcm.nowPlayingEnabled = checked
+                Accessible.name: i18nc("@label", "Show what's playing")
+            }
+            Controls.Label {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
+                wrapMode: Text.WordWrap
+                text: i18nc("@info", "Off by default: media titles can be personal. Shows player metadata on the primary screen only; never controls playback. Previews keep media hidden.")
+            }
             Controls.SpinBox {
                 Kirigami.FormData.label: i18nc("@label", "Clock font size:")
                 from: 16
@@ -110,7 +198,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "weather"
             title: i18nc("@label", "Weather")
             summary: kcm.theme === "space" ? i18nc("@info", "No weather effects in Space") : kcm.liveSkyEnabled ? i18nc("@info", "Managed by Live Sky") : [kcm.rainEnabled ? i18nc("@label Weather", "Rain") : "", kcm.snowEnabled ? i18nc("@label Weather", "Snow") : "", kcm.thunderstormsEnabled ? i18nc("@label Weather", "Thunderstorms") : "", kcm.fogEnabled ? i18nc("@label Weather", "Fog") : "", kcm.shootingStarsEnabled ? i18nc("@label Weather", "Shooting stars") : ""].filter(function(value) { return value.length > 0 }).join(i18nc("Separator between enabled weather effects", " · ")) || i18nc("@label Feature state", "Off")
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -177,7 +265,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "liveSky"
             title: i18nc("@label", "Live Sky")
             summary: kcm.liveSkyEnabled ? i18nc("@info Live Sky summary: location, temperature unit", "On · %1 · °%2", kcm.liveSkyLocation || i18nc("@info", "No location selected"), kcm.liveSkyUnits.toUpperCase()) : i18nc("@label Feature state", "Off")
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -239,7 +327,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "agents"
             title: i18nc("@label", "AI Agents")
             summary: [i18nc("@label", "Always ask"), i18nc("@label", "Always start screensaver"), i18nc("@label", "Do not start while agents are running")][["ask", "start", "block"].indexOf(kcm.agentDetectionMode)]
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -316,7 +404,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "bobos"
             title: i18nc("@label", "BobOS")
             summary: !kcm.phoneEnabled ? i18nc("@info", "Phone off") : !kcm.bobosEnabled ? i18nc("@info", "Phone on · BobOS off") : i18ncp("@info BobOS delay summary", "On · After %1 min", "On · After %1 min", kcm.bobosActivationDelay)
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -379,7 +467,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "performance"
             title: i18nc("@label", "Performance")
             summary: [i18nc("@label Performance mode", "Smooth"), i18nc("@label Performance mode", "Balanced"), i18nc("@label Performance mode", "Battery saver")][["smooth", "balanced", "battery-saver"].indexOf(kcm.performanceMode)]
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -431,7 +519,7 @@ KCMUtils.SimpleKCM {
             sectionKey: "lock"
             title: i18nc("@label", "Lock")
             summary: kcm.passwordLock ? i18ncp("@info Lock delay summary", "Password after %1 min", "Password after %1 min", kcm.lockMinutes) : i18nc("@info", "Screensaver password countdown off")
-            form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
+            form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form]
             Controls.Switch {
                 id: passwordSwitch
                 Kirigami.FormData.label: i18nc("@label", "Password unlock:")
@@ -503,5 +591,12 @@ KCMUtils.SimpleKCM {
             text: i18nc("@label", "Press Apply to save your changes. Changes take effect the next time Bob starts.")
             wrapMode: Text.WordWrap
         }
+    }
+    ColorDialog {
+        id: bobColorDialog
+        objectName: "bobColorDialog"
+        title: i18nc("@title:window", "Choose Bob's color")
+        selectedColor: kcm.bobCustomColor
+        onAccepted: kcm.bobCustomColor = selectedColor.toString()
     }
 }

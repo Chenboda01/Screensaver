@@ -13,6 +13,8 @@
 
 ScreenBot follows Bob, a floating robot, as he explores themed worlds and fictional BobOS phone adventures. Customize the clock, weather, and optional Live Sky in KDE System Settings.
 
+The **Customize Bob** section lets you choose Bob's display name, a cyan/green/purple/orange/pink/gold palette or any custom color, and an optional cap, bow tie, headphones, flower, crown, or antenna ball. Names support emoji and other languages and are capped at 16 visible characters. Your selected accessory stays in settings when weather gear appears; headwear that would overlap the Live Sky layer takes precedence.
+
 The Python runtime is split into the `screenbot/` package: theme painters, weather effects, overlays, BobOS phone screens, settings, lifecycle code, and terminal agent detection are tested as separate modules. The top-level `screensaver.py` and `agent_prompt.py` remain compatibility and command-line entry points.
 
 The Performance settings also include **Burn-in protection** for OLED displays, enabled in Standard mode by default. Standard mode slowly shifts the scene and drifts the clock within its selected area. Strong mode adds a gradual fade to black after 30 minutes, reaching black at 60 minutes; any keyboard or mouse input closes the screensaver and cancels the fade. Off retains the original fixed layout and brightness.
@@ -30,8 +32,12 @@ Bob exploring the Mountains under a full moon with Live Sky enabled (six-second 
 | ![Bob floating among blue and pink planets and a golden ringed planet in Space](assets/screenshots/space.webp) | ![Bob above layered blue mountain peaks beneath a glowing moon and purple sky](assets/screenshots/mountains.webp) |
 | **Snow** | **Forest** |
 | ![Bob hovering over snow-covered alpine peaks with drifting snowflakes](assets/screenshots/snow.webp) | ![Bob among dark evergreen silhouettes and glowing fireflies under a green night sky](assets/screenshots/forest.webp) |
-| **Futuristic City** | |
-| ![Bob floating above a futuristic skyline with cyan, violet, and pink illuminated windows](assets/screenshots/city.webp) | |
+| **Futuristic City** | **Aurora** |
+| ![Bob floating above a futuristic skyline with cyan, violet, and pink illuminated windows](assets/screenshots/city.webp) | ![Bob beneath animated green and violet aurora curtains above snowy ridges](assets/screenshots/aurora.webp) |
+| **Ocean / Beach** | **Desert** |
+| ![Bob exploring a tropical coast with palms, waves, and a lighthouse](assets/screenshots/ocean.webp) | ![Bob among warm desert dunes and cacti below a sunlit sky](assets/screenshots/desert.webp) |
+| **Underwater** | |
+| ![Bob wearing a transparent diving helmet above coral, fish, and bubbles](assets/screenshots/underwater.webp) | |
 
 ### Live Sky
 
@@ -47,11 +53,15 @@ The same Mountains scene with locally calculated Boston skies and fixed example 
 
 ### BobOS
 
-Bob's fictional phone zooms into its home screen and opens Bob Browser:
+Bob's fictional phone zooms into its home screen before each adventure. It chooses 4–6 different apps, with a different selection from the previous adventure, then shuts down and returns to exploring. The full-sequence KDE preview still shows every app.
 
 ![Animated BobOS phone zooming in, showing its app launcher, then opening the simulated browser](assets/screenshots/bobos-phone.gif)
 
 ![BobOS phone home screen with fictional Browser, Files, Terminal, Games, Chat, Maps, Weather, Calendar, and App Store buttons](assets/screenshots/bobos.webp)
+
+**Bob Camera** takes a simulated selfie against the current theme and Live Sky, flashes, and shows the photo in Bob Files. Its viewfinder refreshes at most five times per second; only two 480×200 images are kept in memory and disappear when the screensaver closes. It never accesses a camera or saves photos to disk. **Bob Pet** feeds Pip a pretend snack and plays moonball; each visit starts fresh, with no persistent pet state or external service. The existing **Reduce motion and flashes** preference freezes Camera’s viewfinder, suppresses its flash, and stops Pip’s continuous motion while preserving feeding and play states.
+
+Each selected adventure must fit entirely before the configured KDE password-lock deadline. If it cannot, Bob keeps exploring until KDE locks. The activation delay, connection animation option, and minimum five-minute cooldown still apply.
 
 All previews are captured from the production renderer. Stills are 1280×720; animations are six-second, 768×432 loops. [Regenerate the gallery](assets/screenshots/README.md) after visual changes.
 
@@ -134,15 +144,15 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 
 ## Features
 
-- Random, Space, Mountains, Snow, Forest, and Futuristic City themes
+- Random, Space, Mountains, Snow, Forest, Futuristic City, Aurora, Ocean / Beach, Desert, and Underwater themes
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
-- Individually enabled rain, snow, thunderstorms, and fog on landscape themes; optional shooting stars are limited to landscapes, and Space stays free of weather overlays
+- Individually enabled rain, snow, thunderstorms, and fog on landscape themes; Underwater turns rain, snow, and thunderstorms into surface ripples, optional shooting stars are limited to landscapes, and Space stays free of weather overlays
 - Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
 - Optional head-local Bob weather reactions while Live Sky is on: a rain umbrella, snow hat and scarf, strong-sun sunglasses, fog squint, lightning surprise, wind response, moon glances, and a deep-night sleepy expression. Use `--preview-weather rain`, `snow`, or `clear-noon` with a quick preview to see the accessories without waiting for live conditions
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
 - Optional primary-screen AI agent status badge with elapsed work time, confirmed finish time, and one short Bob celebration; uncertain states remain hidden and no prompts, filenames, or output appear on screen
 - Manual launches remain available regardless of the automatic agent policy
-- Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, AI Wi-Fi, and an immediate preview
+- Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, Camera, Pet, AI Wi-Fi, and an immediate preview
 - Configurable BobOS delay of 1–30 minutes from the first visible screensaver frame, plus a cooldown of at least five minutes
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
@@ -180,3 +190,11 @@ Create a catalog in `kcm/po/<language>/kcm_screenbot_screensaver.po` with `msgin
 The normal installer builds and installs catalogs through `ki18n_install(po)`; compiled `.mo` files belong in the installation, not in Git. QML uses the KCM plugin ID `kcm_screenbot_screensaver` as its translation domain; C++ uses the same domain through `TRANSLATION_DOMAIN`. The KCM leaves the hosting application's translation domain alone. To preview Spanish after installing, run `LANGUAGE=es kcmshell6 kcm_screenbot_screensaver` from a UTF-8 locale other than `C`.
 
 For an isolated build, installation, locale, and Apply/Discard check, run `kcm/tests/check-translations.sh "$PWD/.omo/evidence/translations"`. It requires the `en_US.UTF-8` locale and records logs and native settings screenshots for Spanish, English, and an unavailable language's English fallback in both light and dark palettes. No user settings are changed.
+
+### Now playing
+
+Enable **System Settings → Screensaver → Clock → Show what's playing**, then choose **Apply** to show the current media title and artist near the clock on the primary screen. The setting is off by default; **Discard** keeps the saved preference. The card also works with the clock hidden. It moves to a clear corner if Bob would cover it, and stays hidden on small layouts with no room clear of Bob, the clock, and captions. Previews keep real media metadata hidden.
+
+ScreenBot reads MPRIS metadata from players such as Elisa, VLC, Spotify, and browsers. Playing media takes priority when several players are open. Track changes appear within a few seconds; pausing or stopping fades the card away. Long titles are shortened, and no player or an unavailable session bus leaves the card hidden. Reduced motion hides the card without fading.
+
+Song titles can be personal. ScreenBot never controls playback, reads browser tabs, fetches artwork or media URLs, or saves media metadata. Browser titles come only from the browser's MPRIS media information. Disable the setting and Apply before the next screensaver launch to stop showing it.
