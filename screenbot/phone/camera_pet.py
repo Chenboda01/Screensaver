@@ -26,7 +26,7 @@ class CameraPetRenderer:
             state.adventure_start = adventure_start
             state.captured = False
             state.refresh_key = None
-        key = (self.theme, int(t * 5))
+        key = (self.theme, -1 if self.reduce_motion else int(t * 5))
         if state.frame is None or (not state.captured and state.refresh_key != key):
             image = QImage(480, 200, QImage.Format.Format_ARGB32_Premultiplied)
             image.fill(Qt.GlobalColor.transparent)
@@ -54,7 +54,7 @@ class CameraPetRenderer:
         p.drawRoundedRect(view, 12, 12)
         if not captured:
             p.drawRect(QRectF(366, 235, 168, 132))
-        if 1.5 <= elapsed < 1.8:
+        if not self.reduce_motion and 1.5 <= elapsed < 1.8:
             p.fillRect(view, QColor(255, 255, 255, round((1.8 - elapsed) / .3 * 220)))
         p.setPen(QColor('#ddfff5'))
         p.setFont(QFont('Sans Serif', 15))
@@ -70,8 +70,9 @@ class CameraPetRenderer:
         p.drawRoundedRect(QRectF(85, 145, 730, 290), 20, 20)
         fed = elapsed >= 1.0
         playing = elapsed >= 2.0
-        x = 410 + (math.sin(elapsed * 2) * 55 if playing else 0)
-        y = 290 - (abs(math.sin(elapsed * 4)) * 28 if playing else 0)
+        motion_time = 0.0 if self.reduce_motion else elapsed
+        x = 410 + (math.sin(motion_time * 2) * 55 if playing else 0)
+        y = 290 - (abs(math.sin(motion_time * 4)) * 28 if playing else 0)
         p.setBrush(QColor('#f2b58f'))
         p.drawRect(QRectF(x - 52, y - 44, 104, 80))
         p.drawRect(QRectF(x - 52, y - 68, 24, 24))
@@ -84,13 +85,13 @@ class CameraPetRenderer:
         p.drawRect(QRectF(x - 8, y + 8, 16, 8 if fed else 16))
         p.setBrush(QColor('#e5cf7e'))
         if not fed:
-            p.drawEllipse(QPointF(580 - elapsed * 110, 300), 14, 10)
+            p.drawEllipse(QPointF(580 - motion_time * 110, 300), 14, 10)
         p.setBrush(QColor('#8ae0ce'))
         p.drawRoundedRect(QRectF(540, 331, 80, 22), 8, 8)
         if playing:
             p.setBrush(QColor('#e7a3eb'))
-            p.drawEllipse(QPointF(640 + math.sin(elapsed * 3) * 45,
-                                  310 - abs(math.sin(elapsed * 3)) * 65), 22, 22)
+            p.drawEllipse(QPointF(640 + math.sin(motion_time * 3) * 45,
+                                  310 - abs(math.sin(motion_time * 3)) * 65), 22, 22)
         p.setPen(QColor('#f0f9f7'))
         p.setFont(QFont('Sans Serif', 18, QFont.Weight.DemiBold))
         message = 'Snack delivery!' if not fed else ('Playtime! Pip loves moonball.' if playing else 'Crunch! One happy pixel pet.')

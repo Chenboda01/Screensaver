@@ -59,7 +59,7 @@ Bob's fictional phone zooms into its home screen before each adventure. It choos
 
 ![BobOS phone home screen with fictional Browser, Files, Terminal, Games, Chat, Maps, Weather, Calendar, and App Store buttons](assets/screenshots/bobos.webp)
 
-**Bob Camera** takes a simulated selfie against the current theme and Live Sky, flashes, and shows the photo in Bob Files. Its viewfinder refreshes at most five times per second; only two 480×200 images are kept in memory and disappear when the screensaver closes. It never accesses a camera or saves photos to disk. **Bob Pet** feeds Pip a pretend snack and plays moonball; each visit starts fresh, with no persistent pet state or external service.
+**Bob Camera** takes a simulated selfie against the current theme and Live Sky, flashes, and shows the photo in Bob Files. Its viewfinder refreshes at most five times per second; only two 480×200 images are kept in memory and disappear when the screensaver closes. It never accesses a camera or saves photos to disk. **Bob Pet** feeds Pip a pretend snack and plays moonball; each visit starts fresh, with no persistent pet state or external service. The existing **Reduce motion and flashes** preference freezes Camera’s viewfinder, suppresses its flash, and stops Pip’s continuous motion while preserving feeding and play states.
 
 Each selected adventure must fit entirely before the configured KDE password-lock deadline. If it cannot, Bob keeps exploring until KDE locks. The activation delay, connection animation option, and minimum five-minute cooldown still apply.
 

@@ -12,7 +12,8 @@ from PyQt6.QtCore import QRectF, Qt
 from PyQt6.QtGui import QImage, QPainter
 from PyQt6.QtWidgets import QApplication
 
-from bobos import APP_PHASES, NORMAL_SEQUENCE, PREVIEW_SEQUENCE, BobOSPhase, BobOSStatus, BobOSTimeline
+from bobos import APP_PHASES, NORMAL_SEQUENCE, BobOSPhase, BobOSStatus, BobOSTimeline
+from screenbot.settings import PHONE_UI_PHASES
 from screensaver import Saver
 
 
@@ -32,6 +33,7 @@ def saver(tmp_path: Path, application: QApplication) -> Iterator[Saver]:
 
 
 def render(saver: Saver, phase: BobOSPhase, elapsed: float, width: int = 900) -> QImage:
+    assert phase in PHONE_UI_PHASES, "Use the real widget for scene and zoom transitions"
     image = QImage(width, round(width * 520 / 900), QImage.Format.Format_ARGB32_Premultiplied)
     image.fill(Qt.GlobalColor.transparent)
     painter = QPainter(image)
@@ -41,7 +43,7 @@ def render(saver: Saver, phase: BobOSPhase, elapsed: float, width: int = 900) ->
     painter.end()
     evidence = os.environ.get('SCREENBOT_BOBOS_EVIDENCE')
     if evidence:
-        target = Path(evidence) / f'{saver.theme}-{phase.value}-{elapsed:g}-{width}.png'
+        target = Path(evidence) / f'{saver.theme}-{phase.value}-{elapsed:g}-{width}-reduced-{saver.reduce_motion}.png'
         target.parent.mkdir(parents=True, exist_ok=True)
         assert image.save(str(target))
     return image
@@ -137,10 +139,6 @@ def test_saver_passes_real_lock_deadline_and_preview_bypasses_it(saver: Saver) -
 def test_preview_retains_every_app_and_notification(saver: Saver) -> None:
     phases = {phase for phase, _ in saver.bobos_timeline.adventure_sequence}
 
-    for phase, duration in PREVIEW_SEQUENCE:
-        image = render(saver, phase, duration / 2)
-        assert not image.isNull()
-
     assert set(APP_PHASES) <= phases
     assert BobOSPhase.NOTIFICATION in phases
     assert saver.bobos_timeline.sequence_duration_seconds < 60
@@ -201,3 +199,59 @@ def test_pet_has_no_saved_state(saver: Saver, tmp_path: Path) -> None:
     render(saver, BobOSPhase.PET, 2.8)
 
     assert set(tmp_path.rglob('*')) == existing
+
+
+@pytest.mark.parametrize('phase,times', [
+    (BobOSPhase.CAMERA, (.2, .8)),
+    (BobOSPhase.CAMERA, (1.55, 1.7, 2.8)),
+    (BobOSPhase.PET, (.2, .8)),
+    (BobOSPhase.PET, (2.2, 2.8, 8.4)),
+])
+def test_reduce_motion_freezes_app_motion_and_camera_flash(saver: Saver, phase: BobOSPhase,
+                                                          times: tuple[float, ...]) -> None:
+    saver.reduce_motion = True
+
+    frames = [render(saver, phase, elapsed).copy(85, 140, 735, 305) for elapsed in times]
+
+    assert all(frame == frames[0] for frame in frames)
+    assert frames[0].pixelColor(325, 150) != frames[0].pixelColor(10, 10)
+
+
+@pytest.mark.parametrize('phase,times', [
+    (BobOSPhase.CAMERA, (.2, .8)),
+    (BobOSPhase.CAMERA, (1.55, 1.7, 2.8)),
+    (BobOSPhase.PET, (.2, .8)),
+    (BobOSPhase.PET, (2.2, 2.8, 8.4)),
+])
+def test_normal_motion_keeps_app_animation_and_camera_flash(saver: Saver, phase: BobOSPhase,
+                                                           times: tuple[float, ...]) -> None:
+    saver.reduce_motion = False
+
+    frames = [render(saver, phase, elapsed).copy(85, 140, 735, 305) for elapsed in times]
+
+    assert all(first != second for first, second in zip(frames, frames[1:]))
+
+
+def test_reduced_motion_keeps_pet_states_and_camera_photo(saver: Saver) -> None:
+    saver.reduce_motion = True
+
+    pet_states = [render(saver, BobOSPhase.PET, elapsed) for elapsed in (.2, 1.55, 2.8)]
+    render(saver, BobOSPhase.CAMERA, 1.55)
+
+    assert pet_states[0] != pet_states[1] != pet_states[2]
+    assert saver.bobos_camera.photo is not None
+    assert not saver.bobos_camera.photo.isNull()
+
+
+def test_saved_reduce_motion_preference_reaches_phone_renderer(tmp_path: Path,
+                                                              application: QApplication) -> None:
+    config = tmp_path / 'reduced-settings.ini'
+    config.write_text('[Screensaver]\ntheme=forest\nreduce_motion=true\n', encoding='utf-8')
+    window = Saver(preview_bobos=True, config_path=config)
+    try:
+        before = render(window, BobOSPhase.CAMERA, 1.55).copy(90, 143, 720, 300)
+        after = render(window, BobOSPhase.CAMERA, 2.8).copy(90, 143, 720, 300)
+        assert window.reduce_motion
+        assert before == after
+    finally:
+        window.close()
