@@ -13,7 +13,7 @@ cat > "$SANDBOX/bin/qdbus6" <<'EOF'
 if [[ "${SCREENBOT_TEST_NO_POWERDEVIL:-}" == 1 ]]; then exit 1; fi
 case "$*" in
  *isActionSupported*) echo true ;;
- *reparseConfiguration*) printf 'reload\n' >> "$HOME/reloads.log" ;;
+ *refreshStatus*) printf 'reload\n' >> "$HOME/reloads.log" ;;
  *) exit 1 ;;
 esac
 EOF
