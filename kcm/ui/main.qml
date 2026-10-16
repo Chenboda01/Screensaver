@@ -38,6 +38,7 @@ KCMUtils.SimpleKCM {
             summary: ["Random", "Space", "Mountains", "Snow", "Forest", "Futuristic City"][["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme)]
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.ComboBox {
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "Theme:"
                 model: ["Random", "Space", "Mountains", "Snow", "Forest", "Futuristic City"]
                 currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme))
@@ -58,6 +59,7 @@ KCMUtils.SimpleKCM {
                 onToggled: kcm.clockVisible = checked
             }
             Controls.ComboBox {
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "Time format:"
                 model: ["12-hour", "24-hour"]
                 currentIndex: kcm.clockFormat === "24h" ? 1 : 0
@@ -72,6 +74,7 @@ KCMUtils.SimpleKCM {
                 onToggled: kcm.showDate = checked
             }
             Controls.ComboBox {
+                Layout.maximumWidth: parent.width
                 id: clockPosition
                 Kirigami.FormData.label: "Clock position:"
                 model: ["Top left", "Top center", "Top right", "Center left", "Center", "Center right", "Bottom left", "Bottom center", "Bottom right"]
@@ -105,6 +108,8 @@ KCMUtils.SimpleKCM {
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "Animated weather:"
                 text: "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes."
                 wrapMode: Text.WordWrap
@@ -159,6 +164,8 @@ KCMUtils.SimpleKCM {
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "Live Sky:"
                 text: "Adapt landscape skies and weather to local conditions. In Space, Live Sky shows Earth’s day/night and the Moon phase, without weather effects or shooting stars. Manual weather effects are dimmed while Live Sky is enabled."
                 wrapMode: Text.WordWrap
@@ -169,13 +176,20 @@ KCMUtils.SimpleKCM {
                 checked: kcm.liveSkyEnabled
                 onToggled: kcm.liveSkyEnabled = checked
             }
-            CitySearch { settings: kcm }
+            CitySearch {
+                settings: kcm
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
+            }
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 text: "Typed searches are sent to Open-Meteo only while Live Sky is enabled. Choose a suggestion to set your location; Apply saves it. Offline search uses the bundled city catalog. No IP-based lookup is used."
                 wrapMode: Text.WordWrap
             }
             Controls.ComboBox {
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "Temperature units:"
                 model: ["Celsius", "Fahrenheit"]
                 currentIndex: kcm.liveSkyUnits === "f" ? 1 : 0
@@ -184,6 +198,7 @@ KCMUtils.SimpleKCM {
                 onActivated: function(index) { kcm.liveSkyUnits = index === 1 ? "f" : "c" }
             }
             Controls.ComboBox {
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "Weather refresh:"
                 model: ["Every 15 minutes", "Every 30 minutes", "Every 60 minutes"]
                 currentIndex: [15, 30, 60].indexOf(kcm.liveSkyInterval)
@@ -209,11 +224,14 @@ KCMUtils.SimpleKCM {
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "AI Agent Detection:"
                 text: "Choose what happens when an active terminal agent is detected. Manual launches always remain available."
                 wrapMode: Text.WordWrap
             }
             Controls.ComboBox {
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "When an agent is active:"
                 model: ["Always ask", "Always start screensaver", "Don't start screensaver while agents are running"]
                 currentIndex: ["ask", "start", "block"].indexOf(kcm.agentDetectionMode)
@@ -236,6 +254,8 @@ KCMUtils.SimpleKCM {
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: "Bob's Phone & BobOS 2.0"
                 text: "Bob's Phone contains a fictional mobile operating system. Its apps, messages, places, and games are animated drawings only."
                 wrapMode: Text.WordWrap
@@ -327,6 +347,8 @@ KCMUtils.SimpleKCM {
             }
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 text: "Countdown color preview (elapsed time)"
                 Kirigami.FormData.label: "Color transition:"
             }
@@ -345,11 +367,15 @@ KCMUtils.SimpleKCM {
             }
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 text: "The countdown begins when Bob appears. Its color smoothly changes green → yellow → orange → red as time runs out. KDE handles the actual password lock."
                 wrapMode: Text.WordWrap
             }
             Controls.Label {
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
                 text: "For password protection, configure KDE Screen Locking to require the password immediately and disable any unlock grace period. Disabling this option does not disable KDE's separate automatic locking or suspend locks."
                 wrapMode: Text.WordWrap
             }

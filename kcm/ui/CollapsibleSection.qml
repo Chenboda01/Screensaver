@@ -60,7 +60,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: section.expanded ? "" : section.summary
                     elide: Text.ElideRight
-                    color: Kirigami.Theme.disabledTextColor
+                    color: Kirigami.Theme.textColor
                 }
             }
             Controls.ToolTip.visible: hovered && !section.expanded
