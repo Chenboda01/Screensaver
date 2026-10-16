@@ -49,13 +49,16 @@ ColumnLayout {
                     implicitHeight: implicitWidth
                 }
                 Controls.Label {
+                    objectName: section.sectionKey + "TitleLabel"
                     text: section.title
                     font.bold: true
+                    color: Kirigami.Theme.textColor
                 }
                 Controls.Label {
                     text: "●"
                     visible: section.modified
                     Accessible.ignored: true
+                    color: Kirigami.Theme.textColor
                 }
                 Controls.Label {
                     Layout.fillWidth: true

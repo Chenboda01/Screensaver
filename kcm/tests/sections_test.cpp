@@ -16,6 +16,8 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QUrl>
+#include <algorithm>
+#include <cmath>
 
 class SectionsTest : public QObject {
     Q_OBJECT
@@ -184,6 +186,28 @@ private Q_SLOTS:
         QVERIFY(photoInterval);
         QVERIFY(photoOrder);
         QVERIFY(photoFit);
+        const auto luminance = [](const QColor &color) {
+            const auto channel = [](int value) {
+                const double normalized = value / 255.0;
+                return normalized <= 0.04045 ? normalized / 12.92 : std::pow((normalized + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * channel(color.red()) + 0.7152 * channel(color.green()) + 0.0722 * channel(color.blue());
+        };
+        const auto contrastRatio = [&](QQuickItem *label) {
+            const QColor foreground = label->property("color").value<QColor>();
+            const QColor background = view.color();
+            const double lighter = std::max(luminance(foreground), luminance(background));
+            const double darker = std::min(luminance(foreground), luminance(background));
+            return (lighter + 0.05) / (darker + 0.05);
+        };
+        for (const auto &name : {QStringLiteral("introText"), QStringLiteral("themeTitleLabel"), QStringLiteral("applyInstructions")}) {
+            auto *label = item(name);
+            QVERIFY(label);
+            const QColor foreground = label->property("color").value<QColor>();
+            QVERIFY2(contrastRatio(label) >= 4.5,
+                     qPrintable(QStringLiteral("Insufficient text contrast for %1: foreground %2, background %3")
+                         .arg(name, foreground.name(), view.color().name())));
+        }
         auto *photoFolderDialog = view.rootObject()->findChild<QObject *>(QStringLiteral("photoFolderDialog"));
         QVERIFY(photoFolderDialog);
         QVERIFY(!photoFolder->property("enabled").toBool());

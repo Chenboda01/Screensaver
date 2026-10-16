@@ -10,9 +10,11 @@ KCMUtils.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.largeSpacing
         Controls.Label {
+            objectName: "introText"
             Layout.fillWidth: true
             text: i18nc("@label", "Choose how Bob appears and when KDE locks your screen.")
             wrapMode: Text.WordWrap
+            color: Kirigami.Theme.textColor
         }
         Controls.Button {
             objectName: "themePreviewButton"
@@ -208,6 +210,7 @@ KCMUtils.SimpleKCM {
                 Kirigami.FormData.label: i18nc("@label", "Preview:")
                 text: i18nc("@label", "Use Preview above to see Bob with these staged settings. Weather accessories can layer alongside your choice; your headwear stays visible when weather gear would overlap.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
         }
         CollapsibleSection {
@@ -265,6 +268,7 @@ KCMUtils.SimpleKCM {
                 Layout.maximumWidth: parent.width
                 wrapMode: Text.WordWrap
                 text: i18nc("@info", "Off by default: media titles can be personal. Shows player metadata on the primary screen only; never controls playback. Previews keep media hidden.")
+                color: Kirigami.Theme.textColor
             }
             Controls.SpinBox {
                 Kirigami.FormData.label: i18nc("@label", "Clock font size:")
@@ -296,6 +300,7 @@ KCMUtils.SimpleKCM {
                 Kirigami.FormData.label: i18nc("@label", "Animated weather:")
                 text: i18nc("@label", "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
             Controls.Switch {
                 objectName: "bobWeatherEnabledSwitch"
@@ -667,6 +672,7 @@ KCMUtils.SimpleKCM {
                 Layout.maximumWidth: parent.width
                 text: i18nc("@label", "The countdown begins when Bob appears. Its color smoothly changes green → yellow → orange → red as time runs out. KDE handles the actual password lock.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
             Controls.Label {
                 Layout.fillWidth: true
@@ -674,12 +680,15 @@ KCMUtils.SimpleKCM {
                 Layout.maximumWidth: parent.width
                 text: i18nc("@label", "For password protection, configure KDE Screen Locking to require the password immediately and disable any unlock grace period. Disabling this option does not disable KDE's separate automatic locking or suspend locks.")
                 wrapMode: Text.WordWrap
+                color: Kirigami.Theme.textColor
             }
         }
         Controls.Label {
+            objectName: "applyInstructions"
             Layout.fillWidth: true
             text: i18nc("@label", "Press Apply to save your changes. Changes take effect the next time Bob starts.")
             wrapMode: Text.WordWrap
+            color: Kirigami.Theme.textColor
         }
     }
     ColorDialog {
