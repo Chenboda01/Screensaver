@@ -21,6 +21,7 @@ from screenbot.app import Saver
 from screenbot.burnin import BURN_IN_MODES, BURN_IN_SHIFT_LIMIT, burn_in_clock_drift, burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
 from screenbot.runtime import battery_powered, frame_interval_ms, particle_count
 from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, read_settings, selected_theme
+from screenbot.weather_accessories import WeatherPreview, parse_weather_preview
 
 __all__ = [
     'BURN_IN_MODES', 'BURN_IN_SHIFT_LIMIT', 'BobOSPhase', 'BobOSStatus',
@@ -50,12 +51,20 @@ def main(arguments: list[str] | None = None) -> int:
         QCommandLineOption('screen', 'Show a preview on the named display.', 'name'),
         QCommandLineOption('wifi-animation', 'Show the BobOS connection animation.'),
         QCommandLineOption('no-wifi-animation', 'Skip the BobOS connection animation.'),
+        QCommandLineOption('preview-weather', 'Force a Bob weather appearance in preview mode.', 'condition'),
     ])
     parser.process([sys.argv[0], *command_arguments])
     preview = parser.isSet('preview')
     preview_bobos = parser.isSet('preview-bobos')
-    if (preview and preview_bobos) or (parser.isSet('config') and not (preview or preview_bobos)):
+    if ((preview and preview_bobos)
+            or ((parser.isSet('config') or parser.isSet('preview-weather'))
+                and not (preview or preview_bobos))):
         parser.showHelp(2)
+    weather_override: WeatherPreview | None = None
+    if parser.isSet('preview-weather'):
+        weather_override = parse_weather_preview(parser.value('preview-weather'))
+        if weather_override is None:
+            parser.showHelp(2)
     if '--wifi-animation' in command_arguments:
         wifi_override = True
     elif '--no-wifi-animation' in command_arguments:
@@ -68,6 +77,7 @@ def main(arguments: list[str] | None = None) -> int:
             config_path=Path(parser.value('config')) if parser.isSet('config') else None,
             preview_bobos=preview_bobos,
             preview_wifi_animation=wifi_override,
+            preview_weather=weather_override,
         )
     except (OSError, configparser.Error, ValueError) as error:
         print(f'Could not read ScreenBot settings: {error}', file=sys.stderr)
@@ -75,7 +85,10 @@ def main(arguments: list[str] | None = None) -> int:
     if not saver.is_preview:
         session = ScreenSession(app, saver)
         session.start()
-        return app.exec()
+        saver.start_agent_status_worker()
+        exit_code = app.exec()
+        saver.stop_agent_status_worker()
+        return exit_code
     if parser.isSet('screen'):
         for screen in app.screens():
             if screen.name() == parser.value('screen'):

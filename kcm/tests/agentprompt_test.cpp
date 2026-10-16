@@ -77,6 +77,23 @@ private Q_SLOTS:
         QCOMPARE(reopened.agentPromptTimeout(), 0);
         QCOMPARE(reopened.agentPromptTimeoutAction(), QStringLiteral("cancel"));
     }
+    void statusBadgePreferenceAppliesAndDiscards() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        QVERIFY(kcm.agentStatusEnabled());
+        kcm.setAgentStatusEnabled(false);
+        QVERIFY(kcm.needsSave());
+        QCOMPARE(kcm.modifiedSections(), QStringList{QStringLiteral("agents")});
+        kcm.load();
+        QVERIFY(kcm.agentStatusEnabled());
+        QVERIFY(!kcm.needsSave());
+
+        kcm.setAgentStatusEnabled(false);
+        kcm.save();
+        ScreenBotKcm reopened(nullptr, KPluginMetaData());
+        QVERIFY(!reopened.agentStatusEnabled());
+        QSettings persisted(configPath(), QSettings::IniFormat);
+        QVERIFY(!persisted.value(QStringLiteral("Screensaver/agent_status_enabled")).toBool());
+    }
     void invalidSettings_data() {
         QTest::addColumn<QVariant>("input");
         QTest::addColumn<int>("expected");
@@ -121,8 +138,11 @@ private Q_SLOTS:
         auto *timeout = item("agentPromptTimeout");
         auto *action = item("agentPromptTimeoutAction");
         auto *never = item("agentPromptNever");
-        QVERIFY(timeout && action && never);
+        auto *status = item("agentStatusEnabled");
+        QVERIFY(timeout && action && never && status);
         QVERIFY(timeout->isVisible() && action->isVisible() && never->isVisible());
+        QVERIFY(status->isVisible());
+        QVERIFY(status->property("checked").toBool());
 
         timeout->forceActiveFocus();
         QTest::keyClick(&view, Qt::Key_Up);

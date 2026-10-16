@@ -26,6 +26,11 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool thunderstormsEnabled READ thunderstormsEnabled WRITE setThunderstormsEnabled NOTIFY thunderstormsEnabledChanged)
     Q_PROPERTY(bool fogEnabled READ fogEnabled WRITE setFogEnabled NOTIFY fogEnabledChanged)
     Q_PROPERTY(bool shootingStarsEnabled READ shootingStarsEnabled WRITE setShootingStarsEnabled NOTIFY shootingStarsEnabledChanged)
+    Q_PROPERTY(bool bobWeatherEnabled READ bobWeatherEnabled WRITE setBobWeatherEnabled NOTIFY bobWeatherEnabledChanged)
+    Q_PROPERTY(QString bobName READ bobName WRITE setBobName NOTIFY bobNameChanged)
+    Q_PROPERTY(QString bobColorPreset READ bobColorPreset WRITE setBobColorPreset NOTIFY bobColorPresetChanged)
+    Q_PROPERTY(QString bobCustomColor READ bobCustomColor WRITE setBobCustomColor NOTIFY bobCustomColorChanged)
+    Q_PROPERTY(QString bobAccessory READ bobAccessory WRITE setBobAccessory NOTIFY bobAccessoryChanged)
     Q_PROPERTY(bool liveSkyEnabled READ liveSkyEnabled WRITE setLiveSkyEnabled NOTIFY liveSkyEnabledChanged)
     Q_PROPERTY(QStringList liveSkyLocations READ liveSkyLocations CONSTANT)
     Q_PROPERTY(QString liveSkyLocation READ liveSkyLocation WRITE setLiveSkyLocation NOTIFY liveSkyLocationChanged)
@@ -35,6 +40,7 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(int liveSkyInterval READ liveSkyInterval WRITE setLiveSkyInterval NOTIFY liveSkyIntervalChanged)
     Q_PROPERTY(bool liveSkyConditions READ liveSkyConditions WRITE setLiveSkyConditions NOTIFY liveSkyConditionsChanged)
     Q_PROPERTY(QString agentDetectionMode READ agentDetectionMode WRITE setAgentDetectionMode NOTIFY agentDetectionModeChanged)
+    Q_PROPERTY(bool agentStatusEnabled READ agentStatusEnabled WRITE setAgentStatusEnabled NOTIFY agentStatusEnabledChanged)
     Q_PROPERTY(int agentPromptTimeout READ agentPromptTimeout WRITE setAgentPromptTimeout NOTIFY agentPromptTimeoutChanged)
     Q_PROPERTY(QString agentPromptTimeoutAction READ agentPromptTimeoutAction WRITE setAgentPromptTimeoutAction NOTIFY agentPromptTimeoutActionChanged)
     Q_PROPERTY(bool phoneEnabled READ phoneEnabled WRITE setPhoneEnabled NOTIFY phoneEnabledChanged)
@@ -66,6 +72,11 @@ public:
     bool thunderstormsEnabled() const { return m_thunderstormsEnabled; }
     bool fogEnabled() const { return m_fogEnabled; }
     bool shootingStarsEnabled() const { return m_shootingStarsEnabled; }
+    bool bobWeatherEnabled() const { return m_bobWeatherEnabled; }
+    QString bobName() const { return m_bobName; }
+    QString bobColorPreset() const { return m_bobColorPreset; }
+    QString bobCustomColor() const { return m_bobCustomColor; }
+    QString bobAccessory() const { return m_bobAccessory; }
     bool liveSkyEnabled() const { return m_liveSkyEnabled; }
     QStringList liveSkyLocations() const { return m_liveSkyLocations; }
     QString liveSkyLocation() const { return m_liveSkyLocation; }
@@ -76,6 +87,7 @@ public:
     int liveSkyInterval() const { return m_liveSkyInterval; }
     bool liveSkyConditions() const { return m_liveSkyConditions; }
     QString agentDetectionMode() const { return m_agentDetectionMode; }
+    bool agentStatusEnabled() const { return m_agentStatusEnabled; }
     int agentPromptTimeout() const { return m_agentPromptTimeout; }
     QString agentPromptTimeoutAction() const { return m_agentPromptTimeoutAction; }
     bool phoneEnabled() const { return m_phoneEnabled; }
@@ -99,12 +111,18 @@ public:
     void setThunderstormsEnabled(bool value);
     void setFogEnabled(bool value);
     void setShootingStarsEnabled(bool value);
+    void setBobWeatherEnabled(bool value);
+    void setBobName(const QString &value);
+    void setBobColorPreset(const QString &value);
+    void setBobCustomColor(const QString &value);
+    void setBobAccessory(const QString &value);
     void setLiveSkyEnabled(bool value);
     void setLiveSkyLocation(const QString &value);
     void setLiveSkyUnits(const QString &value);
     void setLiveSkyInterval(int value);
     void setLiveSkyConditions(bool value);
     void setAgentDetectionMode(const QString &value);
+    void setAgentStatusEnabled(bool value);
     void setAgentPromptTimeout(int value);
     void setAgentPromptTimeoutAction(const QString &value);
     Q_INVOKABLE void resetRememberedAgentChoice();
@@ -136,12 +154,18 @@ Q_SIGNALS:
     void thunderstormsEnabledChanged();
     void fogEnabledChanged();
     void shootingStarsEnabledChanged();
+    void bobWeatherEnabledChanged();
+    void bobNameChanged();
+    void bobColorPresetChanged();
+    void bobCustomColorChanged();
+    void bobAccessoryChanged();
     void liveSkyEnabledChanged();
     void liveSkyLocationChanged();
     void liveSkyUnitsChanged();
     void liveSkyIntervalChanged();
     void liveSkyConditionsChanged();
     void agentDetectionModeChanged();
+    void agentStatusEnabledChanged();
     void agentPromptTimeoutChanged();
     void agentPromptTimeoutActionChanged();
     void phoneEnabledChanged();
@@ -175,6 +199,11 @@ private:
     bool m_thunderstormsEnabled = false;
     bool m_fogEnabled = false;
     bool m_shootingStarsEnabled = false;
+    bool m_bobWeatherEnabled = true;
+    QString m_bobName = QStringLiteral("Bob");
+    QString m_bobColorPreset = QStringLiteral("cyan");
+    QString m_bobCustomColor = QStringLiteral("#6bf6ff");
+    QString m_bobAccessory = QStringLiteral("none");
     bool m_liveSkyEnabled = false;
     QStringList m_liveSkyLocations;
     QString m_liveSkyLocation;
@@ -185,6 +214,7 @@ private:
     int m_liveSkyInterval = 30;
     bool m_liveSkyConditions = true;
     QString m_agentDetectionMode = QStringLiteral("ask");
+    bool m_agentStatusEnabled = true;
     int m_agentPromptTimeout = 10;
     QString m_agentPromptTimeoutAction = QStringLiteral("start");
     bool m_savedClockVisible = true;
@@ -197,12 +227,18 @@ private:
     bool m_savedThunderstormsEnabled = false;
     bool m_savedFogEnabled = false;
     bool m_savedShootingStarsEnabled = false;
+    bool m_savedBobWeatherEnabled = true;
+    QString m_savedBobName = QStringLiteral("Bob");
+    QString m_savedBobColorPreset = QStringLiteral("cyan");
+    QString m_savedBobCustomColor = QStringLiteral("#6bf6ff");
+    QString m_savedBobAccessory = QStringLiteral("none");
     bool m_savedLiveSkyEnabled = false;
     QString m_savedLiveSkyLocation;
     QString m_savedLiveSkyUnits = QStringLiteral("c");
     int m_savedLiveSkyInterval = 30;
     bool m_savedLiveSkyConditions = true;
     QString m_savedAgentDetectionMode = QStringLiteral("ask");
+    bool m_savedAgentStatusEnabled = true;
     int m_savedAgentPromptTimeout = 10;
     QString m_savedAgentPromptTimeoutAction = QStringLiteral("start");
     bool m_phoneEnabled = true;

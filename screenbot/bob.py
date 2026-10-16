@@ -5,15 +5,18 @@ from bobos import BobOSPhase, BobOSStatus
 
 
 class BobRenderer:
-    def bob(self, p: QPainter, w: int, h: int, t: float, status: BobOSStatus) -> None:
+    def bob(self, p: QPainter, w: int, h: int, t: float, status: BobOSStatus,
+            celebration_elapsed: float | None = None) -> None:
         """Paint Bob as a floating head with expressions driven by his phone use."""
+        celebrating = celebration_elapsed is not None
         appearance = self.bob_appearance
         palette = appearance.palette()
 
         def color(key: str, alpha: int = 255) -> QColor:
             return QColor(*palette[key], alpha)
 
-        mood = self.bob_mood(status.phase, t)
+        weather_mood = self.weather_mood_override(status, t)
+        mood = 'happy' if celebrating else (weather_mood or self.bob_mood(status.phase, t))
         pose_time = t
         if mood == 'sleepy':
             pose_time = t - (t % 32.0 - 22.0)
@@ -24,7 +27,11 @@ class BobRenderer:
         p.save()
         p.translate(x, y)
         p.scale(scale, scale)
-        p.rotate(math.sin(pose_time*.72)*2.4)
+        rotation = math.sin(pose_time*.72)*2.4
+        rotation += self.weather_tilt_degrees(status, t)
+        if celebration_elapsed is not None:
+            rotation += math.sin(celebration_elapsed*math.tau*.72)*13
+        p.rotate(rotation)
         p.setPen(Qt.PenStyle.NoPen)
         halo = QRadialGradient(QPointF(0, 2), 185)
         halo.setColorAt(0, color('glow', 78))
@@ -45,6 +52,15 @@ class BobRenderer:
         p.setPen(QPen(color('face_outline'), 4))
         p.setBrush(color('face'))
         p.drawRoundedRect(QRectF(-76, -96, 152, 144), 32, 32)
+        if celebrating and celebration_elapsed is not None:
+            confetti = ('#ffcf69', '#77e4a0', '#63d9ff', '#e89aff', '#ff8d88', '#fff1a6')
+            p.setPen(Qt.PenStyle.NoPen)
+            for index, confetti_color in enumerate(confetti):
+                angle = index * math.tau / len(confetti) + celebration_elapsed * 1.8
+                radius = 108 + 12 * math.sin(celebration_elapsed * 4.0 + index)
+                p.setBrush(QColor(confetti_color))
+                p.drawEllipse(QPointF(math.cos(angle) * radius,
+                                      -24 + math.sin(angle) * radius), 4, 5)
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(color('face_inset'))
         p.drawRoundedRect(QRectF(-63, -76, 126, 102), 24, 24)
@@ -59,6 +75,13 @@ class BobRenderer:
             p.setPen(QPen(eyes, 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             p.drawLine(-35, -22, -12, -22)
             p.drawLine(12, -22, 35, -22)
+        elif mood == 'squint':
+            p.setPen(QPen(eyes, 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawLine(-38, -18, -12, -18)
+            p.drawLine(12, -18, 38, -18)
+        elif mood == 'look-up':
+            p.drawEllipse(QPointF(-24, -30), 10, 13)
+            p.drawEllipse(QPointF(24, -30), 10, 13)
         elif mood == 'curious':
             p.drawEllipse(QPointF(-24, -18), 11, 16)
             p.drawEllipse(QPointF(24, -18), 11, 16)
@@ -72,7 +95,7 @@ class BobRenderer:
             p.drawRoundedRect(QRectF(-37, -30, 26, 20), 9, 9)
             p.drawRoundedRect(QRectF(11, -30, 26, 20), 9, 9)
         p.setPen(QPen(eyes, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        if mood == 'curious':
+        if mood in ('curious', 'look-up'):
             p.drawEllipse(QPointF(0, 6), 5, 7)
         elif mood == 'confused':
             p.drawArc(QRectF(-16, 4, 32, 18), 20*16, 140*16)
@@ -108,6 +131,9 @@ class BobRenderer:
         """Optional weather-owned expression, separate from the normal mood cycle."""
         return None
 
+    def weather_tilt_degrees(self, status: BobOSStatus, t: float) -> float:
+        """Optional weather-owned tilt, separate from the base Bob sway."""
+        return 0.0
     @staticmethod
     def draw_custom_accessory(p: QPainter, accessory: str, palette: dict[str, tuple[int, int, int]]) -> None:
         """Paint only the user's chosen head accessory; weather layers stay separate."""
@@ -123,10 +149,10 @@ class BobRenderer:
         elif accessory == 'bow-tie':
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(accent)
-            p.drawPolygon([QPointF(-20, -104), QPointF(-2, -96), QPointF(-20, -88)])
-            p.drawPolygon([QPointF(20, -104), QPointF(2, -96), QPointF(20, -88)])
+            p.drawPolygon([QPointF(-20, 29), QPointF(-2, 37), QPointF(-20, 45)])
+            p.drawPolygon([QPointF(20, 29), QPointF(2, 37), QPointF(20, 45)])
             p.setBrush(QColor('#fff3d0'))
-            p.drawEllipse(QPointF(0, -96), 4, 4)
+            p.drawEllipse(QPointF(0, 37), 4, 4)
         elif accessory == 'headphones':
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawArc(QRectF(-81, -110, 162, 116), 0, 180 * 16)
