@@ -61,7 +61,9 @@ QStringList ScreenBotKcm::modifiedSections() const {
         || m_liveSkyUnits != m_savedLiveSkyUnits
         || m_liveSkyInterval != m_savedLiveSkyInterval
         || m_liveSkyConditions != m_savedLiveSkyConditions) sections.append(QStringLiteral("liveSky"));
-    if (m_agentDetectionMode != m_savedAgentDetectionMode) sections.append(QStringLiteral("agents"));
+    if (m_agentDetectionMode != m_savedAgentDetectionMode
+        || m_agentPromptTimeout != m_savedAgentPromptTimeout
+        || m_agentPromptTimeoutAction != m_savedAgentPromptTimeoutAction) sections.append(QStringLiteral("agents"));
     if (m_phoneEnabled != m_savedPhoneEnabled
         || m_bobosEnabled != m_savedBobosEnabled
         || m_bobosActivationDelay != m_savedBobosActivationDelay
@@ -146,6 +148,11 @@ void ScreenBotKcm::load() {
     const QString requestedAgentMode = cfg.value(QStringLiteral("Screensaver/agent_detection_mode"), QStringLiteral("ask")).toString();
     const QString agentMode = requestedAgentMode == QLatin1String("start") || requestedAgentMode == QLatin1String("block")
         ? requestedAgentMode : QStringLiteral("ask");
+    bool timeoutOk = false;
+    const int requestedTimeout = cfg.value(QStringLiteral("Screensaver/agent_prompt_timeout_seconds"), 10).toInt(&timeoutOk);
+    const int promptTimeout = !timeoutOk ? 10 : (requestedTimeout == 0 ? 0 : qBound(5, requestedTimeout, 120));
+    const QString requestedTimeoutAction = cfg.value(QStringLiteral("Screensaver/agent_prompt_timeout_action"), QStringLiteral("start")).toString();
+    const QString promptTimeoutAction = requestedTimeoutAction == QLatin1String("cancel") ? requestedTimeoutAction : QStringLiteral("start");
     const bool phone = cfg.value(QStringLiteral("Screensaver/bob_phone_enabled"),
                                   cfg.value(QStringLiteral("Screensaver/ai_backpack_enabled"), true)).toBool();
     const bool bobos = cfg.value(QStringLiteral("Screensaver/bobos_enabled"), true).toBool();
@@ -172,6 +179,8 @@ void ScreenBotKcm::load() {
     if (m_liveSkyInterval != liveSkyInterval) { m_liveSkyInterval = liveSkyInterval; Q_EMIT liveSkyIntervalChanged(); }
     if (m_liveSkyConditions != liveSkyConditions) { m_liveSkyConditions = liveSkyConditions; Q_EMIT liveSkyConditionsChanged(); }
     if (m_agentDetectionMode != agentMode) { m_agentDetectionMode = agentMode; Q_EMIT agentDetectionModeChanged(); }
+    if (m_agentPromptTimeout != promptTimeout) { m_agentPromptTimeout = promptTimeout; Q_EMIT agentPromptTimeoutChanged(); }
+    if (m_agentPromptTimeoutAction != promptTimeoutAction) { m_agentPromptTimeoutAction = promptTimeoutAction; Q_EMIT agentPromptTimeoutActionChanged(); }
     if (m_phoneEnabled != phone) { m_phoneEnabled = phone; Q_EMIT phoneEnabledChanged(); }
     if (m_bobosEnabled != bobos) { m_bobosEnabled = bobos; Q_EMIT bobosEnabledChanged(); }
     if (m_bobosActivationDelay != bobosDelay) { m_bobosActivationDelay = bobosDelay; Q_EMIT bobosActivationDelayChanged(); }
@@ -197,6 +206,8 @@ void ScreenBotKcm::load() {
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
     m_savedAgentDetectionMode = m_agentDetectionMode;
+    m_savedAgentPromptTimeout = m_agentPromptTimeout;
+    m_savedAgentPromptTimeoutAction = m_agentPromptTimeoutAction;
     m_savedPhoneEnabled = m_phoneEnabled;
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
@@ -230,6 +241,8 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/live_sky_interval"), m_liveSkyInterval);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_conditions"), m_liveSkyConditions);
     cfg.setValue(QStringLiteral("Screensaver/agent_detection_mode"), m_agentDetectionMode);
+    cfg.setValue(QStringLiteral("Screensaver/agent_prompt_timeout_seconds"), m_agentPromptTimeout);
+    cfg.setValue(QStringLiteral("Screensaver/agent_prompt_timeout_action"), m_agentPromptTimeoutAction);
     cfg.setValue(QStringLiteral("Screensaver/bob_phone_enabled"), m_phoneEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_enabled"), m_bobosEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_activation_delay"), m_bobosActivationDelay);
@@ -265,6 +278,8 @@ void ScreenBotKcm::save() {
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
     m_savedAgentDetectionMode = m_agentDetectionMode;
+    m_savedAgentPromptTimeout = m_agentPromptTimeout;
+    m_savedAgentPromptTimeoutAction = m_agentPromptTimeoutAction;
     m_savedPhoneEnabled = m_phoneEnabled;
     m_savedBobosEnabled = m_bobosEnabled;
     m_savedBobosActivationDelay = m_bobosActivationDelay;
@@ -439,6 +454,22 @@ void ScreenBotKcm::setAgentDetectionMode(const QString &value) {
     if (value == m_agentDetectionMode) return;
     m_agentDetectionMode = value;
     Q_EMIT agentDetectionModeChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setAgentPromptTimeout(int value) {
+    value = value == 0 ? 0 : qBound(5, value, 120);
+    if (value == m_agentPromptTimeout) return;
+    m_agentPromptTimeout = value;
+    Q_EMIT agentPromptTimeoutChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setAgentPromptTimeoutAction(const QString &value) {
+    const QString action = value == QLatin1String("cancel") ? value : QStringLiteral("start");
+    if (action == m_agentPromptTimeoutAction) return;
+    m_agentPromptTimeoutAction = action;
+    Q_EMIT agentPromptTimeoutActionChanged();
     checkModified();
 }
 

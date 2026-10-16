@@ -237,6 +237,45 @@ KCMUtils.SimpleKCM {
                 currentIndex: ["ask", "start", "block"].indexOf(kcm.agentDetectionMode)
                 onActivated: function(index) { kcm.agentDetectionMode = ["ask", "start", "block"][index] }
             }
+            Controls.CheckBox {
+                objectName: "agentPromptNever"
+                Kirigami.FormData.label: "Automatic answer:"
+                text: "Never (wait for me)"
+                visible: kcm.agentDetectionMode === "ask"
+                checked: kcm.agentPromptTimeout === 0
+                onToggled: kcm.agentPromptTimeout = checked ? 0 : 10
+            }
+            Controls.SpinBox {
+                objectName: "agentPromptTimeout"
+                Kirigami.FormData.label: "Answer automatically after (s):"
+                Accessible.name: "Answer automatically after, in seconds"
+                visible: kcm.agentDetectionMode === "ask"
+                enabled: kcm.agentPromptTimeout !== 0
+                from: 5
+                to: 120
+                value: kcm.agentPromptTimeout || 10
+                editable: true
+                onValueModified: kcm.agentPromptTimeout = value
+            }
+            Controls.ComboBox {
+                objectName: "agentPromptTimeoutAction"
+                Layout.maximumWidth: parent.width
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
+                Kirigami.FormData.label: "When time runs out:"
+                visible: kcm.agentDetectionMode === "ask"
+                enabled: kcm.agentPromptTimeout !== 0
+                model: ["Start screensaver (Yes)", "Keep desktop visible (No)"]
+                currentIndex: kcm.agentPromptTimeoutAction === "cancel" ? 1 : 0
+                onActivated: function(index) { kcm.agentPromptTimeoutAction = index === 1 ? "cancel" : "start" }
+            }
+            Controls.Label {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
+                visible: kcm.agentDetectionMode === "ask"
+                text: "Interacting with the prompt pauses its countdown. Automatic answers never remember a choice."
+                wrapMode: Text.WordWrap
+            }
             Controls.Button {
                 objectName: "resetAgentChoiceButton"
                 Kirigami.FormData.label: "Remembered choice:"
