@@ -30,6 +30,8 @@ private Q_SLOTS:
         const auto item = [&](const char *name) { return root->findChild<QQuickItem *>(QLatin1String(name)); };
         QCOMPARE(item("themeSection")->property("title").toString(), spanish ? QStringLiteral("Tema") : QStringLiteral("Theme"));
         QCOMPARE(item("clockSection")->property("title").toString(), spanish ? QStringLiteral("Reloj") : QStringLiteral("Clock"));
+        QCOMPARE(item("appearanceSection")->property("title").toString(),
+                 spanish ? QStringLiteral("Personalizar Bob") : QStringLiteral("Customize Bob"));
         QCOMPARE(item("themePreviewButton")->property("text").toString(), spanish ? QStringLiteral("Vista previa") : QStringLiteral("Preview"));
         auto *delay = item("bobosDelay");
         QVERIFY(delay);
@@ -58,7 +60,7 @@ private Q_SLOTS:
         QVERIFY(!kcm->needsSave());
         QSettings persisted(config, QSettings::IniFormat);
         QCOMPARE(persisted.value(QStringLiteral("Screensaver/theme")).toString(), QStringLiteral("forest"));
-        const QStringList keys{QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("lock")};
+        const QStringList keys{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock")};
         window.setColor(QApplication::palette().window().color());
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
