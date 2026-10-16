@@ -75,7 +75,10 @@ def main(arguments: list[str] | None = None) -> int:
     if not saver.is_preview:
         session = ScreenSession(app, saver)
         session.start()
-        return app.exec()
+        saver.start_agent_status_worker()
+        exit_code = app.exec()
+        saver.stop_agent_status_worker()
+        return exit_code
     if parser.isSet('screen'):
         for screen in app.screens():
             if screen.name() == parser.value('screen'):

@@ -1,12 +1,15 @@
 """Privacy-safe status transitions for the optional screensaver agent badge."""
 
+import logging
 from dataclasses import dataclass
 from enum import StrEnum
+import time
 from typing import Final, assert_never
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from agent_prompt import DetectionResult, terminal_agent_status
+from agent_prompt import terminal_agent_status
+from screenbot.agent_detection import DetectionResult
 
 
 class AgentBadgePhase(StrEnum):
@@ -73,6 +76,8 @@ class AgentStatusTracker:
 
 
 POLL_INTERVAL_SECONDS: Final[float] = 7.5
+MAX_SCAN_SECONDS: Final[float] = 10.0
+_LOGGER: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 class AgentStatusWorker(QThread):
@@ -86,42 +91,50 @@ class AgentStatusWorker(QThread):
         self._stopping = False
 
     def stop(self) -> None:
-        """Request an orderly exit; the bounded wait is at most one poll period."""
+        """Request an orderly exit and join after the visible UI has closed."""
+        self.request_stop()
+        self.wait()
+
+    def request_stop(self) -> None:
+        """Ask the worker to stop without blocking the caller or UI thread."""
         self._stopping = True
         self.requestInterruption()
-        self.wait(round((POLL_INTERVAL_SECONDS + 2) * 1000))
 
     def run(self) -> None:
         """Scan immediately, then wait between scans without blocking the UI."""
         while not self._stopping and not self.isInterruptionRequested():
+            scan_started = self._monotonic_time()
+            detection = terminal_agent_status()
+            scan_finished = self._monotonic_time()
             snapshot = self._tracker.observe(
-                terminal_agent_status(),
-                self._monotonic_time(),
+                detection,
+                scan_finished,
                 self._wall_time(),
             )
             self.status_changed.emit(snapshot)
-            if self._wait_for_next_scan():
+            scan_duration = max(0.0, scan_finished - scan_started)
+            if scan_duration > MAX_SCAN_SECONDS:
+                _LOGGER.warning("AI agent status scan exceeded 10 seconds (%.1f s).", scan_duration)
+            if self._wait_for_next_scan(max(0.0, POLL_INTERVAL_SECONDS - scan_duration)):
                 break
 
     @staticmethod
     def _monotonic_time() -> float:
         """Provide an overridable monotonic clock for deterministic worker tests."""
-        import time
-
         return time.monotonic()
 
     @staticmethod
     def _wall_time() -> float:
         """Provide an overridable wall clock for the visible completion time."""
-        import time
-
         return time.time()
 
-    def _wait_for_next_scan(self) -> bool:
+    def _wait_for_next_scan(self, wait_seconds: float) -> bool:
         """Wait using Qt's interruption-aware thread sleep."""
-        remaining_ms = round(POLL_INTERVAL_SECONDS * 1000)
-        while remaining_ms > 0 and not self._stopping and not self.isInterruptionRequested():
+        deadline = time.monotonic() + max(0.0, wait_seconds)
+        while not self._stopping and not self.isInterruptionRequested():
+            remaining_ms = round((deadline - time.monotonic()) * 1000)
+            if remaining_ms <= 0:
+                break
             step_ms = min(remaining_ms, 250)
             self.msleep(step_ms)
-            remaining_ms -= step_ms
         return self._stopping or self.isInterruptionRequested()
