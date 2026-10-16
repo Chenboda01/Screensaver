@@ -86,8 +86,10 @@ def main(arguments: list[str] | None = None) -> int:
         session = ScreenSession(app, saver)
         session.start()
         saver.start_agent_status_worker()
+        saver.start_media_worker()
         exit_code = app.exec()
         saver.stop_agent_status_worker()
+        saver.stop_media_worker()
         return exit_code
     if parser.isSet('screen'):
         for screen in app.screens():
