@@ -113,6 +113,7 @@ def test_escape_dismisses_without_remembering(app: QApplication) -> None:
 
 def test_enter_selects_the_default_answer(app: QApplication) -> None:
     dialog = agent_prompt.AgentPromptDialog(agent_prompt.PromptSettings())
+    dialog.show()
     dialog.remember_checkbox.setChecked(True)
 
     QTest.keyClick(dialog, Qt.Key.Key_Return)
