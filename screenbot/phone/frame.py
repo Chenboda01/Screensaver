@@ -85,6 +85,10 @@ class PhoneFrameRenderer:
             self.draw_calendar(p, status.phase_elapsed_seconds, t)
         elif status.phase is BobOSPhase.APP_STORE:
             self.draw_app_store(p, status.phase_elapsed_seconds, t)
+        elif status.phase is BobOSPhase.CAMERA:
+            self.draw_camera(p, status.phase_elapsed_seconds, t)
+        elif status.phase is BobOSPhase.PET:
+            self.draw_pet(p, status.phase_elapsed_seconds, t)
         else:
             p.fillRect(screen, QColor(3, 6, 15, min(235, int(status.phase_elapsed_seconds*40))))
             p.setPen(QColor('#aeefff'))

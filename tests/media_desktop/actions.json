@@ -1,0 +1,118 @@
+[
+  {
+    "operation": "click",
+    "x": 510,
+    "y": 419,
+    "label": "clock-open",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "Tab",
+    "label": "focus-1",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "Tab",
+    "label": "focus-2",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "Tab",
+    "label": "focus-3",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "Tab",
+    "label": "focus-4",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "Tab",
+    "label": "focus-5",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "space",
+    "label": "media-on-pending",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "Tab",
+    "shift": true,
+    "label": "reverse-focus",
+    "expect_saved": null
+  },
+  {
+    "operation": "key",
+    "key": "Tab",
+    "label": "return-focus",
+    "expect_saved": null
+  },
+  {
+    "operation": "click",
+    "x": 996,
+    "y": 821,
+    "label": "media-applied",
+    "expect_saved": true
+  },
+  {
+    "operation": "click",
+    "x": 648,
+    "y": 570,
+    "label": "media-off-pending",
+    "expect_saved": true
+  },
+  {
+    "operation": "click",
+    "x": 372,
+    "y": 266,
+    "label": "navigate-unsaved",
+    "expect_saved": true,
+    "expect_dialog": true
+  },
+  {
+    "operation": "click",
+    "x": 768,
+    "y": 480,
+    "label": "discarded-to-colors",
+    "expect_saved": true
+  },
+  {
+    "operation": "click",
+    "x": 372,
+    "y": 195,
+    "label": "returned-after-discard",
+    "expect_saved": true
+  },
+  {
+    "operation": "click",
+    "x": 648,
+    "y": 570,
+    "label": "off-pending-again",
+    "expect_saved": true
+  },
+  {
+    "operation": "click",
+    "x": 996,
+    "y": 821,
+    "label": "off-applied",
+    "expect_saved": false
+  },
+  {
+    "operation": "capture",
+    "label": "off-settled-repeat",
+    "expect_saved": false
+  },
+  {
+    "operation": "done",
+    "label": "completed",
+    "expect_saved": false
+  }
+]

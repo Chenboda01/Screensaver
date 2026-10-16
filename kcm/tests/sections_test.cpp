@@ -56,7 +56,7 @@ private Q_SLOTS:
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
             {QStringLiteral("photoFolder"), QStringLiteral("/tmp/screenbot-photo-test")}, {QStringLiteral("photoIncludeSubfolders"), true},
             {QStringLiteral("photoInterval"), 45}, {QStringLiteral("photoOrder"), QStringLiteral("random")}, {QStringLiteral("photoFit"), QStringLiteral("fit-blur")},
-            {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
+            {QStringLiteral("nowPlayingEnabled"), true}, {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
             {QStringLiteral("bobWeatherEnabled"), false},
             {QStringLiteral("bobName"), QStringLiteral("Pixel👩‍🚀")},

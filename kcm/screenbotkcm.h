@@ -22,6 +22,7 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool passwordLock READ passwordLock WRITE setPasswordLock NOTIFY passwordLockChanged)
     Q_PROPERTY(int lockMinutes READ lockMinutes WRITE setLockMinutes NOTIFY lockMinutesChanged)
     Q_PROPERTY(bool showTimer READ showTimer WRITE setShowTimer NOTIFY showTimerChanged)
+    Q_PROPERTY(bool nowPlayingEnabled READ nowPlayingEnabled WRITE setNowPlayingEnabled NOTIFY nowPlayingEnabledChanged)
     Q_PROPERTY(bool clockVisible READ clockVisible WRITE setClockVisible NOTIFY clockVisibleChanged)
     Q_PROPERTY(QString clockFormat READ clockFormat WRITE setClockFormat NOTIFY clockFormatChanged)
     Q_PROPERTY(bool showDate READ showDate WRITE setShowDate NOTIFY showDateChanged)
@@ -74,6 +75,7 @@ public:
     bool passwordLock() const { return m_passwordLock; }
     int lockMinutes() const { return m_lockMinutes; }
     bool showTimer() const { return m_showTimer; }
+    bool nowPlayingEnabled() const { return m_nowPlayingEnabled; }
     bool clockVisible() const { return m_clockVisible; }
     QString clockFormat() const { return m_clockFormat; }
     bool showDate() const { return m_showDate; }
@@ -119,6 +121,7 @@ public:
     void setLockMinutes(int value);
     void setShowTimer(bool value);
     void setClockVisible(bool value);
+    void setNowPlayingEnabled(bool value);
     void setClockFormat(const QString &value);
     void setShowDate(bool value);
     void setClockPosition(const QString &value);
@@ -167,6 +170,7 @@ Q_SIGNALS:
     void lockMinutesChanged();
     void showTimerChanged();
     void clockVisibleChanged();
+    void nowPlayingEnabledChanged();
     void clockFormatChanged();
     void showDateChanged();
     void clockPositionChanged();
@@ -222,6 +226,8 @@ private:
     int m_savedLockMinutes = 2;
     bool m_savedShowTimer = false;
     bool m_clockVisible = true;
+    bool m_nowPlayingEnabled = false;
+    bool m_savedNowPlayingEnabled = false;
     QString m_clockFormat = QStringLiteral("12h");
     bool m_showDate = false;
     QString m_clockPosition = QStringLiteral("top-center");

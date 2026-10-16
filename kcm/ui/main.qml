@@ -243,6 +243,21 @@ KCMUtils.SimpleKCM {
                 enabled: kcm.clockVisible
                 onActivated: function(index) { kcm.clockPosition = values[index] }
             }
+            Controls.Switch {
+                objectName: "nowPlayingEnabled"
+                Kirigami.FormData.label: i18nc("@label", "Show what's playing:")
+                text: checked ? i18nc("@label", "Show media title and artist") : i18nc("@label", "Hidden")
+                checked: kcm.nowPlayingEnabled
+                onToggled: kcm.nowPlayingEnabled = checked
+                Accessible.name: i18nc("@label", "Show what's playing")
+            }
+            Controls.Label {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 25
+                Layout.maximumWidth: parent.width
+                wrapMode: Text.WordWrap
+                text: i18nc("@info", "Off by default: media titles can be personal. Shows player metadata on the primary screen only; never controls playback. Previews keep media hidden.")
+            }
             Controls.SpinBox {
                 Kirigami.FormData.label: i18nc("@label", "Clock font size:")
                 from: 16
