@@ -5,6 +5,7 @@ from PyQt6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient
 
 from bobos import BobOSPhase, BobOSStatus
 from screenbot.themes import underwater
+from screenbot.seasonal_renderer import draw_seasonal_bob_hat
 
 
 class BobRenderer:
@@ -116,6 +117,7 @@ class BobRenderer:
         p.drawEllipse(QPointF(44, 5), 5, 5)
         self.draw_custom_accessory(p, appearance.accessory, palette)
         self.draw_weather_accessory(p, t, palette)
+        draw_seasonal_bob_hat(p, getattr(self, 'seasonal_bob_hat', ''))
         if getattr(self, 'theme', None) == 'underwater':
             underwater.draw_bob_diving_helmet(p, QPointF(0, -24), 83)
         if self.phone_enabled and status.phase in {

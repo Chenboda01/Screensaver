@@ -3,6 +3,7 @@
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
+import configparser
 
 from screenbot.seasonal import (
     LUNAR_NEW_YEAR_DATES,
@@ -12,9 +13,11 @@ from screenbot.seasonal import (
     SeasonalEvent,
     calendar_state,
     effective_preview_date,
+    effective_preview_datetime,
     hemisphere_for_latitude,
     new_year_countdown_seconds,
     season_for_date,
+    seasonal_preferences,
 )
 
 
@@ -181,6 +184,46 @@ def test_preview_without_override_keeps_system_local_date() -> None:
     selected = effective_preview_date(system_date, None, preview_mode=True)
     # Then it follows the supplied local date.
     assert selected == system_date
+
+
+def test_preview_datetime_override_is_local_and_regular_mode_ignores_it() -> None:
+    # Given system-local time and a forced preview time for Halloween night.
+    system_now = datetime(2026, 10, 16, 18, 30, tzinfo=timezone.utc)
+    forced_now = datetime(2026, 10, 31, 23, 59)
+    # When resolving preview and normal-session wall clocks.
+    preview_now = effective_preview_datetime(system_now, forced_now, preview_mode=True)
+    session_now = effective_preview_datetime(system_now, forced_now, preview_mode=False)
+    # Then the preview override inherits local timezone while normal mode is unchanged.
+    assert (preview_now.date(), preview_now.hour, preview_now.minute) == (date(2026, 10, 31), 23, 59)
+    assert session_now == system_now
+
+
+def test_seasonal_settings_default_to_generic_new_year_only() -> None:
+    # Given a fresh local settings file with no seasonal preferences.
+    settings = configparser.ConfigParser()
+    # When parsing the default seasonal options.
+    preferences = seasonal_preferences(settings)
+    # Then generic New Year decorations are available and personal/cultural events remain opt-in.
+    assert preferences.enabled
+    assert preferences.events == frozenset({SeasonalEvent.NEW_YEAR})
+    assert preferences.birthday is None
+
+
+def test_seasonal_settings_read_birthday_only_from_local_config_values() -> None:
+    # Given local settings with a birthday date and display name.
+    settings = configparser.ConfigParser()
+    settings.read_dict({"Screensaver": {
+        "seasonal_enabled": "true",
+        "seasonal_birthday_enabled": "true",
+        "seasonal_birthday_date": "07-04",
+        "seasonal_birthday_name": "Pixel",
+    }})
+    # When parsing event preferences.
+    preferences = seasonal_preferences(settings)
+    # Then the typed birthday is retained in memory with only month/day.
+    assert preferences.birthday is not None
+    assert (preferences.birthday.month, preferences.birthday.day, preferences.birthday.name) == (7, 4, "Pixel")
+    assert SeasonalEvent.BIRTHDAY in preferences.events
 
 
 @pytest.mark.parametrize(

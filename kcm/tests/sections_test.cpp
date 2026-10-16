@@ -18,7 +18,7 @@
 
 class SectionsTest : public QObject {
     Q_OBJECT
-    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock") };
+    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("seasonal"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock") };
     QString configPath() const { return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation); }
     QByteArray savedBytes() {
         QFile file(configPath() + QStringLiteral("/screenbot-screensaver.ini"));
@@ -61,6 +61,12 @@ private Q_SLOTS:
             {QStringLiteral("bobCustomColor"), QStringLiteral("#a06cff")},
             {QStringLiteral("bobAccessory"), QStringLiteral("flower")},
             {QStringLiteral("liveSkyEnabled"), true}, {QStringLiteral("liveSkyUnits"), QStringLiteral("f")}, {QStringLiteral("liveSkyInterval"), 60}, {QStringLiteral("liveSkyConditions"), false},
+            {QStringLiteral("seasonalEnabled"), false}, {QStringLiteral("seasonalNewYearEnabled"), false},
+            {QStringLiteral("seasonalLunarNewYearEnabled"), true}, {QStringLiteral("seasonalValentinesEnabled"), true},
+            {QStringLiteral("seasonalSpringEnabled"), true}, {QStringLiteral("seasonalHalloweenEnabled"), true},
+            {QStringLiteral("seasonalWinterHolidaysEnabled"), true}, {QStringLiteral("seasonalBirthdayEnabled"), true},
+            {QStringLiteral("seasonalBirthdayDate"), QStringLiteral("02-29")},
+            {QStringLiteral("seasonalBirthdayName"), QStringLiteral("Pixel")},
             {QStringLiteral("agentDetectionMode"), QStringLiteral("block")}, {QStringLiteral("phoneEnabled"), false}, {QStringLiteral("bobosEnabled"), false},
             {QStringLiteral("bobosActivationDelay"), 7}, {QStringLiteral("showWifiAnimation"), false}, {QStringLiteral("passwordLock"), true},
             {QStringLiteral("lockMinutes"), 5}, {QStringLiteral("showTimer"), true},
@@ -96,6 +102,19 @@ private Q_SLOTS:
         QCOMPARE(kcm.bobCustomColor(), QStringLiteral("#6bf6ff"));
         kcm.setBobAccessory(QStringLiteral("runs-command"));
         QCOMPARE(kcm.bobAccessory(), QStringLiteral("none"));
+    }
+    void seasonalBirthdayInputIsValidatedAndLocalOnly() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        kcm.setSeasonalBirthdayDate(QStringLiteral("02-29"));
+        QCOMPARE(kcm.seasonalBirthdayDate(), QStringLiteral("02-29"));
+        kcm.setSeasonalBirthdayDate(QStringLiteral("02-30"));
+        QCOMPARE(kcm.seasonalBirthdayDate(), QStringLiteral("02-29"));
+        kcm.setSeasonalBirthdayName(QString(QChar(0x202e)) + QStringLiteral("  Pixel\n") + QStringLiteral("👩‍🚀").repeated(40));
+        QVERIFY(!kcm.seasonalBirthdayName().contains(QChar(0x202e)));
+        QVERIFY(!kcm.seasonalBirthdayName().contains(QLatin1Char('\n')));
+        QVERIFY(kcm.seasonalBirthdayName().size() < 200);
+        kcm.save();
+        QVERIFY(savedBytes().contains("seasonal_birthday_name=Pixel"));
     }
     void bobosPreviewInsideSection() {
         const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
@@ -166,6 +185,26 @@ private Q_SLOTS:
         QVERIFY(item(QStringLiteral("bobColorPreset")));
         QVERIFY(item(QStringLiteral("bobCustomColorButton")));
         QVERIFY(item(QStringLiteral("bobAccessory")));
+        QVERIFY(item(QStringLiteral("seasonalEnabledSwitch")));
+        QVERIFY(item(QStringLiteral("seasonalHalloweenSwitch")));
+        QVERIFY(item(QStringLiteral("seasonalBirthdayMonth")));
+        QVERIFY(item(QStringLiteral("seasonalBirthdayDay")));
+        auto *seasonalSection = item(QStringLiteral("seasonalSection"));
+        QVERIFY(seasonalSection);
+        seasonalSection->setProperty("expanded", true);
+        auto *seasonalMaster = item(QStringLiteral("seasonalEnabledSwitch"));
+        auto *halloweenSwitch = item(QStringLiteral("seasonalHalloweenSwitch"));
+        auto *birthdayMonth = item(QStringLiteral("seasonalBirthdayMonth"));
+        QVERIFY(seasonalMaster->property("checked").toBool());
+        QVERIFY(halloweenSwitch->property("enabled").toBool());
+        kcm.setSeasonalEnabled(false);
+        QVERIFY(!halloweenSwitch->property("enabled").toBool());
+        QVERIFY(!birthdayMonth->property("enabled").toBool());
+        QVERIFY(seasonalSection->property("modified").toBool());
+        kcm.load();
+        QVERIFY(seasonalMaster->property("checked").toBool());
+        QVERIFY(halloweenSwitch->property("enabled").toBool());
+        seasonalSection->setProperty("expanded", false);
         QVERIFY(view.rootObject()->findChild<QObject *>(QStringLiteral("bobColorDialog")));
         for (const auto &key : keys) {
             auto *section = item(key + QStringLiteral("Section"));

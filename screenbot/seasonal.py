@@ -1,6 +1,7 @@
 """Pure, offline calendar rules for optional seasonal decorations."""
 
 from dataclasses import dataclass
+import configparser
 from datetime import date, datetime, timedelta
 from enum import StrEnum
 import math
@@ -60,6 +61,16 @@ LUNAR_NEW_YEAR_DATES: Final[Mapping[int, date]] = MappingProxyType({
     2045: date(2045, 2, 17),
 })
 
+EVENT_SETTINGS: Final[Mapping[SeasonalEvent, str]] = MappingProxyType({
+    SeasonalEvent.NEW_YEAR: "seasonal_new_year_enabled",
+    SeasonalEvent.LUNAR_NEW_YEAR: "seasonal_lunar_new_year_enabled",
+    SeasonalEvent.VALENTINES_DAY: "seasonal_valentines_enabled",
+    SeasonalEvent.SPRING: "seasonal_spring_enabled",
+    SeasonalEvent.HALLOWEEN: "seasonal_halloween_enabled",
+    SeasonalEvent.WINTER_HOLIDAYS: "seasonal_winter_holidays_enabled",
+    SeasonalEvent.BIRTHDAY: "seasonal_birthday_enabled",
+})
+
 
 @dataclass(frozen=True, slots=True)
 class Birthday:
@@ -95,6 +106,30 @@ class CalendarState:
     hemisphere: Hemisphere
     season: Season
     events: frozenset[SeasonalEvent]
+
+
+@dataclass(frozen=True, slots=True)
+class SeasonalPreferences:
+    """User's local seasonal options, parsed from the existing settings file."""
+
+    enabled: bool
+    events: frozenset[SeasonalEvent]
+    birthday: Birthday | None
+
+
+def seasonal_preferences(settings: configparser.ConfigParser) -> SeasonalPreferences:
+    """Read only known local event options; New Year is the sole default event."""
+    section = "Screensaver"
+    enabled = settings.getboolean(section, "seasonal_enabled", fallback=True)
+    events = frozenset(
+        event for event, key in EVENT_SETTINGS.items()
+        if settings.getboolean(section, key, fallback=event is SeasonalEvent.NEW_YEAR)
+    )
+    birthday = Birthday.parse(
+        settings.get(section, "seasonal_birthday_date", fallback=""),
+        settings.get(section, "seasonal_birthday_name", fallback=""),
+    )
+    return SeasonalPreferences(enabled, events, birthday)
 
 
 def hemisphere_for_latitude(latitude: float | None) -> Hemisphere:
@@ -168,6 +203,20 @@ def effective_preview_date(
     if preview_mode and forced_date is not None:
         return forced_date
     return system_local_date
+
+
+def effective_preview_datetime(
+    system_local_now: datetime,
+    forced_local_datetime: datetime | None,
+    *,
+    preview_mode: bool,
+) -> datetime:
+    """Choose a local wall-clock value; only a preview can consume an override."""
+    if not preview_mode or forced_local_datetime is None:
+        return system_local_now
+    if forced_local_datetime.tzinfo is None:
+        return forced_local_datetime.replace(tzinfo=system_local_now.tzinfo)
+    return forced_local_datetime.astimezone(system_local_now.tzinfo)
 
 
 def new_year_countdown_seconds(local_now: datetime) -> int | None:

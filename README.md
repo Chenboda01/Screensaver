@@ -154,9 +154,25 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - Manual launches remain available regardless of the automatic agent policy
 - Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, Camera, Pet, AI Wi-Fi, and an immediate preview
 - Configurable BobOS delay of 1–30 minutes from the first visible screensaver frame, plus a cooldown of at least five minutes
+- Optional calendar decorations for New Year, Lunar New Year, Valentine's Day, hemisphere-aware spring, Halloween, winter holidays, and a personal birthday; only New Year is enabled by default
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
 - Optional countdown with a smooth green-to-red color transition
+
+### Seasonal decorations
+
+Open **System Settings → Screensaver → Seasonal decorations** to enable the feature and choose events. New Year is the only event enabled by default; the other cultural events and personal birthday mode are opt-in. Dates use your system's local time. When saved Live Sky latitude is available, Spring follows that location's hemisphere; otherwise ScreenBot uses Northern Hemisphere dates. Decorations layer over the selected theme, and Reduce motion keeps their movement and flashes still or softer. Space never receives seasonal snowfall or shooting-star effects.
+
+Birthday mode stores only a recurring month/day and optional display name in `~/.config/screenbot-screensaver.ini`; it does not store a birth year or send birthday information over the network. The display name is rendered as plain text.
+
+Preview a saved event without waiting for the calendar. Use an ISO local date, or add a time for New Year countdown/fireworks testing:
+
+```bash
+bash ~/ScreenBot/screensaver/start.sh --preview --force-date 2026-10-31
+bash ~/ScreenBot/screensaver/start.sh --preview --force-date 2027-01-01T00:00
+```
+
+Forced dates are available only in preview mode and do not change the system clock or bypass KDE's real password lock.
 
 ### Live Sky location and network privacy
 
