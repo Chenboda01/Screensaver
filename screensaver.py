@@ -15,7 +15,7 @@ import time
 from pathlib import Path
 from typing import Final
 
-from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QDateTime, QPointF, QRectF, QSettings, Qt, QTimer
+from PyQt6.QtCore import QCommandLineOption, QCommandLineParser, QDateTime, QPointF, QRect, QRectF, QSettings, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 from PyQt6.QtGui import QCursor, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
@@ -25,6 +25,7 @@ from live_sky_network import LiveWeather, read_location_setting
 from live_sky_render import SpaceSky, draw_sky
 
 from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
+from screen_session import ScreenSession
 
 CLOCK_POSITIONS: Final[frozenset[str]] = frozenset(
     {
@@ -161,6 +162,7 @@ class Saver(QWidget):
         self.next_lock_attempt = 0.0
         self.lock_error = False
         self.start_time = time.monotonic()
+        self.session_started = False
         self.old_mouse = None
         r = random.Random()
         self.particles = [(r.random(), r.random(), r.uniform(.65, 2.6), r.random()*math.tau) for _ in range(110)]
@@ -174,7 +176,9 @@ class Saver(QWidget):
 
     def showEvent(self, event: QShowEvent) -> None:
         """Start all screensaver-relative timers when Bob first becomes visible."""
-        self.start_time = time.monotonic()
+        if not self.session_started:
+            self.start_time = time.monotonic()
+            self.session_started = True
         self.preview_mouse_origin = QCursor.pos()
         super().showEvent(event)
 
@@ -194,19 +198,7 @@ class Saver(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         w, h = self.width(), self.height()
         t = time.monotonic() - self.start_time
-        if self.theme == 'space':
-            self.space(p, w, h, t)
-        elif self.theme == 'mountains':
-            self.mountains(p, w, h, t)
-        elif self.theme == 'snow':
-            self.snow(p, w, h, t)
-        elif self.theme == 'forest':
-            self.forest(p, w, h, t)
-        else:
-            self.city(p, w, h, t)
-        if self.live_sky_enabled and self.theme != 'space' and self.live_sky_position is not None:
-            self.live_landscape_light(p, w, h, t)
-        self.weather(p, w, h, t)
+        self.draw_scenery(p, w, h, t)
         if self.show_clock:
             self.clock(p, w, h)
         bobos_status = self.bobos_status(t)
@@ -226,6 +218,22 @@ class Saver(QWidget):
         if self.password_lock and t >= self.lock_seconds and t >= self.next_lock_attempt:
             self.next_lock_attempt = t + 5
             QTimer.singleShot(0, self.request_kde_lock)
+
+    def draw_scenery(self, p: QPainter, w: int, h: int, t: float) -> None:
+        """Render shared scenery at each display's own logical size."""
+        if self.theme == 'space':
+            self.space(p, w, h, t)
+        elif self.theme == 'mountains':
+            self.mountains(p, w, h, t)
+        elif self.theme == 'snow':
+            self.snow(p, w, h, t)
+        elif self.theme == 'forest':
+            self.forest(p, w, h, t)
+        else:
+            self.city(p, w, h, t)
+        if self.live_sky_enabled and self.theme != 'space' and self.live_sky_position is not None:
+            self.live_landscape_light(p, w, h, t)
+        self.weather(p, w, h, t)
 
     def preview_hint(self, painter: QPainter, width: int, height: int, elapsed: float) -> None:
         """Explain the temporary view, including missing Live Sky data, independently of the clock."""
@@ -260,13 +268,13 @@ class Saver(QWidget):
         bg.setColorAt(0, QColor('#030817'))
         bg.setColorAt(.55, QColor('#141b45'))
         bg.setColorAt(1, QColor('#050a1d'))
-        p.fillRect(self.rect(), bg)
+        p.fillRect(QRect(0, 0, w, h), bg)
         haze = QRadialGradient(QPointF(w*.51, h*.58), max(w, h)*.43)
         haze.setColorAt(0, QColor(51, 90, 209, 75))
         haze.setColorAt(1, QColor(51, 90, 209, 0))
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(haze)
-        p.drawRect(self.rect())
+        p.drawRect(QRect(0, 0, w, h))
         for x, y, size, phase in self.particles:
             brightness = int(110 + 120*(.5 + .5*math.sin(t*1.4 + phase)))
             p.setBrush(QColor(177, 212, 255, brightness))
@@ -319,7 +327,7 @@ class Saver(QWidget):
             gradient.setColorAt(0, QColor('#102048'))
             gradient.setColorAt(.58, QColor('#846d9a'))
             gradient.setColorAt(1, QColor('#0d1d35'))
-            p.fillRect(self.rect(), gradient)
+            p.fillRect(QRect(0, 0, w, h), gradient)
             p.setPen(Qt.PenStyle.NoPen)
             moon = QPointF(w*.79, h*.22)
             for radius, alpha in [(80, 17), (58, 28), (34, 48)]:
@@ -350,7 +358,7 @@ class Saver(QWidget):
             sky.setColorAt(0, QColor('#101b39'))
             sky.setColorAt(.6, QColor('#416d9f'))
             sky.setColorAt(1, QColor('#cee8f4'))
-            p.fillRect(self.rect(), sky)
+            p.fillRect(QRect(0, 0, w, h), sky)
             p.setPen(Qt.PenStyle.NoPen)
             moon = QPointF(.79*w, .19*h)
             glow = QRadialGradient(moon, h*.18)
@@ -382,7 +390,7 @@ class Saver(QWidget):
             sky.setColorAt(0,QColor('#081a24'))
             sky.setColorAt(.6,QColor('#19564e'))
             sky.setColorAt(1,QColor('#0b2b2a'))
-            p.fillRect(self.rect(),sky)
+            p.fillRect(QRect(0, 0, w, h),sky)
             p.setPen(Qt.PenStyle.NoPen)
             moon=QPointF(w*.82,h*.2)
             p.setBrush(QColor(216,246,207,55))
@@ -417,7 +425,7 @@ class Saver(QWidget):
             sky.setColorAt(0,QColor('#050920'))
             sky.setColorAt(.6,QColor('#1c2051'))
             sky.setColorAt(1,QColor('#090c25'))
-            p.fillRect(self.rect(),sky)
+            p.fillRect(QRect(0, 0, w, h),sky)
             p.setPen(Qt.PenStyle.NoPen)
             for x,y,size,phase in self.particles[:55]:
                 p.setBrush(QColor(177,192,255,170))
@@ -610,7 +618,7 @@ class Saver(QWidget):
         p.setPen(Qt.PenStyle.NoPen)
         for x, intensity in flashes:
             alpha = round(72*intensity)
-            p.fillRect(QRectF(0, 0, w, h), QColor(207, 224, 255, alpha))
+            p.fillRect(QRect(0, 0, w, h), QColor(207, 224, 255, alpha))
             points = [
                 QPointF(w*x, 0),
                 QPointF(w*(x-.035), h*.18),
@@ -1340,7 +1348,7 @@ def main(arguments: list[str] | None = None) -> int:
         QCommandLineOption('preview', 'Preview the theme without locking or starting BobOS.'),
         QCommandLineOption('preview-bobos', 'Preview the full BobOS adventure without locking.'),
         QCommandLineOption('config', 'Read temporary settings for a preview.', 'path'),
-        QCommandLineOption('screen', 'Show on the named display.', 'name'),
+        QCommandLineOption('screen', 'Show a preview on the named display.', 'name'),
         QCommandLineOption('wifi-animation', 'Show the BobOS connection animation.'),
         QCommandLineOption('no-wifi-animation', 'Skip the BobOS connection animation.'),
     ])
@@ -1365,6 +1373,10 @@ def main(arguments: list[str] | None = None) -> int:
     except (OSError, configparser.Error, ValueError) as error:
         print(f'Could not read ScreenBot settings: {error}', file=sys.stderr)
         return 1
+    if not saver.is_preview:
+        session = ScreenSession(app, saver)
+        session.start()
+        return app.exec()
     if parser.isSet('screen'):
         for screen in app.screens():
             if screen.name() == parser.value('screen'):
