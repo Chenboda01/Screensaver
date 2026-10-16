@@ -2,6 +2,7 @@
 #include <KQuickConfigModule>
 #include <KQuickConfigModuleLoader>
 #include <QApplication>
+#include <QAccessible>
 #include <QDir>
 #include <QFile>
 #include <QQuickItem>
@@ -42,6 +43,27 @@ private Q_SLOTS:
         kcm->save();
         const QString config = qEnvironmentVariable("XDG_CONFIG_HOME") + QStringLiteral("/screenbot-screensaver.ini");
         const auto saved = [&]() { QFile file(config); if (!file.open(QIODevice::ReadOnly)) return QByteArray(); return file.readAll(); };
+        auto *media = item("nowPlayingEnabled");
+        QVERIFY(media);
+        QCOMPARE(kcm->property("nowPlayingEnabled").toBool(), false);
+        const QByteArray mediaBefore = saved();
+        media->setProperty("checked", true);
+        QVERIFY(QMetaObject::invokeMethod(media, "toggled"));
+        QVERIFY(kcm->needsSave());
+        QVERIFY(kcm->property("modifiedSections").toStringList().contains(QStringLiteral("clock")));
+        QCOMPARE(saved(), mediaBefore);
+        QCOMPARE(media->property("text").toString(), spanish ? QStringLiteral("Mostrar el título y el artista") : QStringLiteral("Show media title and artist"));
+        kcm->load();
+        QVERIFY(!kcm->property("nowPlayingEnabled").toBool());
+        QVERIFY(!kcm->needsSave());
+        media->setProperty("checked", true);
+        QVERIFY(QMetaObject::invokeMethod(media, "toggled"));
+        kcm->save();
+        kcm->load();
+        QVERIFY(kcm->property("nowPlayingEnabled").toBool());
+        QVERIFY(!kcm->needsSave());
+        QSettings mediaSettings(config, QSettings::IniFormat);
+        QVERIFY(mediaSettings.value(QStringLiteral("Screensaver/now_playing_enabled")).toBool());
         const QByteArray before = saved();
         QVERIFY(!before.isEmpty());
         auto *theme = item("themeChoice");
@@ -74,6 +96,22 @@ private Q_SLOTS:
                 QVERIFY(flickable);
                 flickable->setProperty("contentY", 0);
                 QTest::qWait(300);
+                if (key == QLatin1String("clock")) {
+                    media->forceActiveFocus();
+                    QVERIFY(media->hasActiveFocus());
+                    auto *accessible = QAccessible::queryAccessibleInterface(media);
+                    QVERIFY(accessible);
+                    QCOMPARE(accessible->text(QAccessible::Name), spanish ? QStringLiteral("Mostrar lo que se está reproduciendo") : QStringLiteral("Show what's playing"));
+                    QTest::keyClick(&window, Qt::Key_Space);
+                    QVERIFY(!kcm->property("nowPlayingEnabled").toBool());
+                    QVERIFY(kcm->needsSave());
+                    QTest::qWait(50);
+                    QVERIFY(window.grabWindow().save(evidence + QStringLiteral("/clock-media-off-%1.png").arg(width)));
+                    QTest::keyClick(&window, Qt::Key_Space);
+                    QVERIFY(kcm->property("nowPlayingEnabled").toBool());
+                    QVERIFY(!kcm->needsSave());
+                    QTest::qWait(50);
+                }
                 QVERIFY(window.grabWindow().save(evidence + QStringLiteral("/%1-%2.png").arg(key).arg(width)));
                 flickable->setProperty("contentY", qMax(0.0, flickable->property("contentHeight").toDouble() - flickable->property("height").toDouble()));
                 QTest::qWait(100);

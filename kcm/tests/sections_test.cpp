@@ -53,7 +53,7 @@ private Q_SLOTS:
         const auto before = savedBytes();
         const QVariantMap changes{
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
-            {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
+            {QStringLiteral("nowPlayingEnabled"), true}, {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
             {QStringLiteral("bobWeatherEnabled"), false},
             {QStringLiteral("bobName"), QStringLiteral("Pixel👩‍🚀")},

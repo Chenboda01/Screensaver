@@ -182,3 +182,11 @@ Create a catalog in `kcm/po/<language>/kcm_screenbot_screensaver.po` with `msgin
 The normal installer builds and installs catalogs through `ki18n_install(po)`; compiled `.mo` files belong in the installation, not in Git. QML uses the KCM plugin ID `kcm_screenbot_screensaver` as its translation domain; C++ uses the same domain through `TRANSLATION_DOMAIN`. The KCM leaves the hosting application's translation domain alone. To preview Spanish after installing, run `LANGUAGE=es kcmshell6 kcm_screenbot_screensaver` from a UTF-8 locale other than `C`.
 
 For an isolated build, installation, locale, and Apply/Discard check, run `kcm/tests/check-translations.sh "$PWD/.omo/evidence/translations"`. It requires the `en_US.UTF-8` locale and records logs and native settings screenshots for Spanish, English, and an unavailable language's English fallback in both light and dark palettes. No user settings are changed.
+
+### Now playing
+
+Enable **System Settings → Screensaver → Clock → Show what's playing**, then choose **Apply** to show the current media title and artist near the clock on the primary screen. The setting is off by default; **Discard** keeps the saved preference. The card also works with the clock hidden. Previews keep real media metadata hidden.
+
+ScreenBot reads MPRIS metadata from players such as Elisa, VLC, Spotify, and browsers. Playing media takes priority when several players are open. Track changes appear within a few seconds; pausing or stopping fades the card away. Long titles are shortened, and no player or an unavailable session bus leaves the card hidden. Reduced motion hides the card without fading.
+
+Song titles can be personal. ScreenBot never controls playback, reads browser tabs, fetches artwork or media URLs, or saves media metadata. Browser titles come only from the browser's MPRIS media information. Disable the setting and Apply before the next screensaver launch to stop showing it.

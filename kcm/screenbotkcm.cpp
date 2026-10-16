@@ -96,6 +96,7 @@ QStringList ScreenBotKcm::modifiedSections() const {
     QStringList sections;
     if (m_theme != m_savedTheme) sections.append(QStringLiteral("theme"));
     if (m_clockVisible != m_savedClockVisible
+        || m_nowPlayingEnabled != m_savedNowPlayingEnabled
         || m_clockFormat != m_savedClockFormat
         || m_showDate != m_savedShowDate
         || m_clockPosition != m_savedClockPosition
@@ -161,6 +162,7 @@ void ScreenBotKcm::load() {
     const bool lock = cfg.value(QStringLiteral("Screensaver/password_lock"), false).toBool();
     const int mins = qBound(1, cfg.value(QStringLiteral("Screensaver/lock_minutes"), 2).toInt(), 60);
     const bool show = cfg.value(QStringLiteral("Screensaver/show_timer"), false).toBool();
+    const bool nowPlayingEnabled = cfg.value(QStringLiteral("Screensaver/now_playing_enabled"), false).toBool();
     const bool clockVisible = cfg.value(QStringLiteral("Screensaver/show_clock"), true).toBool();
     const QString clockFormat = cfg.value(QStringLiteral("Screensaver/clock_format"), QStringLiteral("12h")).toString();
     const QString validClockFormat = clockFormat == QLatin1String("24h") ? clockFormat : QStringLiteral("12h");
@@ -242,6 +244,7 @@ void ScreenBotKcm::load() {
     if (m_passwordLock != lock) { m_passwordLock = lock; Q_EMIT passwordLockChanged(); }
     if (m_lockMinutes != mins) { m_lockMinutes = mins; Q_EMIT lockMinutesChanged(); }
     if (m_showTimer != show) { m_showTimer = show; Q_EMIT showTimerChanged(); }
+    if (m_nowPlayingEnabled != nowPlayingEnabled) { m_nowPlayingEnabled = nowPlayingEnabled; Q_EMIT nowPlayingEnabledChanged(); }
     if (m_clockVisible != clockVisible) { m_clockVisible = clockVisible; Q_EMIT clockVisibleChanged(); }
     if (m_clockFormat != validClockFormat) { m_clockFormat = validClockFormat; Q_EMIT clockFormatChanged(); }
     if (m_showDate != showDate) { m_showDate = showDate; Q_EMIT showDateChanged(); }
@@ -279,6 +282,7 @@ void ScreenBotKcm::load() {
     m_savedLockMinutes = m_lockMinutes;
     m_savedShowTimer = m_showTimer;
     m_savedClockVisible = m_clockVisible;
+    m_savedNowPlayingEnabled = m_nowPlayingEnabled;
     m_savedClockFormat = m_clockFormat;
     m_savedShowDate = m_showDate;
     m_savedClockPosition = m_clockPosition;
@@ -319,6 +323,7 @@ void ScreenBotKcm::writeSettings(QSettings &cfg) const {
     cfg.setValue(QStringLiteral("Screensaver/lock_minutes"), m_lockMinutes);
     cfg.setValue(QStringLiteral("Screensaver/show_timer"), m_showTimer);
     cfg.setValue(QStringLiteral("Screensaver/show_clock"), m_clockVisible);
+    cfg.setValue(QStringLiteral("Screensaver/now_playing_enabled"), m_nowPlayingEnabled);
     cfg.setValue(QStringLiteral("Screensaver/clock_format"), m_clockFormat);
     cfg.setValue(QStringLiteral("Screensaver/show_date"), m_showDate);
     cfg.setValue(QStringLiteral("Screensaver/clock_position"), m_clockPosition);
@@ -369,6 +374,7 @@ void ScreenBotKcm::save() {
     m_savedLockMinutes = m_lockMinutes;
     m_savedShowTimer = m_showTimer;
     m_savedClockVisible = m_clockVisible;
+    m_savedNowPlayingEnabled = m_nowPlayingEnabled;
     m_savedClockFormat = m_clockFormat;
     m_savedShowDate = m_showDate;
     m_savedClockPosition = m_clockPosition;
@@ -430,6 +436,13 @@ void ScreenBotKcm::setShowTimer(bool value) {
     if (value == m_showTimer) return;
     m_showTimer = value;
     Q_EMIT showTimerChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setNowPlayingEnabled(bool value) {
+    if (value == m_nowPlayingEnabled) return;
+    m_nowPlayingEnabled = value;
+    Q_EMIT nowPlayingEnabledChanged();
     checkModified();
 }
 

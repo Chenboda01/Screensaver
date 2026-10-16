@@ -5,11 +5,20 @@
 # Run: dbus-run-session -- python tests/mpris_service.py
 """A local synthetic MPRIS player for isolated session-bus integration checks."""
 import sys
+import json
+import os
+from pathlib import Path
 from threading import Event
 from typing import Final
 
 from PyQt6.QtCore import QCoreApplication, QObject, pyqtClassInfo, pyqtProperty
 from PyQt6.QtDBus import QDBusAbstractAdaptor, QDBusConnection
+
+
+def fixture_value(key: str, default: str) -> str:
+    """The test alone may change this synthetic service's local fixture state."""
+    state = os.environ.get('SCREENBOT_MPRIS_FIXTURE')
+    return str(json.loads(Path(state).read_text()).get(key, default)) if state else default
 
 
 @pyqtClassInfo('D-Bus Interface', 'org.mpris.MediaPlayer2')
@@ -23,11 +32,11 @@ class Root(QDBusAbstractAdaptor):
 class Player(QDBusAbstractAdaptor):
     @pyqtProperty(str)
     def PlaybackStatus(self) -> str:
-        return 'Playing'
+        return fixture_value('status', 'Playing')
 
     @pyqtProperty('QVariantMap')
     def Metadata(self) -> dict[str, str | list[str]]:
-        return {'xesam:title': 'Synthetic song', 'xesam:artist': ['Synthetic artist'],
+        return {'xesam:title': fixture_value('title', 'Synthetic song'), 'xesam:artist': ['Synthetic artist'],
                 'xesam:album': 'Synthetic album', 'xesam:url': 'file:///private/sentinel',
                 'mpris:artUrl': 'https://private.invalid/sentinel'}
 
