@@ -1,7 +1,7 @@
 {
   "KPlugin": {
     "Name": "Screensaver Settings",
-    "Description": "Configure ScreenBot themes, clock, weather effects, and password-lock countdown",
+    "Description": "Configure ScreenBot themes, Live Sky, weather effects, clock, and password-lock countdown",
     "Icon": "preferences-system",
     "EnabledByDefault": true
   },

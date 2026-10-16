@@ -1,5 +1,12 @@
 # Changelog
 
+## V22
+
+- Added opt-in Live Sky mode with local time-of-day and lunar rendering, optional weather-aware animations, KDE settings, asynchronous weather updates, and an offline cache.
+- Added all 896 country/city choices from `countries_and_cities.txt` to KDE Settings; the selected place is resolved and weather is fetched through Open-Meteo without IP-based location lookup.
+- Added automated astronomy, weather mapping, network/cache, and offscreen rendering coverage. Existing manual weather effects remain available when Live Sky is off.
+- Published as a ZIP release with an installation guide and release notes.
+
 ## V21
 
 - Removed the relationship storyline, its character and message content, story-specific animation phases, and its KDE Settings option.

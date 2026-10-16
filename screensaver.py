@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""ScreenBot screensaver V21: BobOS 2.0, Bob's phone, clock, and weather.
+"""ScreenBot screensaver V22: Live Sky, BobOS 2.0, Bob's phone, clock, and weather.
 
 Theme is controlled ONLY by KDE System Settings. This version keeps the
 existing settings integration and replaces the previous full-body design with a
 floating Bob head so it looks closer to ScreenBot's style.
 """
 import configparser
+from datetime import datetime, timezone
 import math
 import random
 import subprocess
@@ -18,6 +19,10 @@ from PyQt6.QtCore import QDateTime, QPointF, QRectF, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
+
+from live_sky import SkyPosition, sky_position
+from live_sky_network import LiveWeather
+from live_sky_render import draw_sky
 
 from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
 
@@ -87,6 +92,19 @@ class Saver(QWidget):
         self.thunderstorms_enabled = settings.getboolean('Screensaver', 'thunderstorms_enabled', fallback=False)
         self.fog_enabled = settings.getboolean('Screensaver', 'fog_enabled', fallback=False)
         self.shooting_stars_enabled = settings.getboolean('Screensaver', 'shooting_stars_enabled', fallback=False)
+        self.live_sky_enabled = settings.getboolean('Screensaver', 'live_sky_enabled', fallback=False)
+        self.live_sky_conditions = settings.getboolean('Screensaver', 'live_sky_conditions', fallback=True)
+        self.live_sky_units = settings.get('Screensaver', 'live_sky_units', fallback='c')
+        try:
+            interval = settings.getint('Screensaver', 'live_sky_interval', fallback=30)
+        except ValueError:
+            interval = 30
+        self.live_sky_location = settings.get('Screensaver', 'live_sky_location', fallback='').strip()
+        self.live_sky_sample_time = 0.
+        self.live_sky_position = None
+        self.live_weather = LiveWeather(self, enabled=self.live_sky_enabled and self.theme != 'space',
+                                       location=self.live_sky_location, interval=interval)
+
         self.password_lock = settings.getboolean('Screensaver', 'password_lock', fallback=False)
         try:
             minutes = settings.getint('Screensaver', 'lock_minutes', fallback=2)
@@ -167,6 +185,8 @@ class Saver(QWidget):
             self.forest(p, w, h, t)
         else:
             self.city(p, w, h, t)
+        if self.live_sky_enabled and self.theme != 'space' and self.live_sky_position is not None:
+            self.live_landscape_light(p, w, h, t)
         self.weather(p, w, h, t)
         if self.show_clock:
             self.clock(p, w, h)
@@ -239,18 +259,21 @@ class Saver(QWidget):
             p.restore()
 
     def mountains(self, p, w, h, t):
-        gradient = QLinearGradient(0, 0, 0, h)
-        gradient.setColorAt(0, QColor('#102048'))
-        gradient.setColorAt(.58, QColor('#846d9a'))
-        gradient.setColorAt(1, QColor('#0d1d35'))
-        p.fillRect(self.rect(), gradient)
-        p.setPen(Qt.PenStyle.NoPen)
-        moon = QPointF(w*.79, h*.22)
-        for radius, alpha in [(80, 17), (58, 28), (34, 48)]:
-            p.setBrush(QColor(255, 235, 196, alpha))
-            p.drawEllipse(moon, radius, radius)
-        p.setBrush(QColor('#fff0ce'))
-        p.drawEllipse(moon, 22, 22)
+        if self.live_sky_enabled:
+            self.live_background(p, w, h, t)
+        else:
+            gradient = QLinearGradient(0, 0, 0, h)
+            gradient.setColorAt(0, QColor('#102048'))
+            gradient.setColorAt(.58, QColor('#846d9a'))
+            gradient.setColorAt(1, QColor('#0d1d35'))
+            p.fillRect(self.rect(), gradient)
+            p.setPen(Qt.PenStyle.NoPen)
+            moon = QPointF(w*.79, h*.22)
+            for radius, alpha in [(80, 17), (58, 28), (34, 48)]:
+                p.setBrush(QColor(255, 235, 196, alpha))
+                p.drawEllipse(moon, radius, radius)
+            p.setBrush(QColor('#fff0ce'))
+            p.drawEllipse(moon, 22, 22)
         peaks = [
             ('#566c91', [(0, .75), (.12, .58), (.25, .73), (.4, .49), (.55, .76), (.7, .58), (.82, .73), (1, .53)]),
             ('#2b476b', [(0, .88), (.15, .68), (.28, .86), (.48, .63), (.62, .83), (.77, .64), (1, .8)]),
@@ -267,20 +290,23 @@ class Saver(QWidget):
 
     def snow(self, p, w, h, t):
         """Midnight alpine snow scene, with drifting flakes."""
-        sky = QLinearGradient(0, 0, 0, h)
-        sky.setColorAt(0, QColor('#101b39'))
-        sky.setColorAt(.6, QColor('#416d9f'))
-        sky.setColorAt(1, QColor('#cee8f4'))
-        p.fillRect(self.rect(), sky)
-        p.setPen(Qt.PenStyle.NoPen)
-        moon = QPointF(.79*w, .19*h)
-        glow = QRadialGradient(moon, h*.18)
-        glow.setColorAt(0, QColor(231,245,255,110))
-        glow.setColorAt(1, QColor(231,245,255,0))
-        p.setBrush(glow)
-        p.drawEllipse(moon, h*.18, h*.18)
-        p.setBrush(QColor('#f6fbff'))
-        p.drawEllipse(moon, 24, 24)
+        if self.live_sky_enabled:
+            self.live_background(p, w, h, t)
+        else:
+            sky = QLinearGradient(0, 0, 0, h)
+            sky.setColorAt(0, QColor('#101b39'))
+            sky.setColorAt(.6, QColor('#416d9f'))
+            sky.setColorAt(1, QColor('#cee8f4'))
+            p.fillRect(self.rect(), sky)
+            p.setPen(Qt.PenStyle.NoPen)
+            moon = QPointF(.79*w, .19*h)
+            glow = QRadialGradient(moon, h*.18)
+            glow.setColorAt(0, QColor(231,245,255,110))
+            glow.setColorAt(1, QColor(231,245,255,0))
+            p.setBrush(glow)
+            p.drawEllipse(moon, h*.18, h*.18)
+            p.setBrush(QColor('#f6fbff'))
+            p.drawEllipse(moon, 24, 24)
         for color, coords in [
             ('#9ab9d1', [(0,.77),(.13,.59),(.25,.74),(.4,.45),(.54,.73),(.7,.53),(.84,.74),(1,.55)]),
             ('#dae9f2', [(0,.87),(.16,.69),(.29,.84),(.46,.59),(.64,.87),(.81,.64),(1,.82)]),
@@ -288,7 +314,7 @@ class Saver(QWidget):
         ]:
             p.setBrush(QColor(color))
             p.drawPolygon(QPolygonF([QPointF(a*w,b*h) for a,b in coords]+[QPointF(w,h),QPointF(0,h)]))
-        for x,y,size,phase in self.particles:
+        for x,y,size,phase in ([] if self.live_sky_enabled else self.particles):
             px=(x*w+math.sin(t*.7+phase)*14+t*(5+size*8))%max(1,w)
             py=(y*h+t*(15+size*10))%max(1,h)
             p.setBrush(QColor(245,251,255,165))
@@ -296,17 +322,22 @@ class Saver(QWidget):
 
     def forest(self, p, w, h, t):
         """Layered evergreen forest with glowing floating fireflies."""
-        sky=QLinearGradient(0,0,0,h)
-        sky.setColorAt(0,QColor('#081a24'))
-        sky.setColorAt(.6,QColor('#19564e'))
-        sky.setColorAt(1,QColor('#0b2b2a'))
-        p.fillRect(self.rect(),sky)
-        p.setPen(Qt.PenStyle.NoPen)
-        moon=QPointF(w*.82,h*.2)
-        p.setBrush(QColor(216,246,207,55))
-        p.drawEllipse(moon,60,60)
-        p.setBrush(QColor('#e0f7cb'))
-        p.drawEllipse(moon,22,22)
+        if self.live_sky_enabled:
+            self.live_background(p, w, h, t)
+        else:
+            sky=QLinearGradient(0,0,0,h)
+            sky.setColorAt(0,QColor('#081a24'))
+            sky.setColorAt(.6,QColor('#19564e'))
+            sky.setColorAt(1,QColor('#0b2b2a'))
+            p.fillRect(self.rect(),sky)
+            p.setPen(Qt.PenStyle.NoPen)
+            moon=QPointF(w*.82,h*.2)
+            p.setBrush(QColor(216,246,207,55))
+            p.drawEllipse(moon,60,60)
+            p.setBrush(QColor('#e0f7cb'))
+            p.drawEllipse(moon,22,22)
+        if self.live_sky_enabled:
+            p.fillRect(QRectF(0, h*.79, w, h*.21), QColor('#082b2b'))
         for layer,color,height_scale in [(0,QColor('#1b544c'),.64),(1,QColor('#103b38'),.73),(2,QColor('#082b2b'),.83)]:
             p.setBrush(color)
             count=15
@@ -314,7 +345,8 @@ class Saver(QWidget):
                 cx=((i+(.45 if layer%2 else 0))/count)*w
                 trunk_y=h*(height_scale+.16)
                 tree_h=h*(.17+.06*math.sin(i*2.1+layer))
-                p.drawPolygon(QPolygonF([QPointF(cx-tree_h*.28,trunk_y),QPointF(cx,trunk_y-tree_h),QPointF(cx+tree_h*.28,trunk_y)]))
+                sway = math.sin(t*1.4+i)*min(12., self.live_weather.weather.wind*.2) if self.live_sky_enabled else 0
+                p.drawPolygon(QPolygonF([QPointF(cx-tree_h*.28,trunk_y),QPointF(cx+sway,trunk_y-tree_h),QPointF(cx+tree_h*.28,trunk_y)]))
                 p.drawRect(QRectF(cx-3,trunk_y-2,6,h-trunk_y))
         for x,y,size,phase in self.particles[:75]:
             cx=x*w+math.sin(t*.6+phase)*12
@@ -325,15 +357,18 @@ class Saver(QWidget):
 
     def city(self, p, w, h, t):
         """Neon skyline with lit windows and animated lights."""
-        sky=QLinearGradient(0,0,0,h)
-        sky.setColorAt(0,QColor('#050920'))
-        sky.setColorAt(.6,QColor('#1c2051'))
-        sky.setColorAt(1,QColor('#090c25'))
-        p.fillRect(self.rect(),sky)
-        p.setPen(Qt.PenStyle.NoPen)
-        for x,y,size,phase in self.particles[:55]:
-            p.setBrush(QColor(177,192,255,170))
-            p.drawEllipse(QPointF(x*w,y*h*.6),size*.7,size*.7)
+        if self.live_sky_enabled:
+            self.live_background(p, w, h, t)
+        else:
+            sky=QLinearGradient(0,0,0,h)
+            sky.setColorAt(0,QColor('#050920'))
+            sky.setColorAt(.6,QColor('#1c2051'))
+            sky.setColorAt(1,QColor('#090c25'))
+            p.fillRect(self.rect(),sky)
+            p.setPen(Qt.PenStyle.NoPen)
+            for x,y,size,phase in self.particles[:55]:
+                p.setBrush(QColor(177,192,255,170))
+                p.drawEllipse(QPointF(x*w,y*h*.6),size*.7,size*.7)
         # Deterministic skyline; each building has a unique height and window grid.
         for i in range(25):
             x0=(i/25)*w
@@ -380,8 +415,74 @@ class Saver(QWidget):
             p.setFont(QFont('Sans Serif', max(10, round(self.clock_font_size*.34))))
             p.drawText(QRectF(x, date_y, width, self.clock_font_size*.62), alignment,
                        QDateTime.currentDateTime().toString('ddd, MMM d'))
+        if self.live_sky_enabled and self.live_sky_conditions and self.theme != 'space':
+            live = self.live_weather
+            if not live.located:
+                label = 'Location unavailable · choose a city in Settings'
+            elif not live.fresh:
+                label = 'Offline sky · weather unavailable'
+            else:
+                value = live.weather.temperature
+                fahrenheit = self.live_sky_units == 'f'
+                if fahrenheit:
+                    value = value*9/5+32
+                label = f"{value:.0f} °{'F' if fahrenheit else 'C'} · {live.weather.category}"
+            p.setPen(QColor('#d9e8f5'))
+            p.setFont(QFont('Sans Serif', max(10, round(self.clock_font_size*.3))))
+            conditions_y = date_y + (self.clock_font_size*.62 if self.show_date else 0)
+            p.drawText(QRectF(x, conditions_y, width, self.clock_font_size*.62), alignment, label)
+
+
+    def live_landscape_light(self, p: QPainter, w: int, h: int, t: float) -> None:
+        sky = self.live_sky_position
+        weather = self.live_weather.weather
+        p.save()
+        daylight = max(0., min(1., (sky.sun_altitude+6)/30))
+        moonlight = (1-math.cos(sky.moon_phase*math.tau))/2 if sky.moon_altitude > 0 else 0
+        tint = QColor(210, 233, 255, round(16*moonlight*(1-daylight)*(1-weather.cloud/100)+18*daylight))
+        lighting = QLinearGradient(0, h*.45, 0, h)
+        transparent = QColor(tint)
+        transparent.setAlpha(0)
+        lighting.setColorAt(0, transparent)
+        lighting.setColorAt(1, tint)
+        p.fillRect(QRectF(0, h*.45, w, h*.55), lighting)
+        if weather.category == 'snow':
+            p.fillRect(QRectF(0, h*.94, w, h*.06), QColor(231,244,255,round(min(70., t*.5)*weather.intensity)))
+        if weather.category in ('rain', 'thunderstorm'):
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            for index in range(round(4+weather.intensity*12)):
+                progress = (t*.8+index*.37)%1
+                p.setPen(QPen(QColor(175,218,245,round((1-progress)*80)), 1))
+                p.drawEllipse(QPointF(((index*.618)%1)*w, h*(.89+(index%3)*.035)), 4+progress*20, 1+progress*4)
+        p.restore()
+
+    def live_background(self, p: QPainter, w: int, h: int, t: float) -> None:
+        now = time.time()
+        if self.live_sky_position is None or abs(now-self.live_sky_sample_time) >= 1:
+            self.live_sky_position = sky_position(datetime.now(timezone.utc), self.live_weather.latitude, self.live_weather.longitude)
+            self.live_sky_sample_time = now
+        sky = self.live_sky_position
+        if not self.live_weather.located:
+            sky = SkyPosition(-20, 0, -90, 0, 0, False)
+        draw_sky(p, w, h, t, sky, self.live_weather.weather)
+        p.setPen(Qt.PenStyle.NoPen)
 
     def weather(self, p: QPainter, w: int, h: int, t: float) -> None:
+        if self.live_sky_enabled:
+            if self.theme == 'space':
+                if self.shooting_stars_enabled:
+                    self.draw_shooting_stars(p, w, h, t)
+                return
+            category = self.live_weather.weather.category
+            if category in ('rain', 'thunderstorm'):
+                self.draw_rain(p, w, h, t)
+            if category == 'snow':
+                self.draw_snowfall(p, w, h, t)
+            if category == 'fog':
+                self.draw_fog(p, w, h, t)
+            if category == 'thunderstorm':
+                self.draw_thunderstorms(p, w, h, t)
+            return
         if self.rain_enabled:
             self.draw_rain(p, w, h, t)
         if self.snow_enabled:
@@ -398,17 +499,21 @@ class Saver(QWidget):
         p.save()
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.setPen(QPen(QColor(171, 218, 255, 125), max(1, scale*1.5)))
-        for x, y, speed, phase in self.rain_drops:
-            drop_x = (x*w + math.sin(t*.7 + phase)*12*scale) % w
+        weather = self.live_weather.weather
+        drops = self.rain_drops[:max(1, round(len(self.rain_drops)*weather.intensity))] if self.live_sky_enabled else self.rain_drops
+        wind = weather.wind*.15 if self.live_sky_enabled else 0
+        for x, y, speed, phase in drops:
+            drop_x = (x*w + t*wind*scale + math.sin(t*.7 + phase)*12*scale) % w
             drop_y = (y*h + t*(170 + speed*100)*scale) % h
-            p.drawLine(QPointF(drop_x, drop_y), QPointF(drop_x - 5*scale, drop_y + 19*scale))
+            p.drawLine(QPointF(drop_x, drop_y), QPointF(drop_x - (5+wind)*scale, drop_y + 19*scale))
         p.restore()
 
     def draw_snowfall(self, p: QPainter, w: int, h: int, t: float) -> None:
         scale = min(w, h) / 900
         p.save()
         p.setPen(Qt.PenStyle.NoPen)
-        for x, y, size, speed, phase in self.snowflakes:
+        flakes = self.snowflakes[:max(1, round(len(self.snowflakes)*self.live_weather.weather.intensity))] if self.live_sky_enabled else self.snowflakes
+        for x, y, size, speed, phase in flakes:
             flake_x = (x*w + math.sin(t*.55 + phase)*24*scale) % w
             flake_y = (y*h + t*(18 + speed*17)*scale) % h
             p.setBrush(QColor(237, 247, 255, 185))

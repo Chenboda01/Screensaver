@@ -3,6 +3,7 @@
 #include <QSettings>
 #include <QProcess>
 #include <QDir>
+#include <QFile>
 #include <QStandardPaths>
 #include <QStringList>
 #include <QtGlobal>
@@ -18,6 +19,21 @@ ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data)
     : KQuickConfigModule(parent, data) {
     setButtons(Apply);
     setSupportsInstantApply(false);
+    const QString locationsPath = QStandardPaths::locate(
+        QStandardPaths::GenericDataLocation,
+        QStringLiteral("screenbot-screensaver/countries_and_cities.txt"));
+    QFile locationsFile(locationsPath);
+    if (locationsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        while (!locationsFile.atEnd()) {
+            const QString entry = QString::fromUtf8(locationsFile.readLine()).trimmed();
+            const qsizetype separator = entry.indexOf(QLatin1Char(','));
+            if (separator <= 0 || separator == entry.size() - 1) continue;
+            const QString country = entry.left(separator).trimmed();
+            const QString city = entry.mid(separator + 1).trimmed();
+            if (!country.isEmpty() && !city.isEmpty())
+                m_liveSkyLocations.append(city + QStringLiteral(", ") + country);
+        }
+    }
     load();
 }
 
@@ -31,6 +47,11 @@ void ScreenBotKcm::checkModified() {
                  || m_thunderstormsEnabled != m_savedThunderstormsEnabled
                  || m_fogEnabled != m_savedFogEnabled
                  || m_shootingStarsEnabled != m_savedShootingStarsEnabled
+                 || m_liveSkyEnabled != m_savedLiveSkyEnabled
+                 || m_liveSkyLocation != m_savedLiveSkyLocation
+                 || m_liveSkyUnits != m_savedLiveSkyUnits
+                 || m_liveSkyInterval != m_savedLiveSkyInterval
+                 || m_liveSkyConditions != m_savedLiveSkyConditions
                  || m_agentDetectionMode != m_savedAgentDetectionMode
                  || m_phoneEnabled != m_savedPhoneEnabled
                  || m_bobosEnabled != m_savedBobosEnabled
@@ -62,6 +83,16 @@ void ScreenBotKcm::load() {
     const bool thunderstorms = cfg.value(QStringLiteral("Screensaver/thunderstorms_enabled"), false).toBool();
     const bool fog = cfg.value(QStringLiteral("Screensaver/fog_enabled"), false).toBool();
     const bool shootingStars = cfg.value(QStringLiteral("Screensaver/shooting_stars_enabled"), false).toBool();
+    const bool liveSky = cfg.value(QStringLiteral("Screensaver/live_sky_enabled"), false).toBool();
+    const QString requestedLiveSkyLocation = cfg.value(QStringLiteral("Screensaver/live_sky_location")).toString();
+    const QString liveSkyLocation = m_liveSkyLocations.contains(requestedLiveSkyLocation)
+        ? requestedLiveSkyLocation : QString();
+    const QString requestedLiveSkyUnits = cfg.value(QStringLiteral("Screensaver/live_sky_units"), QStringLiteral("c")).toString();
+    const QString liveSkyUnits = requestedLiveSkyUnits == QLatin1String("f") ? QStringLiteral("f") : QStringLiteral("c");
+    const int requestedLiveSkyInterval = cfg.value(QStringLiteral("Screensaver/live_sky_interval"), 30).toInt();
+    const int liveSkyInterval = requestedLiveSkyInterval == 15 || requestedLiveSkyInterval == 60
+        ? requestedLiveSkyInterval : 30;
+    const bool liveSkyConditions = cfg.value(QStringLiteral("Screensaver/live_sky_conditions"), true).toBool();
     const QString requestedAgentMode = cfg.value(QStringLiteral("Screensaver/agent_detection_mode"), QStringLiteral("ask")).toString();
     const QString agentMode = requestedAgentMode == QLatin1String("start") || requestedAgentMode == QLatin1String("block")
         ? requestedAgentMode : QStringLiteral("ask");
@@ -84,6 +115,11 @@ void ScreenBotKcm::load() {
     if (m_thunderstormsEnabled != thunderstorms) { m_thunderstormsEnabled = thunderstorms; Q_EMIT thunderstormsEnabledChanged(); }
     if (m_fogEnabled != fog) { m_fogEnabled = fog; Q_EMIT fogEnabledChanged(); }
     if (m_shootingStarsEnabled != shootingStars) { m_shootingStarsEnabled = shootingStars; Q_EMIT shootingStarsEnabledChanged(); }
+    if (m_liveSkyEnabled != liveSky) { m_liveSkyEnabled = liveSky; Q_EMIT liveSkyEnabledChanged(); }
+    if (m_liveSkyLocation != liveSkyLocation) { m_liveSkyLocation = liveSkyLocation; Q_EMIT liveSkyLocationChanged(); }
+    if (m_liveSkyUnits != liveSkyUnits) { m_liveSkyUnits = liveSkyUnits; Q_EMIT liveSkyUnitsChanged(); }
+    if (m_liveSkyInterval != liveSkyInterval) { m_liveSkyInterval = liveSkyInterval; Q_EMIT liveSkyIntervalChanged(); }
+    if (m_liveSkyConditions != liveSkyConditions) { m_liveSkyConditions = liveSkyConditions; Q_EMIT liveSkyConditionsChanged(); }
     if (m_agentDetectionMode != agentMode) { m_agentDetectionMode = agentMode; Q_EMIT agentDetectionModeChanged(); }
     if (m_phoneEnabled != phone) { m_phoneEnabled = phone; Q_EMIT phoneEnabledChanged(); }
     if (m_bobosEnabled != bobos) { m_bobosEnabled = bobos; Q_EMIT bobosEnabledChanged(); }
@@ -103,6 +139,11 @@ void ScreenBotKcm::load() {
     m_savedThunderstormsEnabled = m_thunderstormsEnabled;
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
+    m_savedLiveSkyEnabled = m_liveSkyEnabled;
+    m_savedLiveSkyLocation = m_liveSkyLocation;
+    m_savedLiveSkyUnits = m_liveSkyUnits;
+    m_savedLiveSkyInterval = m_liveSkyInterval;
+    m_savedLiveSkyConditions = m_liveSkyConditions;
     m_savedAgentDetectionMode = m_agentDetectionMode;
     m_savedPhoneEnabled = m_phoneEnabled;
     m_savedBobosEnabled = m_bobosEnabled;
@@ -127,6 +168,11 @@ void ScreenBotKcm::save() {
     cfg.setValue(QStringLiteral("Screensaver/thunderstorms_enabled"), m_thunderstormsEnabled);
     cfg.setValue(QStringLiteral("Screensaver/fog_enabled"), m_fogEnabled);
     cfg.setValue(QStringLiteral("Screensaver/shooting_stars_enabled"), m_shootingStarsEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/live_sky_enabled"), m_liveSkyEnabled);
+    cfg.setValue(QStringLiteral("Screensaver/live_sky_location"), m_liveSkyLocation);
+    cfg.setValue(QStringLiteral("Screensaver/live_sky_units"), m_liveSkyUnits);
+    cfg.setValue(QStringLiteral("Screensaver/live_sky_interval"), m_liveSkyInterval);
+    cfg.setValue(QStringLiteral("Screensaver/live_sky_conditions"), m_liveSkyConditions);
     cfg.setValue(QStringLiteral("Screensaver/agent_detection_mode"), m_agentDetectionMode);
     cfg.setValue(QStringLiteral("Screensaver/bob_phone_enabled"), m_phoneEnabled);
     cfg.setValue(QStringLiteral("Screensaver/bobos_enabled"), m_bobosEnabled);
@@ -151,6 +197,11 @@ void ScreenBotKcm::save() {
     m_savedThunderstormsEnabled = m_thunderstormsEnabled;
     m_savedFogEnabled = m_fogEnabled;
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
+    m_savedLiveSkyEnabled = m_liveSkyEnabled;
+    m_savedLiveSkyLocation = m_liveSkyLocation;
+    m_savedLiveSkyUnits = m_liveSkyUnits;
+    m_savedLiveSkyInterval = m_liveSkyInterval;
+    m_savedLiveSkyConditions = m_liveSkyConditions;
     m_savedAgentDetectionMode = m_agentDetectionMode;
     m_savedPhoneEnabled = m_phoneEnabled;
     m_savedBobosEnabled = m_bobosEnabled;
@@ -263,6 +314,44 @@ void ScreenBotKcm::setShootingStarsEnabled(bool value) {
     if (value == m_shootingStarsEnabled) return;
     m_shootingStarsEnabled = value;
     Q_EMIT shootingStarsEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setLiveSkyEnabled(bool value) {
+    if (value == m_liveSkyEnabled) return;
+    m_liveSkyEnabled = value;
+    Q_EMIT liveSkyEnabledChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setLiveSkyLocation(const QString &value) {
+    if (!value.isEmpty() && !m_liveSkyLocations.contains(value)) return;
+    if (value == m_liveSkyLocation) return;
+    m_liveSkyLocation = value;
+    Q_EMIT liveSkyLocationChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setLiveSkyUnits(const QString &value) {
+    if (value != QLatin1String("c") && value != QLatin1String("f")) return;
+    if (value == m_liveSkyUnits) return;
+    m_liveSkyUnits = value;
+    Q_EMIT liveSkyUnitsChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setLiveSkyInterval(int value) {
+    if (value != 15 && value != 30 && value != 60) return;
+    if (value == m_liveSkyInterval) return;
+    m_liveSkyInterval = value;
+    Q_EMIT liveSkyIntervalChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::setLiveSkyConditions(bool value) {
+    if (value == m_liveSkyConditions) return;
+    m_liveSkyConditions = value;
+    Q_EMIT liveSkyConditionsChanged();
     checkModified();
 }
 

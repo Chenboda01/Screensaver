@@ -18,6 +18,12 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool thunderstormsEnabled READ thunderstormsEnabled WRITE setThunderstormsEnabled NOTIFY thunderstormsEnabledChanged)
     Q_PROPERTY(bool fogEnabled READ fogEnabled WRITE setFogEnabled NOTIFY fogEnabledChanged)
     Q_PROPERTY(bool shootingStarsEnabled READ shootingStarsEnabled WRITE setShootingStarsEnabled NOTIFY shootingStarsEnabledChanged)
+    Q_PROPERTY(bool liveSkyEnabled READ liveSkyEnabled WRITE setLiveSkyEnabled NOTIFY liveSkyEnabledChanged)
+    Q_PROPERTY(QStringList liveSkyLocations READ liveSkyLocations CONSTANT)
+    Q_PROPERTY(QString liveSkyLocation READ liveSkyLocation WRITE setLiveSkyLocation NOTIFY liveSkyLocationChanged)
+    Q_PROPERTY(QString liveSkyUnits READ liveSkyUnits WRITE setLiveSkyUnits NOTIFY liveSkyUnitsChanged)
+    Q_PROPERTY(int liveSkyInterval READ liveSkyInterval WRITE setLiveSkyInterval NOTIFY liveSkyIntervalChanged)
+    Q_PROPERTY(bool liveSkyConditions READ liveSkyConditions WRITE setLiveSkyConditions NOTIFY liveSkyConditionsChanged)
     Q_PROPERTY(QString agentDetectionMode READ agentDetectionMode WRITE setAgentDetectionMode NOTIFY agentDetectionModeChanged)
     Q_PROPERTY(bool phoneEnabled READ phoneEnabled WRITE setPhoneEnabled NOTIFY phoneEnabledChanged)
     Q_PROPERTY(bool bobosEnabled READ bobosEnabled WRITE setBobosEnabled NOTIFY bobosEnabledChanged)
@@ -39,6 +45,12 @@ public:
     bool thunderstormsEnabled() const { return m_thunderstormsEnabled; }
     bool fogEnabled() const { return m_fogEnabled; }
     bool shootingStarsEnabled() const { return m_shootingStarsEnabled; }
+    bool liveSkyEnabled() const { return m_liveSkyEnabled; }
+    QStringList liveSkyLocations() const { return m_liveSkyLocations; }
+    QString liveSkyLocation() const { return m_liveSkyLocation; }
+    QString liveSkyUnits() const { return m_liveSkyUnits; }
+    int liveSkyInterval() const { return m_liveSkyInterval; }
+    bool liveSkyConditions() const { return m_liveSkyConditions; }
     QString agentDetectionMode() const { return m_agentDetectionMode; }
     bool phoneEnabled() const { return m_phoneEnabled; }
     bool bobosEnabled() const { return m_bobosEnabled; }
@@ -58,6 +70,11 @@ public:
     void setThunderstormsEnabled(bool value);
     void setFogEnabled(bool value);
     void setShootingStarsEnabled(bool value);
+    void setLiveSkyEnabled(bool value);
+    void setLiveSkyLocation(const QString &value);
+    void setLiveSkyUnits(const QString &value);
+    void setLiveSkyInterval(int value);
+    void setLiveSkyConditions(bool value);
     void setAgentDetectionMode(const QString &value);
     Q_INVOKABLE void resetRememberedAgentChoice();
     Q_INVOKABLE void previewBobOS(bool showWifiAnimation);
@@ -82,6 +99,11 @@ Q_SIGNALS:
     void thunderstormsEnabledChanged();
     void fogEnabledChanged();
     void shootingStarsEnabledChanged();
+    void liveSkyEnabledChanged();
+    void liveSkyLocationChanged();
+    void liveSkyUnitsChanged();
+    void liveSkyIntervalChanged();
+    void liveSkyConditionsChanged();
     void agentDetectionModeChanged();
     void phoneEnabledChanged();
     void bobosEnabledChanged();
@@ -107,6 +129,12 @@ private:
     bool m_thunderstormsEnabled = false;
     bool m_fogEnabled = false;
     bool m_shootingStarsEnabled = false;
+    bool m_liveSkyEnabled = false;
+    QStringList m_liveSkyLocations;
+    QString m_liveSkyLocation;
+    QString m_liveSkyUnits = QStringLiteral("c");
+    int m_liveSkyInterval = 30;
+    bool m_liveSkyConditions = true;
     QString m_agentDetectionMode = QStringLiteral("ask");
     bool m_savedClockVisible = true;
     QString m_savedClockFormat = QStringLiteral("12h");
@@ -118,6 +146,11 @@ private:
     bool m_savedThunderstormsEnabled = false;
     bool m_savedFogEnabled = false;
     bool m_savedShootingStarsEnabled = false;
+    bool m_savedLiveSkyEnabled = false;
+    QString m_savedLiveSkyLocation;
+    QString m_savedLiveSkyUnits = QStringLiteral("c");
+    int m_savedLiveSkyInterval = 30;
+    bool m_savedLiveSkyConditions = true;
     QString m_savedAgentDetectionMode = QStringLiteral("ask");
     bool m_phoneEnabled = true;
     bool m_bobosEnabled = true;

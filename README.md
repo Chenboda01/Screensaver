@@ -3,8 +3,8 @@
   <h1>ScreenBot Screensaver</h1>
   <p>A little robot, a lot of worlds. A playful screensaver for KDE Plasma 6 on Wayland.</p>
   <p>
-    <a href="https://github.com/Chenboda01/Screensaver/releases/tag/V21"><img alt="Latest release V21" src="https://img.shields.io/badge/release-V21-168eb7"></a>
-    <a href="https://github.com/Chenboda01/Screensaver/releases"><img alt="Downloads" src="https://img.shields.io/badge/downloads-V10%E2%80%93V19%20%2B%20V21-263b52"></a>
+    <a href="https://github.com/Chenboda01/Screensaver/releases/tag/V22"><img alt="Latest release V22" src="https://img.shields.io/badge/release-V22-168eb7"></a>
+    <a href="https://github.com/Chenboda01/Screensaver/releases"><img alt="Downloads" src="https://img.shields.io/badge/downloads-V10%E2%80%93V19%20%2B%20V21%E2%80%93V22-263b52"></a>
     <a href="#platform-support-and-installation"><img alt="Platform" src="https://img.shields.io/badge/platform-KDE%20Plasma%206%20%7C%20Wayland-512bd4"></a>
     <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-4c9a70"></a>
   </p>
@@ -12,7 +12,7 @@
 
 ---
 
-ScreenBot shows head-only animated Bob exploring themed backgrounds, optional weather, and fictional BobOS phone adventures. V10 through V19 and V21 are listed for download; V1 through V9 are unavailable.
+ScreenBot shows head-only animated Bob exploring themed backgrounds, optional Live Sky, and fictional BobOS phone adventures. V10 through V19 and V21 through V22 are listed for download; V1 through V9 are unavailable.
 
 ## Downloads
 
@@ -38,6 +38,7 @@ ScreenBot shows head-only animated Bob exploring themed backgrounds, optional we
 | V18 | [Download ScreenBot Screensaver V18 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V18.zip) |
 | V19 | [Download ScreenBot Screensaver V19 (.zip)](https://github.com/Chenboda01/Screensaver/raw/refs/heads/main/releases/ScreenBot-Screensaver-V19.zip) |
 | V21 | [Download ScreenBot Screensaver V21 (.zip)](https://github.com/Chenboda01/Screensaver/releases/download/V21/ScreenBot-Screensaver-V21.zip) |
+| V22 | [Download ScreenBot Screensaver V22 (.zip)](https://github.com/Chenboda01/Screensaver/releases/download/V22/ScreenBot-Screensaver-V22.zip) |
 
 ## Platform support and installation
 
@@ -47,8 +48,8 @@ The full screensaver and KDE System Settings module are supported on **Linux wit
 
 1. Confirm that KDE Plasma 6 is installed and you are using its Wayland session.
 2. Install your distribution's packages for Python 3 with PyQt6, CMake 3.20 or newer, a C++17 compiler, Make, ECM 6+, Qt 6.5+ (Core, Quick, and QML), and KDE Frameworks 6+ (KCMUtils, CoreAddons, and I18n). Package names vary by distribution.
-3. Download the [V21 ZIP release](https://github.com/Chenboda01/Screensaver/releases/download/V21/ScreenBot-Screensaver-V21.zip) (or another available version) and extract it, for example, into `~/Downloads`.
-4. Open a terminal in the extracted `ScreenBot-Screensaver-V21` folder and run:
+3. Download the [V22 ZIP release](https://github.com/Chenboda01/Screensaver/releases/download/V22/ScreenBot-Screensaver-V22.zip) (or another available version) and extract it, for example, into `~/Downloads`.
+4. Open a terminal in the extracted `ScreenBot-Screensaver-V22` folder and run:
 
    ```bash
    bash install.sh
@@ -73,6 +74,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - Random, Space, Mountains, Snow, Forest, and Futuristic City themes
 - Configurable 12/24-hour clock, date, nine screen positions, font size, and visibility
 - Individually enabled animated rain, snow, thunderstorms, fog, and Space shooting stars
+- Optional Live Sky with locally calculated sun/moon positions and phase, animated clouds, weather-aware sky and landscape effects, and a current-conditions display; it is off by default
 - AI agent detection with a Remember my choice prompt, persistent automatic-launch policies, and a reset option in KDE Settings
 - Manual launches remain available regardless of the automatic agent policy
 - Bob's Phone and animated BobOS 2.0 with a fictional home screen, browser, files, terminal, games, settings, notifications, BobChat, Maps, Weather, Calendar, App Store, AI Wi-Fi, and an immediate preview
@@ -80,6 +82,10 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - Animated head-only Bob; he stays still during his sleepy phase
 - Optional KDE password-lock request with a 1–60 minute delay
 - Optional countdown with a smooth green-to-red color transition
+
+### Live Sky location and network privacy
+
+Live Sky is off by default and makes no network requests while disabled. When enabled, choose a country and city from `countries_and_cities.txt` in KDE Settings. Only that selected place is sent to Open-Meteo to resolve coordinates and request current weather; the app does not send your public IP to a location provider. Weather observations and resolved coordinates are cached locally in `~/.cache/screenbot/live-sky.json`; weather is ignored after three hours. If weather is unavailable, the screensaver keeps rendering from its local sky calculations and the last resolved coordinates; on a first offline run with no cached coordinates it uses a neutral fallback sky. Solar and lunar positions are approximate visual calculations, not navigation-grade astronomy.
 
 ## Version changes
 
@@ -95,6 +101,7 @@ There are no tested or supported installers for BSD or other non-Linux systems. 
 - **V19:** Replaces the backpack and tiny laptop with Bob's Phone. BobOS now zooms into an animated fictional mobile interface and autonomously visits Bob Browser, Bob Files, Bob Terminal, Bob Games, and Bob Settings before shutting down and returning to the selected theme. Adds a lock-safe full-sequence preview in KDE Settings.
 - **V20:** Introduced BobOS 2.0 with an expanded set of fictional phone apps and a longer sequence of animated phone interactions.
 - **V21:** Removes the relationship storyline and its KDE setting. BobOS continues its normal phone adventure, including BobChat, Maps, Weather, Calendar, App Store, and games; the preview and lock-safe shutdown behavior remain available.
+- **V22:** Adds opt-in Live Sky. The landscape follows approximate local solar and lunar positions, moon phase, and weather; KDE Settings includes the country and city list from `countries_and_cities.txt`, units, refresh frequency, and a conditions display. Open-Meteo requests run asynchronously and use a private cache for offline use.
 
 ## Requirements
 

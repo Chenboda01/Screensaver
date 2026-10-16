@@ -70,24 +70,32 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.label: "Rain:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.rainEnabled
+            enabled: !kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.rainEnabled = checked
         }
         Controls.Switch {
             Kirigami.FormData.label: "Snowfall:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.snowEnabled
+            enabled: !kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.snowEnabled = checked
         }
         Controls.Switch {
             Kirigami.FormData.label: "Thunderstorms:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.thunderstormsEnabled
+            enabled: !kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.thunderstormsEnabled = checked
         }
         Controls.Switch {
             Kirigami.FormData.label: "Fog:"
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.fogEnabled
+            enabled: !kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
             onToggled: kcm.fogEnabled = checked
         }
         Controls.Switch {
@@ -95,6 +103,59 @@ KCMUtils.SimpleKCM {
             text: checked ? "Enabled" : "Disabled"
             checked: kcm.shootingStarsEnabled
             onToggled: kcm.shootingStarsEnabled = checked
+        }
+        Controls.Label {
+            Kirigami.FormData.label: "Live Sky:"
+            text: "Adapt the sky, lighting, moon, and weather to local conditions. It is off by default; manual weather effects are dimmed while Live Sky is enabled."
+            wrapMode: Text.WordWrap
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Enable Live Sky:"
+            text: checked ? "On" : "Off"
+            checked: kcm.liveSkyEnabled
+            onToggled: kcm.liveSkyEnabled = checked
+        }
+        Controls.ComboBox {
+            Kirigami.FormData.label: "Country and city:"
+            model: ["Select a location…"].concat(kcm.liveSkyLocations)
+            currentIndex: Math.max(0, kcm.liveSkyLocations.indexOf(kcm.liveSkyLocation) + 1)
+            enabled: kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onActivated: function(index) {
+                kcm.liveSkyLocation = index > 0 ? kcm.liveSkyLocations[index - 1] : ""
+            }
+        }
+        Controls.Label {
+            text: kcm.liveSkyLocation.length === 0
+                ? "Choose a country and city from countries_and_cities.txt. The selected place is sent to Open-Meteo for coordinates and current weather only while Live Sky is enabled. No IP-based location lookup is used."
+                : "Weather is based on " + kcm.liveSkyLocation + ". The selected place is sent to Open-Meteo for coordinates and current weather only while Live Sky is enabled."
+            wrapMode: Text.WordWrap
+            enabled: kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
+        }
+        Controls.ComboBox {
+            Kirigami.FormData.label: "Temperature units:"
+            model: ["Celsius", "Fahrenheit"]
+            currentIndex: kcm.liveSkyUnits === "f" ? 1 : 0
+            enabled: kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onActivated: function(index) { kcm.liveSkyUnits = index === 1 ? "f" : "c" }
+        }
+        Controls.ComboBox {
+            Kirigami.FormData.label: "Weather refresh:"
+            model: ["Every 15 minutes", "Every 30 minutes", "Every 60 minutes"]
+            currentIndex: [15, 30, 60].indexOf(kcm.liveSkyInterval)
+            enabled: kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onActivated: function(index) { kcm.liveSkyInterval = [15, 30, 60][index] }
+        }
+        Controls.Switch {
+            Kirigami.FormData.label: "Current conditions:"
+            text: checked ? "Show weather under the clock" : "Hide weather text"
+            checked: kcm.liveSkyConditions
+            enabled: kcm.liveSkyEnabled
+            opacity: enabled ? 1.0 : 0.4
+            onToggled: kcm.liveSkyConditions = checked
         }
         Controls.Label {
             Kirigami.FormData.label: "AI Agent Detection:"
