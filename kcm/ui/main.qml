@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCMUtils
@@ -117,23 +118,10 @@ KCMUtils.SimpleKCM {
             checked: kcm.liveSkyEnabled
             onToggled: kcm.liveSkyEnabled = checked
         }
-        Controls.ComboBox {
-            Kirigami.FormData.label: "Country and city:"
-            model: ["Select a location…"].concat(kcm.liveSkyLocations)
-            currentIndex: Math.max(0, kcm.liveSkyLocations.indexOf(kcm.liveSkyLocation) + 1)
-            enabled: kcm.liveSkyEnabled
-            opacity: enabled ? 1.0 : 0.4
-            onActivated: function(index) {
-                kcm.liveSkyLocation = index > 0 ? kcm.liveSkyLocations[index - 1] : ""
-            }
-        }
+        CitySearch { settings: kcm }
         Controls.Label {
-            text: kcm.liveSkyLocation.length === 0
-                ? "Choose a country and city from countries_and_cities.txt. The selected place is sent to Open-Meteo for coordinates and current weather only while Live Sky is enabled. No IP-based location lookup is used."
-                : "Weather is based on " + kcm.liveSkyLocation + ". The selected place is sent to Open-Meteo for coordinates and current weather only while Live Sky is enabled."
+            text: "Typed searches are sent to Open-Meteo only while Live Sky is enabled. Choose a suggestion to set your location; Apply saves it. Offline search uses the bundled city catalog. No IP-based lookup is used."
             wrapMode: Text.WordWrap
-            enabled: kcm.liveSkyEnabled
-            opacity: enabled ? 1.0 : 0.4
         }
         Controls.ComboBox {
             Kirigami.FormData.label: "Temperature units:"

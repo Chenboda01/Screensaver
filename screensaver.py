@@ -15,13 +15,13 @@ import time
 from pathlib import Path
 from typing import Final
 
-from PyQt6.QtCore import QDateTime, QPointF, QRectF, Qt, QTimer
+from PyQt6.QtCore import QDateTime, QPointF, QRectF, QSettings, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPolygonF, QRadialGradient
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 
 from live_sky import SkyPosition, sky_position
-from live_sky_network import LiveWeather
+from live_sky_network import LiveWeather, read_location_setting
 from live_sky_render import SpaceSky, draw_sky
 
 from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
@@ -54,7 +54,10 @@ PHONE_UI_PHASES: Final[frozenset[BobOSPhase]] = frozenset(
 
 def read_settings():
     settings = configparser.ConfigParser()
-    settings.read(Path.home() / '.config' / 'screenbot-screensaver.ini')
+    path = Path.home() / '.config' / 'screenbot-screensaver.ini'
+    settings.read(path)
+    if settings.has_section('Screensaver'):
+        settings.set('Screensaver', 'live_sky_location', read_location_setting(QSettings(str(path), QSettings.Format.IniFormat)))
     return settings
 
 
@@ -100,11 +103,19 @@ class Saver(QWidget):
         except ValueError:
             interval = 30
         self.live_sky_location = settings.get('Screensaver', 'live_sky_location', fallback='').strip()
+        try:
+            coordinates = (settings.getfloat('Screensaver', 'live_sky_latitude'),
+                           settings.getfloat('Screensaver', 'live_sky_longitude'))
+        except (ValueError, configparser.Error):
+            coordinates = None
         self.live_sky_sample_time = 0.
         self.live_sky_position = None
         self.space_sky = SpaceSky()
         self.live_weather = LiveWeather(self, enabled=self.live_sky_enabled,
-                                       location=self.live_sky_location, interval=interval)
+                                       location=self.live_sky_location, interval=interval,
+                                       coordinates=coordinates,
+                                       timezone_name=settings.get('Screensaver', 'live_sky_timezone', fallback=''),
+                                       config_path=Path.home() / '.config' / 'screenbot-screensaver.ini')
 
         self.password_lock = settings.getboolean('Screensaver', 'password_lock', fallback=False)
         try:

@@ -34,6 +34,7 @@ ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data)
                 m_liveSkyLocations.append(city + QStringLiteral(", ") + country);
         }
     }
+    m_locationSearch.setCatalog(m_liveSkyLocations);
     load();
 }
 
@@ -49,6 +50,7 @@ void ScreenBotKcm::checkModified() {
                  || m_shootingStarsEnabled != m_savedShootingStarsEnabled
                  || m_liveSkyEnabled != m_savedLiveSkyEnabled
                  || m_liveSkyLocation != m_savedLiveSkyLocation
+                 || m_liveSkyPlace != m_savedLiveSkyPlace
                  || m_liveSkyUnits != m_savedLiveSkyUnits
                  || m_liveSkyInterval != m_savedLiveSkyInterval
                  || m_liveSkyConditions != m_savedLiveSkyConditions
@@ -84,9 +86,25 @@ void ScreenBotKcm::load() {
     const bool fog = cfg.value(QStringLiteral("Screensaver/fog_enabled"), false).toBool();
     const bool shootingStars = cfg.value(QStringLiteral("Screensaver/shooting_stars_enabled"), false).toBool();
     const bool liveSky = cfg.value(QStringLiteral("Screensaver/live_sky_enabled"), false).toBool();
-    const QString requestedLiveSkyLocation = cfg.value(QStringLiteral("Screensaver/live_sky_location")).toString();
-    const QString liveSkyLocation = m_liveSkyLocations.contains(requestedLiveSkyLocation)
-        ? requestedLiveSkyLocation : QString();
+    const QVariant locationValue = cfg.value(QStringLiteral("Screensaver/live_sky_location"));
+    const QString requestedLiveSkyLocation = locationValue.metaType().id() == QMetaType::QStringList
+        ? locationValue.toStringList().join(QStringLiteral(", ")) : locationValue.toString();
+    const QString liveSkyLocation = requestedLiveSkyLocation;
+    QVariantMap place;
+    const QString latitudeKey = QStringLiteral("Screensaver/live_sky_latitude");
+    const QString longitudeKey = QStringLiteral("Screensaver/live_sky_longitude");
+    bool latitudeOk = false, longitudeOk = false;
+    const double latitude = cfg.value(latitudeKey).toDouble(&latitudeOk);
+    const double longitude = cfg.value(longitudeKey).toDouble(&longitudeOk);
+    if (!liveSkyLocation.isEmpty() && latitudeOk && longitudeOk
+        && qIsFinite(latitude) && qIsFinite(longitude)
+        && qAbs(latitude) <= 90 && qAbs(longitude) <= 180) {
+        place = {{QStringLiteral("latitude"), latitude}, {QStringLiteral("longitude"), longitude},
+                 {QStringLiteral("timezone"), cfg.value(QStringLiteral("Screensaver/live_sky_timezone")).toString()}};
+    }
+    m_liveSkyPlace = place;
+    m_locationSearch.setEnabled(liveSky);
+    m_locationSearch.search(QString());
     const QString requestedLiveSkyUnits = cfg.value(QStringLiteral("Screensaver/live_sky_units"), QStringLiteral("c")).toString();
     const QString liveSkyUnits = requestedLiveSkyUnits == QLatin1String("f") ? QStringLiteral("f") : QStringLiteral("c");
     const int requestedLiveSkyInterval = cfg.value(QStringLiteral("Screensaver/live_sky_interval"), 30).toInt();
@@ -116,7 +134,8 @@ void ScreenBotKcm::load() {
     if (m_fogEnabled != fog) { m_fogEnabled = fog; Q_EMIT fogEnabledChanged(); }
     if (m_shootingStarsEnabled != shootingStars) { m_shootingStarsEnabled = shootingStars; Q_EMIT shootingStarsEnabledChanged(); }
     if (m_liveSkyEnabled != liveSky) { m_liveSkyEnabled = liveSky; Q_EMIT liveSkyEnabledChanged(); }
-    if (m_liveSkyLocation != liveSkyLocation) { m_liveSkyLocation = liveSkyLocation; Q_EMIT liveSkyLocationChanged(); }
+    m_liveSkyLocation = liveSkyLocation;
+    Q_EMIT liveSkyLocationChanged();
     if (m_liveSkyUnits != liveSkyUnits) { m_liveSkyUnits = liveSkyUnits; Q_EMIT liveSkyUnitsChanged(); }
     if (m_liveSkyInterval != liveSkyInterval) { m_liveSkyInterval = liveSkyInterval; Q_EMIT liveSkyIntervalChanged(); }
     if (m_liveSkyConditions != liveSkyConditions) { m_liveSkyConditions = liveSkyConditions; Q_EMIT liveSkyConditionsChanged(); }
@@ -141,6 +160,7 @@ void ScreenBotKcm::load() {
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
     m_savedLiveSkyEnabled = m_liveSkyEnabled;
     m_savedLiveSkyLocation = m_liveSkyLocation;
+    m_savedLiveSkyPlace = m_liveSkyPlace;
     m_savedLiveSkyUnits = m_liveSkyUnits;
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
@@ -170,6 +190,11 @@ void ScreenBotKcm::save() {
     cfg.setValue(QStringLiteral("Screensaver/shooting_stars_enabled"), m_shootingStarsEnabled);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_enabled"), m_liveSkyEnabled);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_location"), m_liveSkyLocation);
+    for (const QString &field : {QStringLiteral("latitude"), QStringLiteral("longitude"), QStringLiteral("timezone")}) {
+        const QString key = QStringLiteral("Screensaver/live_sky_") + field;
+        if (m_liveSkyPlace.contains(field)) cfg.setValue(key, m_liveSkyPlace.value(field));
+        else cfg.remove(key);
+    }
     cfg.setValue(QStringLiteral("Screensaver/live_sky_units"), m_liveSkyUnits);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_interval"), m_liveSkyInterval);
     cfg.setValue(QStringLiteral("Screensaver/live_sky_conditions"), m_liveSkyConditions);
@@ -199,6 +224,7 @@ void ScreenBotKcm::save() {
     m_savedShootingStarsEnabled = m_shootingStarsEnabled;
     m_savedLiveSkyEnabled = m_liveSkyEnabled;
     m_savedLiveSkyLocation = m_liveSkyLocation;
+    m_savedLiveSkyPlace = m_liveSkyPlace;
     m_savedLiveSkyUnits = m_liveSkyUnits;
     m_savedLiveSkyInterval = m_liveSkyInterval;
     m_savedLiveSkyConditions = m_liveSkyConditions;
@@ -320,6 +346,7 @@ void ScreenBotKcm::setShootingStarsEnabled(bool value) {
 void ScreenBotKcm::setLiveSkyEnabled(bool value) {
     if (value == m_liveSkyEnabled) return;
     m_liveSkyEnabled = value;
+    m_locationSearch.setEnabled(value);
     Q_EMIT liveSkyEnabledChanged();
     checkModified();
 }
@@ -328,6 +355,22 @@ void ScreenBotKcm::setLiveSkyLocation(const QString &value) {
     if (!value.isEmpty() && !m_liveSkyLocations.contains(value)) return;
     if (value == m_liveSkyLocation) return;
     m_liveSkyLocation = value;
+    m_liveSkyPlace.clear();
+    Q_EMIT liveSkyLocationChanged();
+    checkModified();
+}
+
+void ScreenBotKcm::selectLiveSkyPlace(int index) {
+    const auto results = m_locationSearch.results();
+    if (index < 0 || index >= results.size()) return;
+    const auto place = results.at(index).toMap();
+    m_liveSkyLocation = place.value(QStringLiteral("display")).toString();
+    m_liveSkyPlace.clear();
+    if (place.contains(QStringLiteral("latitude"))) {
+        for (const QString &field : {QStringLiteral("latitude"), QStringLiteral("longitude"), QStringLiteral("timezone")})
+            m_liveSkyPlace.insert(field, place.value(field));
+    }
+    m_locationSearch.search(QString());
     Q_EMIT liveSkyLocationChanged();
     checkModified();
 }
