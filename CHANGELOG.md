@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added an opt-in My photos theme with staged folder, recursion, interval, ordering, and fit settings; asynchronous local photo discovery/decoding, EXIF orientation, bounded cache, slow pan/zoom, cross-fades, and a friendly fallback.
 - Added selectable Aurora, Ocean / Beach, Desert, and Underwater adventures, available individually or through Random.
 - Added Live Sky-aware Aurora visibility, underwater surface ripples for rain and snow, and Bob's scene-matched diving helmet.
 - Split the screensaver and agent prompt runtimes into small entrypoints and focused settings, theme, weather, clock, BobOS, and terminal detection modules. Added exact offscreen image baselines to protect the five themes and BobOS home screen during future changes.

@@ -20,6 +20,7 @@ from screenbot.clock import ClockRenderer
 from screenbot.effects import WeatherEffects
 from screenbot.phone.apps import PhoneAppsRenderer
 from screenbot.phone.frame import PhoneFrameRenderer
+from screenbot.photo_slideshow import PhotoSlideshowRenderer
 from screenbot.runtime import battery_powered, frame_interval_ms
 from screenbot.scene import SceneRenderer
 from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, read_settings, selected_theme
@@ -51,6 +52,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.weather_accessory_animator = WeatherAccessoryAnimator()
         self.theme = selected_theme(settings)
         self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
+        self.photo_slideshow = PhotoSlideshowRenderer.from_settings(self, settings, self.theme)
         self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
         self.clock_format = settings.get('Screensaver', 'clock_format', fallback='12h').strip()
         if self.clock_format not in ('12h', '24h'):
@@ -339,6 +341,8 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
 
     def closeEvent(self, event) -> None:
         """Request polling shutdown without delaying the screensaver close animation."""
+        if self.photo_slideshow is not None:
+            self.photo_slideshow.close()
         if self.agent_status_worker is not None and self.agent_status_worker.isRunning():
             self.agent_status_worker.request_stop()
         super().closeEvent(event)

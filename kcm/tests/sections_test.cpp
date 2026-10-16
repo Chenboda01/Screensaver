@@ -53,6 +53,8 @@ private Q_SLOTS:
         const auto before = savedBytes();
         const QVariantMap changes{
             {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
+            {QStringLiteral("photoFolder"), QStringLiteral("/tmp/screenbot-photo-test")}, {QStringLiteral("photoIncludeSubfolders"), true},
+            {QStringLiteral("photoInterval"), 45}, {QStringLiteral("photoOrder"), QStringLiteral("random")}, {QStringLiteral("photoFit"), QStringLiteral("fit-blur")},
             {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
             {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
             {QStringLiteral("bobWeatherEnabled"), false},
@@ -125,8 +127,11 @@ private Q_SLOTS:
         QVERIFY(QTest::qWaitForWindowExposed(&view));
         auto *section = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("bobosSection"));
         auto *button = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("bobosPreviewButton"));
+        auto *theme = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("themeSection"));
         QVERIFY(section);
         QVERIFY(button);
+        QVERIFY(theme);
+        theme->setProperty("expanded", false);
         section->setProperty("expanded", true);
         QTest::qWait(300);
         QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier,
@@ -166,6 +171,26 @@ private Q_SLOTS:
         QVERIFY(item(QStringLiteral("bobColorPreset")));
         QVERIFY(item(QStringLiteral("bobCustomColorButton")));
         QVERIFY(item(QStringLiteral("bobAccessory")));
+        auto *photoFolder = item(QStringLiteral("photoFolderField"));
+        auto *photoSubfolders = item(QStringLiteral("photoIncludeSubfolders"));
+        auto *photoInterval = item(QStringLiteral("photoInterval"));
+        auto *photoOrder = item(QStringLiteral("photoOrder"));
+        auto *photoFit = item(QStringLiteral("photoFit"));
+        QVERIFY(photoFolder);
+        QVERIFY(photoSubfolders);
+        QVERIFY(photoInterval);
+        QVERIFY(photoOrder);
+        QVERIFY(photoFit);
+        QVERIFY(!photoFolder->property("enabled").toBool());
+        kcm.setTheme(QStringLiteral("photos"));
+        QCoreApplication::processEvents();
+        QVERIFY(photoFolder->property("enabled").toBool());
+        kcm.setPhotoFolder(QStringLiteral("/tmp/screenbot-photo-ui"));
+        QVERIFY(kcm.needsSave());
+        kcm.load();
+        QCOMPARE(kcm.theme(), QStringLiteral("random"));
+        QCOMPARE(kcm.photoFolder(), QDir::homePath() + QStringLiteral("/Pictures"));
+        QVERIFY(!photoFolder->property("enabled").toBool());
         QVERIFY(view.rootObject()->findChild<QObject *>(QStringLiteral("bobColorDialog")));
         for (const auto &key : keys) {
             auto *section = item(key + QStringLiteral("Section"));

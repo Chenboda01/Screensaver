@@ -13,6 +13,7 @@ These are actual `Saver` widget renders through its production `paintEvent`, inc
 Reproducible inputs:
 
 - Original theme stills: 1280×720 at five seconds after appearance, particle seed 22, clock hidden. Aurora uses a fixed Boston new-moon night (March 10, 2024 at 03:00 UTC) so its daylight-aware lights are visible; the other three new themes use Live Sky off.
+- My photos: a temporary folder of three locally generated sample images, sorted by name and rendered through the real asynchronous photo theme. The gallery generator never reads `~/Pictures` or any other user photo directory.
 - Live Sky: Mountains, Boston coordinates (42.36, −71.06), March 25, 2024. Sunrise 10:40 UTC, noon 16:45 UTC, sunset 23:00 UTC, full-moon night 03:00 UTC. Astronomy is calculated by `sky_position`.
 - Rain: noon with a fixed sample (weather code 63, cloud cover 85%, precipitation 4 mm, wind 12 km/h, temperature 9 °C), rendered through the ordinary weather effects.
 - Hero GIF: moonlit Mountains, six seconds at 10 fps, 768×432.

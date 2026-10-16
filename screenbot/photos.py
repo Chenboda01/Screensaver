@@ -215,6 +215,10 @@ class PhotoLibrary(QObject):
             if candidate.is_symlink():
                 return None
             resolved = candidate.resolve(strict=True)
+            if candidate.absolute() != resolved:
+                # Reject paths that traverse a symlinked parent, even when
+                # that target happens to remain beneath the selected folder.
+                return None
             relative = resolved.relative_to(root)
             if _is_hidden_relative(relative) or not resolved.is_file():
                 return None

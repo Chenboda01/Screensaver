@@ -268,6 +268,7 @@ class BobRenderer:
             'ocean': f'{name} is exploring the coastline…',
             'desert': f'{name} is exploring the desert…',
             'underwater': f'{name} is exploring underwater…',
+            'photos': f'{name} is enjoying your photos…',
         }
         bobos_words = {
             BobOSPhase.CURIOUS: f'{name} spotted a new adventure!',

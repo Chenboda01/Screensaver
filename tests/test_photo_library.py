@@ -6,6 +6,7 @@ from pathlib import Path
 import time
 from unittest.mock import patch
 
+os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 from PIL import Image
 from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import QApplication
@@ -21,9 +22,14 @@ from screenbot.photos import (
     discover_photos,
 )
 
+_APPLICATION: QApplication | None = None
+
 
 def _app() -> QApplication:
-    return QApplication.instance() or QApplication([])
+    global _APPLICATION
+    if QApplication.instance() is None:
+        _APPLICATION = QApplication([])
+    return QApplication.instance()
 
 
 def _wait_until(predicate, timeout: float = 3.0) -> None:
@@ -166,5 +172,16 @@ def test_decode_rejects_paths_outside_folder_hidden_files_and_non_images(tmp_pat
     assert not library.request_photo(outside, QSize(100, 100))
     assert not library.request_photo(hidden, QSize(100, 100))
     assert not library.request_photo(note, QSize(100, 100))
+    album = root / 'album'
+    album.mkdir()
+    nested = album / 'inside.jpg'
+    _image(nested)
+    link = root / 'linked-album'
+    try:
+        link.symlink_to(album, target_is_directory=True)
+    except OSError:
+        pass
+    else:
+        assert not library.request_photo(link / nested.name, QSize(100, 100))
     assert library.cached_image_count == 0
     library.close()

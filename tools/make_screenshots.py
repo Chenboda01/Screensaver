@@ -17,6 +17,8 @@ import os
 from pathlib import Path
 import random
 import sys
+import tempfile
+import time
 from typing import Final
 from unittest.mock import patch
 
@@ -24,7 +26,7 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 ROOT: Final = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from PIL import Image
+from PIL import Image, ImageDraw
 from PIL.ImageQt import fromqimage
 from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtGui import QImage
@@ -42,13 +44,15 @@ def seeded_random(seed: int | None = None) -> random.Random:
     return RANDOM(22 if seed is None else seed)
 
 
-def make_saver(theme: str, *, bobos: bool = False) -> Saver:
+def make_saver(theme: str, *, bobos: bool = False, photo_folder: Path | None = None) -> Saver:
     """Use isolated settings with networking, locking, and the clock disabled."""
     settings = configparser.ConfigParser()
     settings["Screensaver"] = {
         "theme": theme, "show_clock": "false", "password_lock": "false",
         "live_sky_enabled": "false", "bobos_enabled": "false",
     }
+    if photo_folder is not None:
+        settings["Screensaver"]["photo_folder"] = str(photo_folder)
     with patch("screenbot.app.read_settings", return_value=settings), \
          patch("screensaver.random.Random", side_effect=seeded_random), \
          patch("screensaver.time.monotonic", return_value=0.):
@@ -90,6 +94,49 @@ def save_animation(saver: Saver, name: str, start: float) -> None:
                    duration=100, loop=0, optimize=True)
 
 
+def create_demo_photos(folder: Path) -> None:
+    """Create non-private local sample images for the gallery capture."""
+    palette = ((239, 137, 89), (183, 112, 73), (98, 155, 143))
+    for index, sky in enumerate(palette):
+        image = Image.new("RGB", (1200, 800))
+        pixels = image.load()
+        for y in range(image.height):
+            amount = y / max(1, image.height - 1)
+            if index == 0 and y >= 440:
+                sea = (34, 109, 142)
+                amount_sea = (y - 440) / 360
+                color = tuple(round(channel * (1 - amount_sea * .5) + 10 * amount_sea * .5)
+                              for channel in sea)
+            else:
+                color = tuple(round(channel * (1 - amount * .45) + 22 * amount * .45) for channel in sky)
+            for x in range(image.width):
+                pixels[x, y] = color
+        draw = ImageDraw.Draw(image)
+        if index == 0:
+            draw.ellipse((835, 210, 1015, 390), fill=(255, 226, 159))
+            for row in range(10):
+                y = 480 + row * 28
+                draw.line((90 + row * 12, y, 1120 - row * 16, y),
+                          fill=(74, 148 + row * 4, 159 + row * 3), width=4)
+            draw.polygon([(0, 660), (210, 620), (410, 690), (650, 642),
+                          (850, 705), (1200, 650), (1200, 800), (0, 800)],
+                         fill=(19, 55, 66))
+        elif index == 1:
+            draw.ellipse((900, 120, 1040, 260), fill=(255, 219, 156))
+            draw.polygon([(0, 540), (250, 400), (500, 525), (770, 365),
+                          (1040, 515), (1200, 430), (1200, 800), (0, 800)],
+                         fill=(141, 79, 55))
+            draw.polygon([(0, 655), (310, 520), (620, 700), (940, 510),
+                          (1200, 650), (1200, 800), (0, 800)], fill=(199, 128, 77))
+        else:
+            draw.ellipse((880, 105, 1010, 235), fill=(255, 230, 186))
+            draw.rectangle((0, 520, 1200, 800), fill=(35, 82, 88))
+            for tree_x, tree_height in ((120, 330), (330, 250), (890, 310), (1080, 370)):
+                draw.rectangle((tree_x, 520 - tree_height // 3, tree_x + 22, 720), fill=(23, 55, 58))
+                draw.ellipse((tree_x - 90, 520 - tree_height, tree_x + 115, 560), fill=(30, 91, 78))
+        image.save(folder / f"sample-{index + 1}.jpg", quality=90)
+
+
 def main() -> None:
     """Regenerate every README gallery image from the current source tree."""
     app = QApplication([])
@@ -99,6 +146,22 @@ def main() -> None:
         if theme == "aurora":
             set_sky(saver, "2024-03-10T03:00:00")
         capture(saver, 5).save(OUTPUT / f"{theme}.webp", lossless=True)
+        saver.close()
+
+    with tempfile.TemporaryDirectory(prefix="screenbot-gallery-photos-") as temporary:
+        folder = Path(temporary)
+        create_demo_photos(folder)
+        saver = make_saver("photos", photo_folder=folder)
+        deadline = time.monotonic() + 5
+        while (saver.photo_slideshow is not None
+               and saver.photo_slideshow._current_image is None
+               and time.monotonic() < deadline):
+            app.processEvents()
+            saver.update()
+            time.sleep(.005)
+        if saver.photo_slideshow is None or saver.photo_slideshow._current_image is None:
+            raise RuntimeError("The local demo photos did not decode for the gallery capture.")
+        capture(saver, 5).save(OUTPUT / "my-photos.webp", lossless=True)
         saver.close()
 
     saver = make_saver("mountains")

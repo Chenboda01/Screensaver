@@ -13,8 +13,20 @@ from screenbot.themes.environment import ThemeEnvironment, ThemeFrame
 
 
 class SceneRenderer:
+    def _draw_photo_fallback_landscape(self, painter: QPainter, width: int,
+                                       height: int, elapsed: float) -> None:
+        """Use the built-in Mountains scene behind the empty-library notice."""
+        self.mountains_background(painter, width, height, elapsed)
+
     def draw_scenery(self, p: QPainter, w: int, h: int, t: float) -> None:
         """Render a cached static scene beneath the live weather/effect layers."""
+        if self.theme == 'photos':
+            # Photos change continuously and are asynchronously decoded, so
+            # they bypass the static theme cache. Existing weather remains a
+            # separate overlay and Bob/clock/BobOS stay in the normal layers.
+            THEME_RENDERERS[self.theme](self, p, w, h, t)
+            self.weather(p, w, h, t)
+            return
         if self.theme in THEME_MOTION_RENDERERS:
             self._update_live_sky_position()
         cache_key = (self.theme, w, h, self.live_sky_enabled,
