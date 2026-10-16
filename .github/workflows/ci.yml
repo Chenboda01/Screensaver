@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python tests (offscreen, offline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Install offscreen Qt and test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libegl1 libgl1 libxkbcommon0
+          python -m pip install PyQt6 pytest
+      - name: Compile Python sources
+        run: python -m py_compile *.py
+      - name: Run all tests without a display or network
+        # A network namespace blocks both Python sockets and Qt's native networking.
+        run: sudo unshare --net env QT_QPA_PLATFORM=offscreen "$(command -v python)" -m pytest tests -v --junitxml=test-results.xml
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-test-results
+          path: test-results.xml
+
+  kcm:
+    name: Qt 6 / KDE Frameworks 6 build
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 20
+    steps:
+      - name: Install Qt 6 and KDE Frameworks 6 build dependencies
+        run: pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules qt6-declarative kcmutils kcoreaddons ki18n
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure KDE settings module
+        run: cmake -S kcm -B build
+      - name: Build KDE settings module
+        run: cmake --build build --parallel 2

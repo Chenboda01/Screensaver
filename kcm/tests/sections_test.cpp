@@ -1,0 +1,229 @@
+#include "screenbotkcm.h"
+#include <KPluginMetaData>
+#include <QAccessible>
+#include <QApplication>
+#include <QDir>
+#include <QFile>
+#include <QMetaProperty>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QQmlContext>
+#include <QQuickItem>
+#include <QQuickView>
+#include <QSettings>
+#include <QStandardPaths>
+#include <QTemporaryDir>
+#include <QTest>
+
+class SectionsTest : public QObject {
+    Q_OBJECT
+    const QStringList keys{ QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("lock") };
+    QString configPath() const { return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation); }
+    QByteArray savedBytes() {
+        QFile file(configPath() + QStringLiteral("/screenbot-screensaver.ini"));
+        if (!file.open(QIODevice::ReadOnly)) return {};
+        return file.readAll();
+    }
+private Q_SLOTS:
+    void init() {
+        QFile::remove(configPath() + QStringLiteral("/screenbot-screensaver.ini"));
+        QFile::remove(configPath() + QStringLiteral("/screenbot-kcm-state.ini"));
+    }
+    void expansionDoesNotApplySettings() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        kcm.save();
+        const auto before = savedBytes();
+        QVERIFY(!before.isEmpty());
+        for (const auto &key : keys) QCOMPARE(kcm.sectionExpanded(key), key == QStringLiteral("theme"));
+        kcm.setClockFormat(QStringLiteral("24h"));
+        for (const auto &key : keys) kcm.setSectionExpanded(key, key != QStringLiteral("theme"));
+        QCOMPARE(savedBytes(), before);
+        QVERIFY(kcm.needsSave());
+        ScreenBotKcm reopened(nullptr, KPluginMetaData());
+        for (const auto &key : keys) QCOMPARE(reopened.sectionExpanded(key), key != QStringLiteral("theme"));
+        QCOMPARE(reopened.clockFormat(), QStringLiteral("12h"));
+        kcm.load();
+        QVERIFY(!kcm.needsSave());
+        QVERIFY(kcm.sectionExpanded(QStringLiteral("clock")));
+    }
+    void allSettingsApplyDiscard() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        kcm.save();
+        const auto before = savedBytes();
+        const QVariantMap changes{
+            {QStringLiteral("theme"), QStringLiteral("forest")}, {QStringLiteral("clockVisible"), false}, {QStringLiteral("clockFormat"), QStringLiteral("24h")}, {QStringLiteral("showDate"), true},
+            {QStringLiteral("clockPosition"), QStringLiteral("bottom-right")}, {QStringLiteral("clockFontSize"), 24}, {QStringLiteral("rainEnabled"), true},
+            {QStringLiteral("snowEnabled"), true}, {QStringLiteral("thunderstormsEnabled"), true}, {QStringLiteral("fogEnabled"), true}, {QStringLiteral("shootingStarsEnabled"), true},
+            {QStringLiteral("liveSkyEnabled"), true}, {QStringLiteral("liveSkyUnits"), QStringLiteral("f")}, {QStringLiteral("liveSkyInterval"), 60}, {QStringLiteral("liveSkyConditions"), false},
+            {QStringLiteral("agentDetectionMode"), QStringLiteral("block")}, {QStringLiteral("phoneEnabled"), false}, {QStringLiteral("bobosEnabled"), false},
+            {QStringLiteral("bobosActivationDelay"), 7}, {QStringLiteral("showWifiAnimation"), false}, {QStringLiteral("passwordLock"), true},
+            {QStringLiteral("lockMinutes"), 5}, {QStringLiteral("showTimer"), true}
+        };
+        QVariantMap defaults;
+        for (auto it = changes.cbegin(); it != changes.cend(); ++it) {
+            defaults.insert(it.key(), kcm.property(it.key().toUtf8().constData()));
+            QVERIFY(kcm.setProperty(it.key().toUtf8().constData(), it.value()));
+        }
+        auto dirty = kcm.modifiedSections();
+        for (const auto &key : keys) QVERIFY(dirty.contains(key));
+        QCOMPARE(savedBytes(), before);
+        kcm.load();
+        for (auto it = defaults.cbegin(); it != defaults.cend(); ++it) QCOMPARE(kcm.property(it.key().toUtf8().constData()), it.value());
+        QVERIFY(kcm.modifiedSections().isEmpty());
+        for (auto it = changes.cbegin(); it != changes.cend(); ++it) QVERIFY(kcm.setProperty(it.key().toUtf8().constData(), it.value()));
+        kcm.save();
+        QVERIFY(kcm.modifiedSections().isEmpty());
+        ScreenBotKcm reopened(nullptr, KPluginMetaData());
+        for (auto it = changes.cbegin(); it != changes.cend(); ++it) QCOMPARE(reopened.property(it.key().toUtf8().constData()).toString(), it.value().toString());
+    }
+    void bobosPreviewInsideSection() {
+        const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
+        QDir().mkpath(evidence);
+        qputenv("SCREENBOT_SOURCE", SCREENBOT_SOURCE_DIR);
+        qputenv("SCREENBOT_PREVIEW_EVIDENCE", evidence.toUtf8());
+        const QString install = QDir::homePath() + QStringLiteral("/ScreenBot/screensaver");
+        QVERIFY(QDir().mkpath(install));
+        QVERIFY(QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/tests/kcm_preview/preview_probe.py"), install + QStringLiteral("/screensaver.py")));
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        QQuickView view;
+        view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
+        view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/ui/main.qml")));
+        QCOMPARE(view.status(), QQuickView::Ready);
+        view.setResizeMode(QQuickView::SizeRootObjectToView);
+        view.resize(1000, 900);
+        view.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&view));
+        auto *section = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("bobosSection"));
+        auto *button = view.rootObject()->findChild<QQuickItem *>(QStringLiteral("bobosPreviewButton"));
+        QVERIFY(section);
+        QVERIFY(button);
+        section->setProperty("expanded", true);
+        QTest::qWait(300);
+        QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier,
+            button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint());
+        QVERIFY(kcm.previewRunning());
+        QTRY_VERIFY_WITH_TIMEOUT(!kcm.previewRunning(), 10000);
+        QVERIFY2(kcm.previewError().isEmpty(), qPrintable(kcm.previewError()));
+        QFile receipt(evidence + QStringLiteral("/launches.jsonl"));
+        QVERIFY(receipt.open(QIODevice::ReadOnly));
+        const auto result = QJsonDocument::fromJson(receipt.readAll().trimmed().split('\n').last()).object();
+        QVERIFY(result[QStringLiteral("bobos_enabled")].toBool());
+        QVERIFY(!result[QStringLiteral("password_lock")].toBool());
+        QVERIFY(!result[QStringLiteral("show_timer")].toBool());
+        QVERIFY(!QFile::exists(result[QStringLiteral("temporary_path")].toString()));
+    }
+    void nativeUiKeyboardAccessibilityAndCaptures() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        QQuickView view;
+        view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
+        view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/ui/main.qml")));
+        QCOMPARE(view.status(), QQuickView::Ready);
+        view.setResizeMode(QQuickView::SizeRootObjectToView);
+        view.setColor(QApplication::palette().window().color());
+        view.resize(1000, 900);
+        view.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&view));
+        const auto item = [&](const QString &name) { return view.rootObject()->findChild<QQuickItem *>(name); };
+        for (const auto &key : keys) {
+            auto *section = item(key + QStringLiteral("Section"));
+            auto *header = item(key + QStringLiteral("Header"));
+            QVERIFY(section);
+            QVERIFY(header);
+            QCOMPARE(section->property("expanded").toBool(), key == QStringLiteral("theme"));
+            QVERIFY(!section->property("summary").toString().isEmpty());
+            auto *accessible = QAccessible::queryAccessibleInterface(header);
+            QVERIFY(accessible);
+            QVERIFY(accessible->state().expandable);
+            QCOMPARE(accessible->state().expanded, key == QStringLiteral("theme"));
+            QVERIFY(!accessible->text(QAccessible::Name).isEmpty());
+        }
+        auto *clock = item(QStringLiteral("clockSection"));
+        auto *header = item(QStringLiteral("clockHeader"));
+        header->forceActiveFocus();
+        QTest::keyClick(&view, Qt::Key_Space);
+        QVERIFY(clock->property("expanded").toBool());
+        QTest::keyClick(&view, Qt::Key_Return);
+        QVERIFY(!clock->property("expanded").toBool());
+        QTest::keyClick(&view, Qt::Key_Right);
+        QVERIFY(clock->property("expanded").toBool());
+        QTest::keyClick(&view, Qt::Key_Left);
+        QVERIFY(!clock->property("expanded").toBool());
+        QTest::keyClick(&view, Qt::Key_Tab);
+        QVERIFY(item(QStringLiteral("weatherHeader"))->hasActiveFocus());
+        kcm.setClockFormat(QStringLiteral("24h"));
+        QVERIFY(clock->property("modified").toBool());
+        QVERIFY(clock->property("summary").toString().contains(QStringLiteral("24-hour")));
+        QTest::qWait(100);
+        QVERIFY(view.grabWindow().save(qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR") + QStringLiteral("/unapplied-clock.png")));
+        kcm.load();
+        QVERIFY(!clock->property("modified").toBool());
+        item(QStringLiteral("agentsSection"))->setProperty("expanded", true);
+        kcm.setAgentDetectionMode(QStringLiteral("block"));
+        QVERIFY(item(QStringLiteral("resetAgentChoiceButton"))->isEnabled());
+        QVERIFY(QMetaObject::invokeMethod(item(QStringLiteral("resetAgentChoiceButton")), "clicked"));
+        QCOMPARE(kcm.agentDetectionMode(), QStringLiteral("ask"));
+        item(QStringLiteral("agentsSection"))->setProperty("expanded", false);
+        item(QStringLiteral("bobosSection"))->setProperty("expanded", true);
+        QVERIFY(item(QStringLiteral("bobosPreviewButton"))->isEnabled());
+        kcm.setPhoneEnabled(false);
+        QVERIFY(!item(QStringLiteral("bobosPreviewButton"))->isEnabled());
+        kcm.setPhoneEnabled(true);
+        item(QStringLiteral("bobosSection"))->setProperty("expanded", false);
+        const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
+        QVERIFY(!evidence.isEmpty());
+        QDir().mkpath(evidence);
+        for (const int width : {390, 768, 1440}) {
+            view.resize(width, 900);
+            QTest::qWait(300);
+            QVERIFY(view.grabWindow().save(evidence + QString(QStringLiteral("/overview-%1.png")).arg(width)));
+            for (const auto &key : keys) {
+                for (const auto &other : keys) item(other + QStringLiteral("Section"))->setProperty("expanded", other == key);
+                QTest::qWait(300);
+                QVERIFY(view.grabWindow().save(evidence + QString(QStringLiteral("/%1-%2.png")).arg(key).arg(width)));
+                QVERIFY(item(key + QStringLiteral("Header"))->width() <= width);
+            }
+            for (const auto &key : keys) item(key + QStringLiteral("Section"))->setProperty("expanded", true);
+            QTest::qWait(300);
+            QObject *flickable = view.rootObject()->property("flickable").value<QObject *>();
+            QVERIFY(flickable);
+            QVERIFY(flickable->property("contentHeight").toReal() > flickable->property("height").toReal());
+            flickable->setProperty("contentY", flickable->property("contentHeight").toReal() - flickable->property("height").toReal());
+            QTest::qWait(100);
+            QVERIFY(view.grabWindow().save(evidence + QString(QStringLiteral("/all-open-end-%1.png")).arg(width)));
+            for (const auto &key : keys) item(key + QStringLiteral("Section"))->setProperty("expanded", key == QStringLiteral("theme"));
+            flickable->setProperty("contentY", 0);
+        }
+    }
+};
+int main(int argc, char **argv) {
+    QTemporaryDir config;
+    qputenv("HOME", config.path().toUtf8());
+    qputenv("XDG_CONFIG_HOME", config.path().toUtf8());
+    if (qEnvironmentVariableIsSet("SCREENBOT_TEST_DARK"))
+        QFile::copy(QStringLiteral("/usr/share/color-schemes/BreezeDark.colors"), config.path() + QStringLiteral("/kdeglobals"));
+    const QString data = config.path() + QStringLiteral("/data");
+    QDir().mkpath(data + QStringLiteral("/screenbot-screensaver"));
+    QFile::copy(QStringLiteral(SCREENBOT_SOURCE_DIR "/countries_and_cities.txt"), data + QStringLiteral("/screenbot-screensaver/countries_and_cities.txt"));
+    qputenv("XDG_DATA_HOME", data.toUtf8());
+    QApplication app(argc, argv);
+    if (qEnvironmentVariableIsSet("SCREENBOT_TEST_DARK")) {
+        QSettings colors(QStringLiteral("/usr/share/color-schemes/BreezeDark.colors"), QSettings::IniFormat);
+        QPalette palette = app.palette();
+        const auto color = [&](const QString &key) {
+            const auto channels = colors.value(key).toStringList();
+            return QColor(channels.value(0).toInt(), channels.value(1).toInt(), channels.value(2).toInt());
+        };
+        palette.setColor(QPalette::Window, color(QStringLiteral("Colors:Window/BackgroundNormal")));
+        palette.setColor(QPalette::WindowText, color(QStringLiteral("Colors:Window/ForegroundNormal")));
+        palette.setColor(QPalette::Base, color(QStringLiteral("Colors:View/BackgroundNormal")));
+        palette.setColor(QPalette::Text, color(QStringLiteral("Colors:View/ForegroundNormal")));
+        palette.setColor(QPalette::Button, color(QStringLiteral("Colors:Button/BackgroundNormal")));
+        palette.setColor(QPalette::ButtonText, color(QStringLiteral("Colors:Button/ForegroundNormal")));
+        palette.setColor(QPalette::Highlight, color(QStringLiteral("Colors:Selection/BackgroundNormal")));
+        palette.setColor(QPalette::HighlightedText, color(QStringLiteral("Colors:Selection/ForegroundNormal")));
+        app.setPalette(palette);
+    }
+    SectionsTest test;
+    return QTest::qExec(&test, argc, argv);
+}
+#include "sections_test.moc"
