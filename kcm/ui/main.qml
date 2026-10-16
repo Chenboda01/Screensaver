@@ -10,16 +10,16 @@ KCMUtils.SimpleKCM {
         spacing: Kirigami.Units.largeSpacing
         Controls.Label {
             Layout.fillWidth: true
-            text: "Choose how Bob appears and when KDE locks your screen."
+            text: i18nc("@label", "Choose how Bob appears and when KDE locks your screen.")
             wrapMode: Text.WordWrap
         }
         Controls.Button {
             objectName: "themePreviewButton"
-            text: "Preview"
+            text: i18nc("@label", "Preview")
             icon.name: "view-preview"
             enabled: !kcm.previewRunning
             onClicked: kcm.previewTheme(this)
-            Controls.ToolTip.text: "Preview current settings without applying them. Move the mouse or press any key to close."
+            Controls.ToolTip.text: i18nc("@label", "Preview current settings without applying them. Move the mouse or press any key to close.")
             Controls.ToolTip.visible: hovered
         }
         Kirigami.InlineMessage {
@@ -34,13 +34,15 @@ KCMUtils.SimpleKCM {
             id: themeSection
             settings: kcm
             sectionKey: "theme"
-            title: "Theme"
-            summary: ["Random", "Space", "Mountains", "Snow", "Forest", "Futuristic City"][["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme)]
+            title: i18nc("@label", "Theme")
+            summary: [i18nc("@item:inlistbox Theme", "Random"), i18nc("@item:inlistbox Theme", "Space"), i18nc("@item:inlistbox Theme", "Mountains"), i18nc("@item:inlistbox Theme", "Snow"), i18nc("@item:inlistbox Theme", "Forest"), i18nc("@item:inlistbox Theme", "Futuristic City")][["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme)]
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.ComboBox {
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "Theme:"
-                model: ["Random", "Space", "Mountains", "Snow", "Forest", "Futuristic City"]
+                objectName: "themeChoice"
+                Kirigami.FormData.label: i18nc("@label", "Theme:")
+                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City")]
                 currentIndex: Math.max(0, ["random", "space", "mountains", "snow", "forest", "city"].indexOf(kcm.theme))
                 onActivated: function(index) { kcm.theme = ["random", "space", "mountains", "snow", "forest", "city"][index] }
             }
@@ -49,42 +51,45 @@ KCMUtils.SimpleKCM {
             id: clockSection
             settings: kcm
             sectionKey: "clock"
-            title: "Clock"
-            summary: kcm.clockVisible ? "On · " + (kcm.clockFormat === "24h" ? "24-hour" : "12-hour") + " · " + kcm.clockPosition.replace(/-/g, " ") : "Off"
+            title: i18nc("@label", "Clock")
+            summary: kcm.clockVisible ? i18nc("@info Clock summary: format, position", "On · %1 · %2", kcm.clockFormat === "24h" ? i18nc("@label", "24-hour") : i18nc("@label", "12-hour"), clockPosition.summaryLabels[clockPosition.currentIndex]) : i18nc("@label Feature state", "Off")
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Switch {
-                Kirigami.FormData.label: "Clock:"
-                text: checked ? "Visible" : "Hidden"
+                Kirigami.FormData.label: i18nc("@label", "Clock:")
+                text: checked ? i18nc("@label", "Visible") : i18nc("@label", "Hidden")
                 checked: kcm.clockVisible
                 onToggled: kcm.clockVisible = checked
             }
             Controls.ComboBox {
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "Time format:"
-                model: ["12-hour", "24-hour"]
+                Kirigami.FormData.label: i18nc("@label", "Time format:")
+                model: [i18nc("@label", "12-hour"), i18nc("@label", "24-hour")]
                 currentIndex: kcm.clockFormat === "24h" ? 1 : 0
                 enabled: kcm.clockVisible
                 onActivated: function(index) { kcm.clockFormat = index === 1 ? "24h" : "12h" }
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Date:"
-                text: checked ? "Show date below the time" : "Hide date"
+                Kirigami.FormData.label: i18nc("@label", "Date:")
+                text: checked ? i18nc("@label", "Show date below the time") : i18nc("@label", "Hide date")
                 checked: kcm.showDate
                 enabled: kcm.clockVisible
                 onToggled: kcm.showDate = checked
             }
             Controls.ComboBox {
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
                 id: clockPosition
-                Kirigami.FormData.label: "Clock position:"
-                model: ["Top left", "Top center", "Top right", "Center left", "Center", "Center right", "Bottom left", "Bottom center", "Bottom right"]
+                Kirigami.FormData.label: i18nc("@label", "Clock position:")
+                model: [i18nc("@label", "Top left"), i18nc("@label", "Top center"), i18nc("@label", "Top right"), i18nc("@label", "Center left"), i18nc("@label", "Center"), i18nc("@label", "Center right"), i18nc("@label", "Bottom left"), i18nc("@label", "Bottom center"), i18nc("@label", "Bottom right")]
+                readonly property var summaryLabels: [i18nc("@label Clock position summary", "top left"), i18nc("@label Clock position summary", "top center"), i18nc("@label Clock position summary", "top right"), i18nc("@label Clock position summary", "center left"), i18nc("@label Clock position summary", "center center"), i18nc("@label Clock position summary", "center right"), i18nc("@label Clock position summary", "bottom left"), i18nc("@label Clock position summary", "bottom center"), i18nc("@label Clock position summary", "bottom right")]
                 property var values: ["top-left", "top-center", "top-right", "center-left", "center-center", "center-right", "bottom-left", "bottom-center", "bottom-right"]
                 currentIndex: Math.max(0, values.indexOf(kcm.clockPosition))
                 enabled: kcm.clockVisible
                 onActivated: function(index) { kcm.clockPosition = values[index] }
             }
             Controls.SpinBox {
-                Kirigami.FormData.label: "Clock font size:"
+                Kirigami.FormData.label: i18nc("@label", "Clock font size:")
                 from: 16
                 to: 72
                 stepSize: 1
@@ -92,7 +97,7 @@ KCMUtils.SimpleKCM {
                 value: kcm.clockFontSize
                 enabled: kcm.clockVisible
                 onValueModified: kcm.clockFontSize = value
-                textFromValue: function(value, locale) { return value + " pt" }
+                textFromValue: function(value, locale) { return i18nc("@label Font size in points", "%1 pt", value) }
                 valueFromText: function(text, locale) {
                     var parsed = parseInt(text, 10)
                     return isNaN(parsed) ? 48 : Math.min(72, Math.max(16, parsed))
@@ -103,52 +108,52 @@ KCMUtils.SimpleKCM {
             id: weatherSection
             settings: kcm
             sectionKey: "weather"
-            title: "Weather"
-            summary: kcm.theme === "space" ? "No weather effects in Space" : kcm.liveSkyEnabled ? "Managed by Live Sky" : [kcm.rainEnabled ? "Rain" : "", kcm.snowEnabled ? "Snow" : "", kcm.thunderstormsEnabled ? "Thunderstorms" : "", kcm.fogEnabled ? "Fog" : "", kcm.shootingStarsEnabled ? "Shooting stars" : ""].filter(function(value) { return value.length > 0 }).join(" · ") || "Off"
+            title: i18nc("@label", "Weather")
+            summary: kcm.theme === "space" ? i18nc("@info", "No weather effects in Space") : kcm.liveSkyEnabled ? i18nc("@info", "Managed by Live Sky") : [kcm.rainEnabled ? i18nc("@label Weather", "Rain") : "", kcm.snowEnabled ? i18nc("@label Weather", "Snow") : "", kcm.thunderstormsEnabled ? i18nc("@label Weather", "Thunderstorms") : "", kcm.fogEnabled ? i18nc("@label Weather", "Fog") : "", kcm.shootingStarsEnabled ? i18nc("@label Weather", "Shooting stars") : ""].filter(function(value) { return value.length > 0 }).join(i18nc("Separator between enabled weather effects", " · ")) || i18nc("@label Feature state", "Off")
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "Animated weather:"
-                text: "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes."
+                Kirigami.FormData.label: i18nc("@label", "Animated weather:")
+                text: i18nc("@label", "Weather and shooting-star effects are disabled in Space. Shooting stars are available on the landscape themes.")
                 wrapMode: Text.WordWrap
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Rain:"
-                text: checked ? "Enabled" : "Disabled"
+                Kirigami.FormData.label: i18nc("@label", "Rain:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.rainEnabled
                 enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
                 opacity: enabled ? 1.0 : 0.4
                 onToggled: kcm.rainEnabled = checked
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Snowfall:"
-                text: checked ? "Enabled" : "Disabled"
+                Kirigami.FormData.label: i18nc("@label", "Snowfall:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.snowEnabled
                 enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
                 opacity: enabled ? 1.0 : 0.4
                 onToggled: kcm.snowEnabled = checked
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Thunderstorms:"
-                text: checked ? "Enabled" : "Disabled"
+                Kirigami.FormData.label: i18nc("@label", "Thunderstorms:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.thunderstormsEnabled
                 enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
                 opacity: enabled ? 1.0 : 0.4
                 onToggled: kcm.thunderstormsEnabled = checked
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Fog:"
-                text: checked ? "Enabled" : "Disabled"
+                Kirigami.FormData.label: i18nc("@label", "Fog:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.fogEnabled
                 enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
                 opacity: enabled ? 1.0 : 0.4
                 onToggled: kcm.fogEnabled = checked
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Shooting stars (landscapes):"
-                text: checked ? "Enabled" : "Disabled"
+                Kirigami.FormData.label: i18nc("@label", "Shooting stars (landscapes):")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.shootingStarsEnabled
                 enabled: !kcm.liveSkyEnabled && kcm.theme !== "space"
                 opacity: enabled ? 1.0 : 0.4
@@ -159,20 +164,20 @@ KCMUtils.SimpleKCM {
             id: liveSkySection
             settings: kcm
             sectionKey: "liveSky"
-            title: "Live Sky"
-            summary: kcm.liveSkyEnabled ? "On · " + (kcm.liveSkyLocation || "No location selected") + " · °" + kcm.liveSkyUnits.toUpperCase() : "Off"
+            title: i18nc("@label", "Live Sky")
+            summary: kcm.liveSkyEnabled ? i18nc("@info Live Sky summary: location, temperature unit", "On · %1 · °%2", kcm.liveSkyLocation || i18nc("@info", "No location selected"), kcm.liveSkyUnits.toUpperCase()) : i18nc("@label Feature state", "Off")
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "Live Sky:"
-                text: "Adapt landscape skies and weather to local conditions. In Space, Live Sky shows Earth’s day/night and the Moon phase, without weather effects or shooting stars. Manual weather effects are dimmed while Live Sky is enabled."
+                Kirigami.FormData.label: i18nc("@label", "Live Sky:")
+                text: i18nc("@label", "Adapt landscape skies and weather to local conditions. In Space, Live Sky shows Earth’s day/night and the Moon phase, without weather effects or shooting stars. Manual weather effects are dimmed while Live Sky is enabled.")
                 wrapMode: Text.WordWrap
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Enable Live Sky:"
-                text: checked ? "On" : "Off"
+                Kirigami.FormData.label: i18nc("@label", "Enable Live Sky:")
+                text: checked ? i18nc("@label", "On") : i18nc("@label", "Off")
                 checked: kcm.liveSkyEnabled
                 onToggled: kcm.liveSkyEnabled = checked
             }
@@ -185,30 +190,32 @@ KCMUtils.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                text: "Typed searches are sent to Open-Meteo only while Live Sky is enabled. Choose a suggestion to set your location; Apply saves it. Offline search uses the bundled city catalog. No IP-based lookup is used."
+                text: i18nc("@label", "Typed searches are sent to Open-Meteo only while Live Sky is enabled. Choose a suggestion to set your location; Apply saves it. Offline search uses the bundled city catalog. No IP-based lookup is used.")
                 wrapMode: Text.WordWrap
             }
             Controls.ComboBox {
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "Temperature units:"
-                model: ["Celsius", "Fahrenheit"]
+                Kirigami.FormData.label: i18nc("@label", "Temperature units:")
+                model: [i18nc("@label", "Celsius"), i18nc("@label", "Fahrenheit")]
                 currentIndex: kcm.liveSkyUnits === "f" ? 1 : 0
                 enabled: kcm.liveSkyEnabled
                 opacity: enabled ? 1.0 : 0.4
                 onActivated: function(index) { kcm.liveSkyUnits = index === 1 ? "f" : "c" }
             }
             Controls.ComboBox {
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "Weather refresh:"
-                model: ["Every 15 minutes", "Every 30 minutes", "Every 60 minutes"]
+                Kirigami.FormData.label: i18nc("@label", "Weather refresh:")
+                model: [i18ncp("@item:inlistbox Weather refresh interval", "Every %1 minute", "Every %1 minutes", 15), i18ncp("@item:inlistbox Weather refresh interval", "Every %1 minute", "Every %1 minutes", 30), i18ncp("@item:inlistbox Weather refresh interval", "Every %1 minute", "Every %1 minutes", 60)]
                 currentIndex: [15, 30, 60].indexOf(kcm.liveSkyInterval)
                 enabled: kcm.liveSkyEnabled
                 opacity: enabled ? 1.0 : 0.4
                 onActivated: function(index) { kcm.liveSkyInterval = [15, 30, 60][index] }
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Current conditions:"
-                text: checked ? "Show weather under the clock" : "Hide weather text"
+                Kirigami.FormData.label: i18nc("@label", "Current conditions:")
+                text: checked ? i18nc("@label", "Show weather under the clock") : i18nc("@label", "Hide weather text")
                 checked: kcm.liveSkyConditions
                 enabled: kcm.liveSkyEnabled
                 opacity: enabled ? 1.0 : 0.4
@@ -219,36 +226,37 @@ KCMUtils.SimpleKCM {
             id: agentsSection
             settings: kcm
             sectionKey: "agents"
-            title: "AI Agents"
-            summary: ["Always ask", "Always start screensaver", "Do not start while agents are running"][["ask", "start", "block"].indexOf(kcm.agentDetectionMode)]
+            title: i18nc("@label", "AI Agents")
+            summary: [i18nc("@label", "Always ask"), i18nc("@label", "Always start screensaver"), i18nc("@label", "Do not start while agents are running")][["ask", "start", "block"].indexOf(kcm.agentDetectionMode)]
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "AI Agent Detection:"
-                text: "Choose what happens when an active terminal agent is detected. Manual launches always remain available."
+                Kirigami.FormData.label: i18nc("@label", "AI Agent Detection:")
+                text: i18nc("@label", "Choose what happens when an active terminal agent is detected. Manual launches always remain available.")
                 wrapMode: Text.WordWrap
             }
             Controls.ComboBox {
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "When an agent is active:"
-                model: ["Always ask", "Always start screensaver", "Don't start screensaver while agents are running"]
+                Kirigami.FormData.label: i18nc("@label", "When an agent is active:")
+                model: [i18nc("@label", "Always ask"), i18nc("@label", "Always start screensaver"), i18nc("@label", "Don't start screensaver while agents are running")]
                 currentIndex: ["ask", "start", "block"].indexOf(kcm.agentDetectionMode)
                 onActivated: function(index) { kcm.agentDetectionMode = ["ask", "start", "block"][index] }
             }
             Controls.CheckBox {
                 objectName: "agentPromptNever"
-                Kirigami.FormData.label: "Automatic answer:"
-                text: "Never (wait for me)"
+                Kirigami.FormData.label: i18nc("@label", "Automatic answer:")
+                text: i18nc("@label", "Never (wait for me)")
                 visible: kcm.agentDetectionMode === "ask"
                 checked: kcm.agentPromptTimeout === 0
                 onToggled: kcm.agentPromptTimeout = checked ? 0 : 10
             }
             Controls.SpinBox {
                 objectName: "agentPromptTimeout"
-                Kirigami.FormData.label: "Answer automatically after (s):"
-                Accessible.name: "Answer automatically after, in seconds"
+                Kirigami.FormData.label: i18nc("@label", "Answer automatically after (s):")
+                Accessible.name: i18nc("@label", "Answer automatically after, in seconds")
                 visible: kcm.agentDetectionMode === "ask"
                 enabled: kcm.agentPromptTimeout !== 0
                 from: 5
@@ -258,13 +266,13 @@ KCMUtils.SimpleKCM {
                 onValueModified: kcm.agentPromptTimeout = value
             }
             Controls.ComboBox {
+                implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 objectName: "agentPromptTimeoutAction"
                 Layout.maximumWidth: parent.width
-                implicitContentWidthPolicy: Controls.ComboBox.WidestText
-                Kirigami.FormData.label: "When time runs out:"
+                Kirigami.FormData.label: i18nc("@label", "When time runs out:")
                 visible: kcm.agentDetectionMode === "ask"
                 enabled: kcm.agentPromptTimeout !== 0
-                model: ["Start screensaver (Yes)", "Keep desktop visible (No)"]
+                model: [i18nc("@label", "Start screensaver (Yes)"), i18nc("@label", "Keep desktop visible (No)")]
                 currentIndex: kcm.agentPromptTimeoutAction === "cancel" ? 1 : 0
                 onActivated: function(index) { kcm.agentPromptTimeoutAction = index === 1 ? "cancel" : "start" }
             }
@@ -273,13 +281,13 @@ KCMUtils.SimpleKCM {
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
                 visible: kcm.agentDetectionMode === "ask"
-                text: "Interacting with the prompt pauses its countdown. Automatic answers never remember a choice."
+                text: i18nc("@label", "Interacting with the prompt pauses its countdown. Automatic answers never remember a choice.")
                 wrapMode: Text.WordWrap
             }
             Controls.Button {
                 objectName: "resetAgentChoiceButton"
-                Kirigami.FormData.label: "Remembered choice:"
-                text: "Reset to Always ask"
+                Kirigami.FormData.label: i18nc("@label", "Remembered choice:")
+                text: i18nc("@label", "Reset to Always ask")
                 enabled: kcm.agentDetectionMode !== "ask"
                 onClicked: kcm.resetRememberedAgentChoice()
             }
@@ -288,33 +296,34 @@ KCMUtils.SimpleKCM {
             id: bobosSection
             settings: kcm
             sectionKey: "bobos"
-            title: "BobOS"
-            summary: !kcm.phoneEnabled ? "Phone off" : !kcm.bobosEnabled ? "Phone on · BobOS off" : "On · After " + kcm.bobosActivationDelay + " min"
+            title: i18nc("@label", "BobOS")
+            summary: !kcm.phoneEnabled ? i18nc("@info", "Phone off") : !kcm.bobosEnabled ? i18nc("@info", "Phone on · BobOS off") : i18ncp("@info BobOS delay summary", "On · After %1 min", "On · After %1 min", kcm.bobosActivationDelay)
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                Kirigami.FormData.label: "Bob's Phone & BobOS 2.0"
-                text: "Bob's Phone contains a fictional mobile operating system. Its apps, messages, places, and games are animated drawings only."
+                Kirigami.FormData.label: i18nc("@label", "Bob's Phone & BobOS 2.0")
+                text: i18nc("@label", "Bob's Phone contains a fictional mobile operating system. Its apps, messages, places, and games are animated drawings only.")
                 wrapMode: Text.WordWrap
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Enable Bob's Phone:"
-                text: checked ? "Enabled" : "Disabled"
+                Kirigami.FormData.label: i18nc("@label", "Enable Bob's Phone:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.phoneEnabled
                 onToggled: kcm.phoneEnabled = checked
             }
             Controls.Switch {
-                Kirigami.FormData.label: "Enable BobOS:"
-                text: checked ? "Enabled" : "Disabled"
+                Kirigami.FormData.label: i18nc("@label", "Enable BobOS:")
+                text: checked ? i18nc("@label", "Enabled") : i18nc("@label", "Disabled")
                 checked: kcm.bobosEnabled
                 enabled: kcm.phoneEnabled
                 opacity: enabled ? 1.0 : 0.4
                 onToggled: kcm.bobosEnabled = checked
             }
             Controls.SpinBox {
-                Kirigami.FormData.label: "BobOS Activation Delay:"
+                objectName: "bobosDelay"
+                Kirigami.FormData.label: i18nc("@label", "BobOS Activation Delay:")
                 from: 1
                 to: 30
                 stepSize: 1
@@ -323,15 +332,15 @@ KCMUtils.SimpleKCM {
                 enabled: kcm.phoneEnabled && kcm.bobosEnabled
                 opacity: enabled ? 1.0 : 0.4
                 onValueModified: kcm.bobosActivationDelay = value
-                textFromValue: function(value, locale) { return value + (value === 1 ? " minute" : " minutes") }
+                textFromValue: function(value, locale) { return i18ncp("@label Duration", "%1 minute", "%1 minutes", value) }
                 valueFromText: function(text, locale) {
                     var parsed = parseInt(text, 10)
                     return isNaN(parsed) ? 3 : Math.min(30, Math.max(1, parsed))
                 }
             }
             Controls.Switch {
-                Kirigami.FormData.label: "AI Wi-Fi animation:"
-                text: checked ? "Shown before BobOS opens" : "Skipped"
+                Kirigami.FormData.label: i18nc("@label", "AI Wi-Fi animation:")
+                text: checked ? i18nc("@label", "Shown before BobOS opens") : i18nc("@label", "Skipped")
                 checked: kcm.showWifiAnimation
                 enabled: kcm.phoneEnabled && kcm.bobosEnabled
                 opacity: enabled ? 1.0 : 0.4
@@ -339,8 +348,8 @@ KCMUtils.SimpleKCM {
             }
             Controls.Button {
                 objectName: "bobosPreviewButton"
-                Kirigami.FormData.label: "BobOS preview:"
-                text: "Preview full adventure"
+                Kirigami.FormData.label: i18nc("@label", "BobOS preview:")
+                text: i18nc("@label", "Preview full adventure")
                 enabled: !kcm.previewRunning && kcm.phoneEnabled && kcm.bobosEnabled
                 opacity: enabled ? 1.0 : 0.4
                 onClicked: kcm.previewBobOS(kcm.showWifiAnimation)
@@ -350,18 +359,18 @@ KCMUtils.SimpleKCM {
             id: lockSection
             settings: kcm
             sectionKey: "lock"
-            title: "Lock"
-            summary: kcm.passwordLock ? "Password after " + kcm.lockMinutes + " min" : "Screensaver password countdown off"
+            title: i18nc("@label", "Lock")
+            summary: kcm.passwordLock ? i18ncp("@info Lock delay summary", "Password after %1 min", "Password after %1 min", kcm.lockMinutes) : i18nc("@info", "Screensaver password countdown off")
             form.twinFormLayouts: [themeSection.form, clockSection.form, weatherSection.form, liveSkySection.form, agentsSection.form, bobosSection.form, lockSection.form]
             Controls.Switch {
                 id: passwordSwitch
-                Kirigami.FormData.label: "Password unlock:"
-                text: checked ? "On" : "Off"
+                Kirigami.FormData.label: i18nc("@label", "Password unlock:")
+                text: checked ? i18nc("@label", "On") : i18nc("@label", "Off")
                 checked: kcm.passwordLock
                 onToggled: kcm.passwordLock = checked
             }
             Controls.SpinBox {
-                Kirigami.FormData.label: "Require password after:"
+                Kirigami.FormData.label: i18nc("@label", "Require password after:")
                 from: 1
                 to: 60
                 stepSize: 1
@@ -370,15 +379,15 @@ KCMUtils.SimpleKCM {
                 enabled: kcm.passwordLock
                 opacity: enabled ? 1.0 : 0.4
                 onValueModified: kcm.lockMinutes = value
-                textFromValue: function(value, locale) { return value + (value === 1 ? " minute" : " minutes") }
+                textFromValue: function(value, locale) { return i18ncp("@label Duration", "%1 minute", "%1 minutes", value) }
                 valueFromText: function(text, locale) {
                     var parsed = parseInt(text, 10)
                     return isNaN(parsed) ? 2 : Math.min(60, Math.max(1, parsed))
                 }
             }
             Controls.CheckBox {
-                Kirigami.FormData.label: "Show countdown:"
-                text: "Display time until password is required"
+                Kirigami.FormData.label: i18nc("@label", "Show countdown:")
+                text: i18nc("@label", "Display time until password is required")
                 checked: kcm.showTimer
                 enabled: kcm.passwordLock
                 opacity: enabled ? 1.0 : 0.4
@@ -388,8 +397,8 @@ KCMUtils.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                text: "Countdown color preview (elapsed time)"
-                Kirigami.FormData.label: "Color transition:"
+                text: i18nc("@label", "Countdown color preview (elapsed time)")
+                Kirigami.FormData.label: i18nc("@label", "Color transition:")
             }
             Rectangle {
                 implicitWidth: 320
@@ -408,20 +417,20 @@ KCMUtils.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                text: "The countdown begins when Bob appears. Its color smoothly changes green → yellow → orange → red as time runs out. KDE handles the actual password lock."
+                text: i18nc("@label", "The countdown begins when Bob appears. Its color smoothly changes green → yellow → orange → red as time runs out. KDE handles the actual password lock.")
                 wrapMode: Text.WordWrap
             }
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
-                text: "For password protection, configure KDE Screen Locking to require the password immediately and disable any unlock grace period. Disabling this option does not disable KDE's separate automatic locking or suspend locks."
+                text: i18nc("@label", "For password protection, configure KDE Screen Locking to require the password immediately and disable any unlock grace period. Disabling this option does not disable KDE's separate automatic locking or suspend locks.")
                 wrapMode: Text.WordWrap
             }
         }
         Controls.Label {
             Layout.fillWidth: true
-            text: "Press Apply to save your changes. Changes take effect the next time Bob starts."
+            text: i18nc("@label", "Press Apply to save your changes. Changes take effect the next time Bob starts.")
             wrapMode: Text.WordWrap
         }
     }

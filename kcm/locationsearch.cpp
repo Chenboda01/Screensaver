@@ -1,4 +1,5 @@
 #include "locationsearch.h"
+#include <KLocalizedString>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -123,7 +124,7 @@ void LocationSearch::search(const QString &query) {
             m_results = *cached;
         } else {
             m_results = offlineMatches(m_catalog, m_query);
-            m_status = tr("Searching online…");
+            m_status = i18n("Searching online…");
             m_debounce.start();
         }
     }
@@ -159,10 +160,10 @@ void LocationSearch::request(const QString &query, bool broadened) {
         if (reply->error() != QNetworkReply::NoError || !document.isObject()
             || document.object().value(QStringLiteral("error")).toBool()) {
             if (broadened && !m_results.isEmpty()) {
-                m_status = tr("Additional online matches unavailable. Showing the results already received.");
+                m_status = i18n("Additional online matches unavailable. Showing the results already received.");
             } else {
                 m_results = offlineMatches(m_catalog, query);
-                m_status = tr("Online search unavailable. Showing offline catalog matches.");
+                m_status = i18n("Online search unavailable. Showing offline catalog matches.");
             }
         } else {
             auto found = parseResults(body, query);
@@ -179,7 +180,7 @@ void LocationSearch::request(const QString &query, bool broadened) {
             }
             if (m_results.isEmpty()) m_results = offlineMatches(m_catalog, query);
             m_cache.insert(query.toCaseFolded(), new QVariantList(m_results));
-            m_status = m_results.isEmpty() ? tr("No matches. Check the spelling, or try a nearby larger town.") : QString();
+            m_status = m_results.isEmpty() ? i18n("No matches. Check the spelling, or try a nearby larger town.") : QString();
         }
         Q_EMIT changed();
     });

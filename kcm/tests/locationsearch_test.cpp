@@ -12,6 +12,7 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QQuickView>
+#include <KLocalizedContext>
 #include <QQuickItem>
 #include <QQmlContext>
 #include <QDir>
@@ -170,6 +171,9 @@ private Q_SLOTS:
         kcm.setLiveSkyEnabled(true);
         kcm.locationSearch()->setCatalog({QStringLiteral("Paris, France"), QStringLiteral("Paris, United States")});
         QQuickView view;
+        auto *translations = new KLocalizedContext(&view);
+        translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
+        view.rootContext()->setContextObject(translations);
         view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
         view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/tests/location_ui.qml")));
         QCOMPARE(view.status(), QQuickView::Ready);
@@ -211,6 +215,9 @@ private Q_SLOTS:
     void fullSettingsQmlLoads() {
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
         QQuickView view;
+        auto *translations = new KLocalizedContext(&view);
+        translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
+        view.rootContext()->setContextObject(translations);
         view.rootContext()->setContextProperty(QStringLiteral("kcm"), &kcm);
         view.setSource(QUrl::fromLocalFile(QStringLiteral(SCREENBOT_SOURCE_DIR "/kcm/ui/main.qml")));
         QCOMPARE(view.status(), QQuickView::Ready);

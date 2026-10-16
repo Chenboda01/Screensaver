@@ -122,3 +122,19 @@ Live Sky is off by default and makes no network requests while disabled. When en
 ## Security
 
 A Python screensaver is not a secure lock screen. KDE Screen Locking controls whether a password is required and may lock earlier for other reasons. Keep independent KDE locking enabled where appropriate.
+
+## Translating the settings page
+
+KDE settings follow the language selected in **System Settings → Region & Language**. Spanish is included; untranslated languages fall back to English. Restart System Settings after changing its language. Settings values remain language independent, and Apply/Discard work in every language. The screensaver's fictional dialogue and agent prompt are currently English only.
+
+Install GNU gettext (`xgettext`, `msginit`, `msgmerge`, and `msgfmt`) to work on translations. From the repository root, regenerate the template with:
+
+```bash
+./kcm/Messages.sh
+```
+
+Create a catalog in `kcm/po/<language>/kcm_screenbot_screensaver.po` with `msginit --locale=<language> --input=kcm/po/kcm_screenbot_screensaver.pot --output-file=kcm/po/<language>/kcm_screenbot_screensaver.po` (create the language directory first). Translate the `msgstr` entries, preserving `%1`, `%2`, and plural forms. Update an existing catalog with `msgmerge --update kcm/po/<language>/kcm_screenbot_screensaver.po kcm/po/kcm_screenbot_screensaver.pot`. Check it with `msgfmt --check --statistics` before contributing the `.po` file.
+
+The normal installer builds and installs catalogs through `ki18n_install(po)`; compiled `.mo` files belong in the installation, not in Git. QML uses the KCM plugin ID `kcm_screenbot_screensaver` as its translation domain; C++ uses the same domain through `TRANSLATION_DOMAIN`. The KCM leaves the hosting application's translation domain alone. To preview Spanish after installing, run `LANGUAGE=es kcmshell6 kcm_screenbot_screensaver` from a UTF-8 locale other than `C`.
+
+For an isolated build, installation, locale, and Apply/Discard check, run `kcm/tests/check-translations.sh "$PWD/.omo/evidence/translations"`. It requires the `en_US.UTF-8` locale and records logs and native settings screenshots for Spanish, English, and an unavailable language's English fallback in both light and dark palettes. No user settings are changed.

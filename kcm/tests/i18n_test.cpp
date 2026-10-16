@@ -1,0 +1,113 @@
+#include <KPluginMetaData>
+#include <KQuickConfigModule>
+#include <KQuickConfigModuleLoader>
+#include <QApplication>
+#include <QDir>
+#include <QFile>
+#include <QQuickItem>
+#include <QQuickWindow>
+#include <QSettings>
+#include <QTemporaryDir>
+#include <QTest>
+
+class I18nTest : public QObject {
+    Q_OBJECT
+private Q_SLOTS:
+    void installedLocaleAndSettings() {
+        const QString plugin = qEnvironmentVariable("SCREENBOT_TEST_PLUGIN");
+        const QString evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR");
+        QVERIFY2(!plugin.isEmpty(), "Set SCREENBOT_TEST_PLUGIN to the installed KCM .so");
+        QVERIFY(!evidence.isEmpty());
+        QVERIFY(QDir().mkpath(evidence));
+        const auto result = KQuickConfigModuleLoader::loadModule(KPluginMetaData(plugin));
+        QVERIFY2(result, qPrintable(result.errorString));
+        std::unique_ptr<KQuickConfigModule> kcm(result.plugin);
+        auto *root = kcm->mainUi();
+        QVERIFY2(root, qPrintable(kcm->errorString()));
+        QQuickWindow window;
+        root->setParentItem(window.contentItem());
+        const bool spanish = qEnvironmentVariable("LANGUAGE") == QLatin1String("es");
+        const auto item = [&](const char *name) { return root->findChild<QQuickItem *>(QLatin1String(name)); };
+        QCOMPARE(item("themeSection")->property("title").toString(), spanish ? QStringLiteral("Tema") : QStringLiteral("Theme"));
+        QCOMPARE(item("clockSection")->property("title").toString(), spanish ? QStringLiteral("Reloj") : QStringLiteral("Clock"));
+        QCOMPARE(item("themePreviewButton")->property("text").toString(), spanish ? QStringLiteral("Vista previa") : QStringLiteral("Preview"));
+        auto *delay = item("bobosDelay");
+        QVERIFY(delay);
+        kcm->setProperty("bobosActivationDelay", 1);
+        QCOMPARE(delay->property("displayText").toString(), spanish ? QStringLiteral("1 minuto") : QStringLiteral("1 minute"));
+        kcm->setProperty("bobosActivationDelay", 3);
+        QCOMPARE(delay->property("displayText").toString(), spanish ? QStringLiteral("3 minutos") : QStringLiteral("3 minutes"));
+        kcm->save();
+        const QString config = qEnvironmentVariable("XDG_CONFIG_HOME") + QStringLiteral("/screenbot-screensaver.ini");
+        const auto saved = [&]() { QFile file(config); if (!file.open(QIODevice::ReadOnly)) return QByteArray(); return file.readAll(); };
+        const QByteArray before = saved();
+        QVERIFY(!before.isEmpty());
+        auto *theme = item("themeChoice");
+        QVERIFY(theme);
+        theme->setProperty("currentIndex", 4);
+        QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, 4)));
+        QVERIFY(kcm->needsSave());
+        QCOMPARE(kcm->property("theme").toString(), QStringLiteral("forest"));
+        QCOMPARE(saved(), before);
+        kcm->load();
+        QVERIFY(!kcm->needsSave());
+        QCOMPARE(kcm->property("theme").toString(), QStringLiteral("random"));
+        theme->setProperty("currentIndex", 4);
+        QVERIFY(QMetaObject::invokeMethod(theme, "activated", Q_ARG(int, 4)));
+        kcm->save();
+        QVERIFY(!kcm->needsSave());
+        QSettings persisted(config, QSettings::IniFormat);
+        QCOMPARE(persisted.value(QStringLiteral("Screensaver/theme")).toString(), QStringLiteral("forest"));
+        const QStringList keys{QStringLiteral("theme"), QStringLiteral("clock"), QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("agents"), QStringLiteral("bobos"), QStringLiteral("lock")};
+        window.setColor(QApplication::palette().window().color());
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        for (const int width : {390, 1440}) {
+            window.resize(width, 900);
+            root->setWidth(width);
+            root->setHeight(900);
+            for (const QString &key : keys) {
+                for (const QString &other : keys) root->findChild<QQuickItem *>(other + QStringLiteral("Section"))->setProperty("expanded", other == key);
+                auto *flickable = root->property("flickable").value<QObject *>();
+                QVERIFY(flickable);
+                flickable->setProperty("contentY", 0);
+                QTest::qWait(300);
+                QVERIFY(window.grabWindow().save(evidence + QStringLiteral("/%1-%2.png").arg(key).arg(width)));
+                flickable->setProperty("contentY", qMax(0.0, flickable->property("contentHeight").toDouble() - flickable->property("height").toDouble()));
+                QTest::qWait(100);
+                QVERIFY(window.grabWindow().save(evidence + QStringLiteral("/%1-%2-end.png").arg(key).arg(width)));
+            }
+        }
+        QFile artifact(evidence + QStringLiteral("/applied-settings.ini"));
+        QVERIFY(artifact.open(QIODevice::WriteOnly));
+        const auto contents = saved();
+        QCOMPARE(artifact.write(contents), contents.size());
+        root->setParentItem(nullptr);
+    }
+};
+
+int main(int argc, char **argv) {
+    QTemporaryDir config;
+    qputenv("XDG_CONFIG_HOME", config.path().toUtf8());
+    if (qEnvironmentVariableIsSet("SCREENBOT_TEST_DARK"))
+        QFile::copy(QStringLiteral("/usr/share/color-schemes/BreezeDark.colors"), config.path() + QStringLiteral("/kdeglobals"));
+    QApplication app(argc, argv);
+    if (qEnvironmentVariableIsSet("SCREENBOT_TEST_DARK")) {
+        QSettings colors(QStringLiteral("/usr/share/color-schemes/BreezeDark.colors"), QSettings::IniFormat);
+        QPalette palette = app.palette();
+        const auto color = [&](const QString &key) {
+            const auto values = colors.value(key).toStringList();
+            return QColor(values.value(0).toInt(), values.value(1).toInt(), values.value(2).toInt());
+        };
+        palette.setColor(QPalette::Window, color(QStringLiteral("Colors:Window/BackgroundNormal")));
+        palette.setColor(QPalette::WindowText, color(QStringLiteral("Colors:Window/ForegroundNormal")));
+        palette.setColor(QPalette::Base, color(QStringLiteral("Colors:View/BackgroundNormal")));
+        palette.setColor(QPalette::Text, color(QStringLiteral("Colors:View/ForegroundNormal")));
+        palette.setColor(QPalette::Button, color(QStringLiteral("Colors:Button/BackgroundNormal")));
+        palette.setColor(QPalette::ButtonText, color(QStringLiteral("Colors:Button/ForegroundNormal")));
+        app.setPalette(palette);
+    }
+    I18nTest test;
+    return QTest::qExec(&test, argc, argv);
+}
+#include "i18n_test.moc"

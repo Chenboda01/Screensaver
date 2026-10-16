@@ -1,4 +1,5 @@
 #include <KPluginFactory>
+#include <KLocalizedContext>
 #include <KQuickConfigModule>
 #include <QGuiApplication>
 #include <QDir>
@@ -66,6 +67,9 @@ int main(int argc, char **argv) {
     kcm->setProperty("showTimer", true);
     REQUIRE(kcm->needsSave());
     QQuickView view;
+    auto *translations = new KLocalizedContext(&view);
+    translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
+    view.rootContext()->setContextObject(translations);
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.rootContext()->setContextProperty("kcm", kcm);
     view.setSource(QUrl::fromLocalFile(source + "/kcm/ui/main.qml"));
