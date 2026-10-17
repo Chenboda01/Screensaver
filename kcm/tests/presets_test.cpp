@@ -175,6 +175,7 @@ private Q_SLOTS:
         QCOMPARE(view.status(), QQuickView::Ready);
         view.setResizeMode(QQuickView::SizeRootObjectToView); view.setColor(QApplication::palette().window().color()); view.resize(1000, 900); view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
+        const auto evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR"); QVERIFY(!evidence.isEmpty()); QVERIFY(QDir().mkpath(evidence));
         std::function<QQuickItem *(QQuickItem *, const QString &)> search;
         search = [&](QQuickItem *item, const QString &name) -> QQuickItem * {
             if (item->objectName() == name) return item;
@@ -190,12 +191,16 @@ private Q_SLOTS:
             QVERIFY(accessible); QVERIFY(!accessible->text(QAccessible::Name).isEmpty());
         }
         QVERIFY(find("preset-icon-plus")); QVERIFY(find("preset-icon-premium")); QVERIFY(find("preset-icon-pro"));
+        auto *plusCard = find("preset-plus");
+        plusCard->forceActiveFocus(); QCOMPARE(view.activeFocusItem(), plusCard);
+        QTest::keyClick(&view, Qt::Key_Tab);
+        QCOMPARE(view.activeFocusItem(), find("preset-premium"));
+        QVERIFY(view.grabWindow().save(qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR") + QStringLiteral("/quality-preset-focus.png")));
         auto *card = find("preset-fun"); card->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space);
         QCOMPARE(kcm.preset(), QStringLiteral("fun")); QVERIFY(kcm.bobosEnabled());
         card = find("preset-pro"); card->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space);
         QCOMPARE(kcm.preset(), QStringLiteral("pro")); QCOMPARE(kcm.performanceMode(), QStringLiteral("ultra"));
         QVERIFY(find("simpleSettings")->isVisible());
-        const auto evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR"); QVERIFY(!evidence.isEmpty()); QDir().mkpath(evidence);
         QTest::qWait(300); QVERIFY(view.grabWindow().save(evidence + QStringLiteral("/simple.png")));
         view.resize(640, 900); QTest::qWait(300);
         QVERIFY(view.grabWindow().save(evidence + QStringLiteral("/simple-narrow.png")));

@@ -1,6 +1,12 @@
 import math
 import random
 from pathlib import Path
+from typing import TypeAlias
+
+SpaceParticle: TypeAlias = tuple[float, float, float, float]
+RainDrop: TypeAlias = tuple[float, float, float, float]
+SnowParticle: TypeAlias = tuple[float, float, float, float, float]
+SceneParticleSets: TypeAlias = tuple[list[SpaceParticle], list[RainDrop], list[SnowParticle]]
 
 def battery_powered(root: Path = Path('/sys/class/power_supply')) -> bool:
     """Return true when a battery exists and no online AC supply is detected."""
@@ -45,7 +51,7 @@ def quality_particle_count(base_count: int, mode: str) -> int:
     multiplier = {'extra-high': 1.25, 'ultra': 1.5}.get(mode, 1.0)
     return round(base_count * multiplier)
 
-def scene_particle_sets(generator: random.Random, mode: str):
+def scene_particle_sets(generator: random.Random, mode: str) -> SceneParticleSets:
     return (
         [(generator.random(), generator.random(), generator.uniform(.65, 2.6), generator.random()*math.tau)
          for _ in range(quality_particle_count(110, mode))],

@@ -73,7 +73,7 @@ KCMUtils.SimpleKCM {
             Layout.fillWidth: true
             settings: kcm
         }
-        Controls.Switch {
+        ThemedSwitch {
             objectName: "advancedViewSwitch"
             text: checked ? i18nc("@option:check", "Advanced view") : i18nc("@option:check", "Simple view")
             checked: kcm.advancedView
