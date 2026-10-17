@@ -5,6 +5,6 @@
     "Icon": "preferences-system",
     "EnabledByDefault": true
   },
-  "X-KDE-Keywords": "Screensaver,ScreenBot,Bob,Space,Mountains,Theme,Clock,Font size,Date,Time format,Position,Weather,Rain,Snow,Fog,Thunderstorms,Shooting stars,Live Sky,City,Temperature,BobOS,Phone,AI Agents,Agent detection,Password,Lock,Countdown",
+  "X-KDE-Keywords": "Screensaver,ScreenBot,Bob,Space,Mountains,Theme,Clock,Font size,Date,Time format,Position,Weather,Rain,Snow,Fog,Thunderstorms,Shooting stars,Live Sky,City,Temperature,BobOS,Phone,AI Agents,Agent detection,Password,Lock,Countdown,Presets,Calm,Fun,Photo frame,Battery saver,Reduce motion,Burn-in protection,Facts,Did you know,Quotes,Seasonal,Birthday,Ambient sound,Volume,Now Playing,Bob name,Color,Accessory,Photos,Folder,Performance,Simple,Advanced",
   "X-KDE-System-Settings-Parent-Category": "workspace"
 }

@@ -6,6 +6,47 @@ import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCMUtils
 
 KCMUtils.SimpleKCM {
+    id: page
+    readonly property var allSections: [themeSection, appearanceSection, clockSection, factsSection, weatherSection,
+                                       liveSkySection, seasonalSection, agentsSection, bobosSection, performanceSection, lockSection]
+    function matchingSections(query) {
+        const needle = query.trim().toLocaleLowerCase()
+        if (needle.length === 0) return []
+        return allSections.filter(function(section) {
+            let words = section.title + " " + section.summary
+            for (const control of section.form.children) {
+                words += " " + (control.Kirigami.FormData.label ?? "") + " " + (control.text ?? "")
+                if (control.model instanceof Array) words += " " + control.model.join(" ")
+            }
+            return words.toLocaleLowerCase().indexOf(needle) !== -1
+        })
+    }
+    function revealSection() {
+        for (const section of allSections) {
+            if (section.sectionKey === kcm.requestedSection) {
+                section.expanded = true
+                sectionScroll.targetSection = section
+                sectionScroll.restart()
+            }
+        }
+    }
+    Timer {
+        id: sectionScroll
+        property var targetSection: null
+        interval: Kirigami.Units.shortDuration + 50
+        onTriggered: {
+            if (!targetSection) return
+            targetSection.forceActiveFocus()
+            const top = targetSection.mapToItem(page.flickable.contentItem, 0, 0).y
+            page.flickable.contentY = Math.max(0, Math.min(top, page.flickable.contentHeight - page.flickable.height))
+        }
+    }
+    Component.onCompleted: if (kcm.requestedSection.length > 0) Qt.callLater(revealSection)
+    Connections {
+        target: kcm
+        function onRequestedSectionChanged() { page.revealSection() }
+    }
+
     component ThemedSwitch: Controls.Switch {
         id: control
         contentItem: Controls.Label {
@@ -28,6 +69,101 @@ KCMUtils.SimpleKCM {
             wrapMode: Text.WordWrap
             color: Kirigami.Theme.textColor
         }
+        PresetChooser {
+            Layout.fillWidth: true
+            settings: kcm
+        }
+        Controls.Switch {
+            objectName: "advancedViewSwitch"
+            text: checked ? i18nc("@option:check", "Advanced view") : i18nc("@option:check", "Simple view")
+            checked: kcm.advancedView
+            onToggled: kcm.advancedView = checked
+        }
+        Kirigami.SearchField {
+            id: settingsSearch
+            objectName: "settingsSearch"
+            Layout.fillWidth: true
+            placeholderText: i18nc("@info:placeholder", "Find a screensaver setting…")
+            Accessible.name: i18nc("@label", "Find a screensaver setting")
+            onAccepted: {
+                const matches = page.matchingSections(text)
+                if (matches.length > 0) kcm.openSection(matches[0].sectionKey)
+            }
+        }
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: settingsSearch.text.length > 0
+            Repeater {
+                model: page.matchingSections(settingsSearch.text)
+                Controls.Button {
+                    required property var modelData
+                    objectName: "search-result-" + modelData.sectionKey
+                    Layout.fillWidth: true
+                    text: modelData.title
+                    onClicked: kcm.openSection(modelData.sectionKey)
+                }
+            }
+            Controls.Label {
+                visible: page.matchingSections(settingsSearch.text).length === 0
+                text: i18nc("@info", "No matching screensaver settings")
+            }
+        }
+        Kirigami.FormLayout {
+            objectName: "simpleSettings"
+            Layout.fillWidth: true
+            visible: !kcm.advancedView
+            Controls.ComboBox {
+                objectName: "simpleTheme"
+                Kirigami.FormData.label: i18nc("@label", "Theme:")
+                model: [i18nc("@label", "Random"), i18nc("@label", "Space"), i18nc("@label", "Mountains"), i18nc("@label", "Snow"), i18nc("@label", "Forest"), i18nc("@label", "Futuristic City"), i18nc("@label", "Aurora"), i18nc("@label", "Ocean / Beach"), i18nc("@label", "Desert"), i18nc("@label", "Underwater"), i18nc("@label", "My photos")]
+                property var values: ["random", "space", "mountains", "snow", "forest", "city", "aurora", "ocean", "desert", "underwater", "photos"]
+                currentIndex: Math.max(0, values.indexOf(kcm.theme))
+                onActivated: function(index) { kcm.theme = values[index] }
+            }
+            Controls.Button {
+                objectName: "simplePhotoFolder"
+                visible: kcm.theme === "photos"
+                Kirigami.FormData.label: i18nc("@label", "Photo folder:")
+                text: i18nc("@button", "Choose photo folder…")
+                onClicked: { kcm.openSection("theme"); photoFolderField.forceActiveFocus() }
+            }
+            ThemedSwitch {
+                objectName: "simpleClock"
+                Kirigami.FormData.label: i18nc("@label", "Clock:")
+                text: i18nc("@option:check", "Show clock")
+                checked: kcm.clockVisible
+                onToggled: kcm.clockVisible = checked
+            }
+            ThemedSwitch {
+                objectName: "simpleLiveSky"
+                Kirigami.FormData.label: i18nc("@label", "Live Sky:")
+                text: i18nc("@option:check", "Follow local sky and weather")
+                checked: kcm.liveSkyEnabled
+                onToggled: kcm.liveSkyEnabled = checked
+            }
+            CitySearch {
+                objectName: "simpleCity"
+                objectPrefix: "simple-"
+                settings: kcm
+                visible: kcm.liveSkyEnabled
+            }
+            ThemedSwitch {
+                objectName: "simplePasswordLock"
+                Kirigami.FormData.label: i18nc("@label", "Password lock:")
+                text: i18nc("@option:check", "Require a password after %1 minutes", kcm.lockMinutes)
+                checked: kcm.passwordLock
+                onToggled: kcm.passwordLock = checked
+            }
+        }
+        Kirigami.InlineMessage {
+            objectName: "presetInputGuidance"
+            Layout.fillWidth: true
+            visible: (kcm.liveSkyEnabled && kcm.liveSkyLocation.length === 0) || kcm.theme === "photos"
+            text: kcm.theme === "photos"
+                ? i18nc("@info", "Choose a local photo folder, then try Preview. Photos stay on this computer.")
+                : i18nc("@info", "Choose a city to enable local sky and weather. Type its name and select a suggestion, then try Preview.")
+            type: Kirigami.MessageType.Information
+        }
         Controls.Button {
             objectName: "themePreviewButton"
             text: i18nc("@label", "Preview")
@@ -46,6 +182,7 @@ KCMUtils.SimpleKCM {
             type: Kirigami.MessageType.Error
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: themeSection
             settings: kcm
             sectionKey: "theme"
@@ -153,6 +290,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: appearanceSection
             settings: kcm
             sectionKey: "appearance"
@@ -226,6 +364,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: clockSection
             settings: kcm
             sectionKey: "clock"
@@ -299,6 +438,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: factsSection
             objectName: "factsSection"
             settings: kcm
@@ -354,6 +494,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: weatherSection
             settings: kcm
             sectionKey: "weather"
@@ -437,7 +578,7 @@ KCMUtils.SimpleKCM {
                 value: kcm.ambientSoundVolume
                 enabled: kcm.ambientSoundEnabled
                 opacity: enabled ? 1.0 : 0.4
-                onValueChanged: kcm.ambientSoundVolume = Math.round(value)
+                onMoved: kcm.ambientSoundVolume = Math.round(value)
                 Accessible.name: i18nc("@label", "Ambient sound volume")
             }
             Controls.ComboBox {
@@ -462,12 +603,20 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: liveSkySection
             settings: kcm
             sectionKey: "liveSky"
             title: i18nc("@label", "Live Sky")
             summary: kcm.liveSkyEnabled ? i18nc("@info Live Sky summary: location, temperature unit", "On · %1 · °%2", kcm.liveSkyLocation || i18nc("@info", "No location selected"), kcm.liveSkyUnits.toUpperCase()) : i18nc("@label Feature state", "Off")
             form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form, factsSection.form]
+            Kirigami.InlineMessage {
+                objectName: "liveSkySetupGuidance"
+                Layout.fillWidth: true
+                visible: kcm.liveSkyEnabled && kcm.liveSkyLocation.length === 0
+                text: i18nc("@info", "Choose a city to enable local sky and weather. Type its name and select a suggestion, then try Preview.")
+                type: Kirigami.MessageType.Information
+            }
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
@@ -524,6 +673,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: seasonalSection
             settings: kcm
             sectionKey: "seasonal"
@@ -661,6 +811,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: agentsSection
             settings: kcm
             sectionKey: "agents"
@@ -738,6 +889,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: bobosSection
             settings: kcm
             sectionKey: "bobos"
@@ -801,6 +953,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: performanceSection
             settings: kcm
             sectionKey: "performance"
@@ -853,6 +1006,7 @@ KCMUtils.SimpleKCM {
             }
         }
         CollapsibleSection {
+            visible: kcm.advancedView
             id: lockSection
             settings: kcm
             sectionKey: "lock"

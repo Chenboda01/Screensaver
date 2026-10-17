@@ -10,6 +10,9 @@ class QUrl;
 
 class ScreenBotKcm : public KQuickConfigModule {
     Q_OBJECT
+    Q_PROPERTY(QString preset READ preset NOTIFY presetChanged)
+    Q_PROPERTY(bool advancedView READ advancedView WRITE setAdvancedView NOTIFY advancedViewChanged)
+    Q_PROPERTY(QString requestedSection READ requestedSection NOTIFY requestedSectionChanged)
     Q_PROPERTY(QStringList modifiedSections READ modifiedSections NOTIFY modifiedSectionsChanged)
     Q_PROPERTY(bool previewRunning READ previewRunning NOTIFY previewRunningChanged)
     Q_PROPERTY(QString previewError READ previewError NOTIFY previewErrorChanged)
@@ -76,7 +79,14 @@ class ScreenBotKcm : public KQuickConfigModule {
     Q_PROPERTY(bool reduceMotion READ reduceMotion WRITE setReduceMotion NOTIFY reduceMotionChanged)
     Q_PROPERTY(QString burnInProtection READ burnInProtection WRITE setBurnInProtection NOTIFY burnInProtectionChanged)
 public:
-    ScreenBotKcm(QObject *parent, const KPluginMetaData &data);
+    ScreenBotKcm(QObject *parent, const KPluginMetaData &data, const QVariantList &args = {});
+    QString preset() const { return m_preset; }
+    bool advancedView() const { return m_advancedView; }
+    void setAdvancedView(bool advanced);
+    QString requestedSection() const { return m_requestedSection; }
+    Q_INVOKABLE void openSection(const QString &section);
+    Q_INVOKABLE void applyPreset(const QString &preset);
+    void defaults() override;
     QStringList modifiedSections() const;
     Q_INVOKABLE bool sectionExpanded(const QString &section) const;
     Q_INVOKABLE void setSectionExpanded(const QString &section, bool expanded);
@@ -211,6 +221,9 @@ public:
     void load() override;
     void save() override;
 Q_SIGNALS:
+    void presetChanged();
+    void advancedViewChanged();
+    void requestedSectionChanged();
     void modifiedSectionsChanged();
     void previewRunningChanged();
     void previewErrorChanged();
@@ -274,11 +287,18 @@ Q_SIGNALS:
     void reduceMotionChanged();
     void burnInProtectionChanged();
 private:
+    void readSettings(QSettings &cfg);
+    void rememberSaved();
+    QString m_preset = QStringLiteral("custom");
+    QString m_savedPreset = QStringLiteral("custom");
+    bool m_applyingPreset = false;
+    bool m_advancedView = false;
+    QString m_requestedSection;
     void writeSettings(QSettings &cfg) const;
     void startPreview(bool bobos, bool wifiAnimation, QQuickItem *source = nullptr);
     QProcess *m_previewProcess = nullptr;
     QString m_previewError;
-    void checkModified();
+    void checkModified(bool manual = true);
     QString m_theme = QStringLiteral("random");
     QString m_photoFolder;
     bool m_photoIncludeSubfolders = false;

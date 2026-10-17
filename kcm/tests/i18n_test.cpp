@@ -23,6 +23,7 @@ private Q_SLOTS:
         const auto result = KQuickConfigModuleLoader::loadModule(KPluginMetaData(plugin));
         QVERIFY2(result, qPrintable(result.errorString));
         std::unique_ptr<KQuickConfigModule> kcm(result.plugin);
+        kcm->setProperty("advancedView", true);
         auto *root = kcm->mainUi();
         QVERIFY2(root, qPrintable(kcm->errorString()));
         QQuickWindow window;
