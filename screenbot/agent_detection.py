@@ -6,6 +6,7 @@ import subprocess
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
@@ -138,7 +139,7 @@ def _codex_turn_is_active() -> bool | None:
 
     for path in recent_logs:
         try:
-            latest_turn: str | None = None
+            active_turns: dict[str, float | None] = {}
             with path.open("rb") as log_file:
                 for line in log_file:
                     # Ignore message and tool payloads; only decode turn-status events.
@@ -152,19 +153,34 @@ def _codex_turn_is_active() -> bool | None:
                     turn_id = payload.get("turn_id")
                     if not turn_id:
                         continue
+                    timestamp = record.get("timestamp")
+                    try:
+                        event_time = datetime.fromisoformat(
+                            timestamp.replace("Z", "+00:00")
+                        ).timestamp()
+                    except (AttributeError, OverflowError, OSError, ValueError):
+                        event_time = None
                     if payload.get("type") == "task_started":
-                        latest_turn = turn_id
+                        active_turns[turn_id] = event_time
                     elif payload.get("type") in {
                         "task_complete",
                         "task_failed",
                         "turn_aborted",
                         "turn_failed",
-                    } and turn_id == latest_turn:
-                        latest_turn = None
+                    }:
+                        active_turns.pop(turn_id, None)
+                    elif turn_id in active_turns and event_time is not None:
+                        active_turns[turn_id] = event_time
         except OSError:
             return None
-        if latest_turn is not None:
+        if any(
+            event_time is not None
+            and 0 <= now - event_time <= SESSION_ACTIVITY_WINDOW_SECONDS
+            for event_time in active_turns.values()
+        ):
             return True
+        if any(event_time is None for event_time in active_turns.values()):
+            return None
     return False
 
 def _opencode_turn_is_active() -> bool | None:
