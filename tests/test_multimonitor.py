@@ -1,15 +1,39 @@
 """Real Qt windows on isolated offscreen outputs; no user desktop or locker touched."""
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 import pytest
 
+from raster_assertions import assert_raster_equal
+
+if TYPE_CHECKING:
+    from screensaver import Saver
+
+
+@contextmanager
+def fixed_scene_inputs(saver: "Saver", elapsed: float) -> Iterator[None]:
+    """Hold one astronomy snapshot and both clocks for a pair of exact renders."""
+    from live_sky import sky_position
+
+    moment = datetime(2026, 10, 16, 12, 34, tzinfo=UTC)
+    snapshot = sky_position(moment, saver.live_weather.latitude, saver.live_weather.longitude)
+    with (patch("time.monotonic", return_value=saver.start_time + elapsed),
+          patch("time.time", return_value=moment.timestamp()),
+          patch.object(saver, "live_sky_position", snapshot),
+          patch.object(saver, "live_sky_sample_time", moment.timestamp())):
+        yield
+
 
 @pytest.mark.parametrize('scenario', [
-    'coverage', 'coverage-live', 'key-primary', 'key-secondary', 'mouse-primary', 'mouse-secondary',
+    'coverage', 'coverage-live', 'coverage-live-boundary', 'key-primary', 'key-secondary', 'mouse-primary', 'mouse-secondary',
     'lock', 'hotplug', 'single', 'mirror',
 ])
 def test_display_session_when_outputs_change(scenario: str, tmp_path: Path) -> None:
@@ -34,8 +58,6 @@ def test_display_session_when_outputs_change(scenario: str, tmp_path: Path) -> N
 
 def run_scenario(scenario: str, directory: Path) -> None:
     """Exercise production widgets using actual QScreen objects in a child process."""
-    from unittest.mock import patch
-
     from PyQt6.QtCore import QEvent, QPointF, Qt
     from PyQt6.QtGui import QImage, QKeyEvent, QMouseEvent, QPainter
     from PyQt6.QtWidgets import QApplication
@@ -58,7 +80,7 @@ def run_scenario(scenario: str, directory: Path) -> None:
         assert saver.grab().save(str(directory / 'primary.png'))
     elif scenario.startswith('coverage'):
         assert len(windows) == 2
-        saver.live_sky_enabled = scenario == 'coverage-live'
+        saver.live_sky_enabled = scenario.startswith('coverage-live')
         secondary = windows[1]
         assert isinstance(secondary, SceneryWindow)
         assert secondary.scene is saver
@@ -69,7 +91,7 @@ def run_scenario(scenario: str, directory: Path) -> None:
             assert window.size() == screen.size()
         for theme in ('space', 'mountains', 'snow', 'forest', 'city', 'aurora', 'ocean', 'desert', 'underwater'):
             saver.theme = theme
-            with patch('time.monotonic', return_value=start + 20):
+            with fixed_scene_inputs(saver, 20):
                 actual = secondary.grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
                 expected = QImage(secondary.size(), QImage.Format.Format_RGB32)
                 painter = QPainter(expected)
@@ -78,8 +100,29 @@ def run_scenario(scenario: str, directory: Path) -> None:
                 painter.end()
                 assert expected.save(str(directory / f'{theme}-expected.png'))
                 assert actual.save(str(directory / f'{theme}-secondary.png'))
-                assert actual == expected, theme
+                assert_raster_equal(actual, expected, f'multimonitor-{scenario}-{theme}', exact=True)
                 assert saver.grab().save(str(directory / f'{theme}-primary.png'))
+        if scenario == 'coverage-live-boundary':
+            from live_sky import SkyPosition
+
+            later_snapshot = SkyPosition(45, 90, -30, 180, .5, True)
+            with patch('screenbot.scene.sky_position', return_value=later_snapshot) as refresh:
+                with fixed_scene_inputs(saver, 20):
+                    held_snapshot = saver.live_sky_position
+                    held_time = saver.live_sky_sample_time
+                    secondary.grab()
+                    saver._update_live_sky_position()
+                    assert saver.live_sky_position is held_snapshot
+                    assert saver.live_sky_sample_time == held_time
+                    refresh.assert_not_called()
+                # Prove the guard is meaningful: beyond one second the same
+                # production updater really would replace the snapshot.
+                saver.live_sky_position = held_snapshot
+                saver.live_sky_sample_time = held_time
+                with patch('time.time', return_value=held_time + 2):
+                    saver._update_live_sky_position()
+                refresh.assert_called_once()
+                assert saver.live_sky_position is later_snapshot
         saver.preview_bobos = True
         from bobos import BobOSTimeline
         saver.bobos_timeline = BobOSTimeline(activation_delay_seconds=180, show_connection_animation=True, preview_mode=True)
