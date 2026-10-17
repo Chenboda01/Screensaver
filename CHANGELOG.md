@@ -1,5 +1,17 @@
 # Changelog
 
+## V24
+
+V24 introduces illustrated appearance presets and a simpler first-run settings page while preserving all existing V23 preferences. It also restores reliable cross-machine visual CI and adds guarded tag-based release automation.
+
+### Added
+- Added Calm, Fun, Live Sky, Photo frame, and Battery saver presets with keyboard-accessible cards. Presets stage appearance changes, preserve lock/security/personal settings, and show Custom after manual edits.
+- Added Simple and Advanced settings views. New installations open in Simple; existing configurations remain unchanged and open in Advanced. A translated settings search is available in both views and jumps to matching Advanced sections.
+- Added KDE Defaults support for staged settings while keeping Reset/Discard and Preview behavior.
+- Stabilized visual regression tests with bundled test-only fonts, a bounded raster tolerance, exact same-process burn-in checks, and CI diagnostic image artifacts.
+- Pinned the CI Qt/PyQt versions, made V-tag publication require successful CI, and enabled strict required checks on main.
+- Published as a versioned ZIP release with installation instructions.
+
 ## V23
 
 V23 adds source-backed, theme-aware facts and optional scene-matched ambient audio, alongside the recent photo, seasonal, media-card, and BobOS improvements.
