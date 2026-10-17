@@ -7,7 +7,7 @@ from PyQt6.QtGui import QColor, QFont, QImage, QLinearGradient, QPainter, QPen
 
 from live_sky import SkyPosition, sky_position
 from live_sky_render import draw_sky
-from screenbot.runtime import particle_count
+from screenbot.runtime import particle_count, quality_particle_count
 from screenbot.themes import THEME_MOTION_RENDERERS, THEME_RENDERERS
 from screenbot.themes.environment import ThemeEnvironment, ThemeFrame
 
@@ -95,7 +95,8 @@ class SceneRenderer:
                 p.setBrush(QColor(177, 212, 255, brightness))
                 p.drawEllipse(QPointF((x*w + t*size*1.3) % max(w, 1), y*h), size, size)
         elif self.theme == 'mountains':
-            for x, y, radius, phase in self.particles[:particle_count(40, scale)]:
+            mountain_count = quality_particle_count(40, self.performance_mode)
+            for x, y, radius, phase in self.particles[:particle_count(mountain_count, scale)]:
                 p.setBrush(QColor(255, 231, 168, int(70 + 100*(.5 + .5*math.sin(t + phase)))))
                 p.drawEllipse(QPointF(x*w, h*(.67 + y*.31)), radius, radius)
         elif self.theme == 'snow':
@@ -106,7 +107,8 @@ class SceneRenderer:
                     p.setBrush(QColor(245,251,255,165))
                     p.drawEllipse(QPointF(px,py),size+0.5,size+0.5)
         elif self.theme == 'forest':
-            for x,y,size,phase in self.particles[:particle_count(75, scale)]:
+            forest_count = quality_particle_count(75, self.performance_mode)
+            for x,y,size,phase in self.particles[:particle_count(forest_count, scale)]:
                 cx=x*w+math.sin(t*.6+phase)*12
                 cy=(.18+y*.73)*h+math.cos(t*.55+phase)*8
                 alpha=int((80+150*(.5+.5*math.sin(t*2+phase))) * (0.45 if self.reduce_motion else 1))

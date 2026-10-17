@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 21:43-0400\n"
+"POT-Creation-Date: 2026-10-17 08:31-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -138,13 +138,49 @@ msgctxt "@info Preset"
 msgid "Fewer effects and lower power use"
 msgstr ""
 
-#: ui/PresetChooser.qml:19
+#: ui/PresetChooser.qml:15
+#, kde-format
+msgctxt "@item Preset"
+msgid "Plus"
+msgstr ""
+
+#: ui/PresetChooser.qml:15
+#, kde-format
+msgctxt "@info Preset"
+msgid "High quality · 30 fps · higher battery use"
+msgstr ""
+
+#: ui/PresetChooser.qml:16
+#, kde-format
+msgctxt "@item Preset"
+msgid "Premium"
+msgstr ""
+
+#: ui/PresetChooser.qml:16
+#, kde-format
+msgctxt "@info Preset"
+msgid "Extra high quality · 45 fps · more battery use"
+msgstr ""
+
+#: ui/PresetChooser.qml:17
+#, kde-format
+msgctxt "@item Preset"
+msgid "Pro"
+msgstr ""
+
+#: ui/PresetChooser.qml:17
+#, kde-format
+msgctxt "@info Preset"
+msgid "Ultra high quality · 60 fps · highest battery use"
+msgstr ""
+
+#: ui/PresetChooser.qml:22
 #, kde-format
 msgctxt "@item Preset"
 msgid "Custom"
 msgstr ""
 
-#: ui/PresetChooser.qml:19
+#: ui/PresetChooser.qml:22
 #, kde-format
 msgctxt "@label Current preset"
 msgid "Preset: %1"
@@ -1725,7 +1761,19 @@ msgstr ""
 #: ui/main.qml:961
 #, kde-format
 msgctxt "@label Performance mode"
-msgid "Smooth"
+msgid "High quality"
+msgstr ""
+
+#: ui/main.qml:961
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Extra high quality"
+msgstr ""
+
+#: ui/main.qml:961
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Ultra high quality"
 msgstr ""
 
 #: ui/main.qml:961 ui/main.qml:976
@@ -1750,8 +1798,9 @@ msgstr ""
 #, kde-format
 msgctxt "@info"
 msgid ""
-"Balanced runs at 30 fps on AC power, then 15 fps on battery or after 15 "
-"minutes. Battery saver uses 10 fps."
+"High quality runs at 30 fps, Extra high at 45 fps, and Ultra high at 60 fps "
+"with denser scene effects. Higher quality uses more battery. Balanced adapts "
+"to power; Battery saver uses 10 fps."
 msgstr ""
 
 #: ui/main.qml:975
@@ -1763,7 +1812,19 @@ msgstr ""
 #: ui/main.qml:976
 #, kde-format
 msgctxt "@label Performance mode"
-msgid "Smooth (30 fps)"
+msgid "High quality (30 fps)"
+msgstr ""
+
+#: ui/main.qml:976
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Extra high quality (45 fps)"
+msgstr ""
+
+#: ui/main.qml:976
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Ultra high quality (60 fps)"
 msgstr ""
 
 #: ui/main.qml:976
@@ -1937,31 +1998,31 @@ msgstr ""
 msgid "No matches. Check the spelling, or try a nearby larger town."
 msgstr ""
 
-#: screenbotkcm.cpp:1067
+#: screenbotkcm.cpp:1071
 #, kde-format
 msgid ""
 "Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure "
 "Bash is available on PATH."
 msgstr ""
 
-#: screenbotkcm.cpp:1074
+#: screenbotkcm.cpp:1078
 #, kde-format
 msgid "Could not create temporary preview settings."
 msgstr ""
 
-#: screenbotkcm.cpp:1085
+#: screenbotkcm.cpp:1089
 #, kde-format
 msgid "Could not write temporary preview settings."
 msgstr ""
 
-#: screenbotkcm.cpp:1102
+#: screenbotkcm.cpp:1106
 #, kde-format
 msgid ""
 "Could not start the preview. Check the ScreenBot installation and Python 3 "
 "dependencies."
 msgstr ""
 
-#: screenbotkcm.cpp:1108
+#: screenbotkcm.cpp:1112
 #, kde-format
 msgid ""
 "The preview stopped unexpectedly. Check the ScreenBot installation and "

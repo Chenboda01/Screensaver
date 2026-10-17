@@ -1,9 +1,13 @@
 import os
 from pathlib import Path
+import random
 import time
 from unittest.mock import patch
 
+import pytest
+
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+from screenbot.runtime import quality_particle_count, scene_particle_sets
 from screensaver import battery_powered, frame_interval_ms, particle_count
 
 
@@ -37,6 +41,44 @@ def test_explicit_modes_and_invalid_mode_are_bounded():
     assert frame_interval_ms('battery-saver', False, 0) == 100
     assert frame_interval_ms('invalid', False, 0) == 33
     assert frame_interval_ms('invalid', True, 0) == 67
+    assert frame_interval_ms('extra-high', True, 3600) == 22
+    assert frame_interval_ms('ultra', True, 3600) == 17
+
+
+def test_quality_tiers_add_scene_detail_without_changing_existing_profiles():
+    assert quality_particle_count(110, 'smooth') == 110
+    assert quality_particle_count(110, 'extra-high') == 138
+    assert quality_particle_count(110, 'ultra') == 165
+    assert quality_particle_count(0, 'ultra') == 0
+    assert [len(group) for group in scene_particle_sets(random.Random(1), 'smooth')] == [110, 150, 110]
+    assert [len(group) for group in scene_particle_sets(random.Random(1), 'extra-high')] == [138, 188, 138]
+    assert [len(group) for group in scene_particle_sets(random.Random(1), 'ultra')] == [165, 225, 165]
+
+
+@pytest.mark.parametrize(('mode', 'interval', 'counts'), [
+    ('smooth', 33, (110, 150, 110)),
+    ('extra-high', 22, (138, 188, 138)),
+    ('ultra', 17, (165, 225, 165)),
+])
+def test_saver_loads_quality_profile_into_frame_pacing_and_detail(
+    tmp_path: Path, mode: str, interval: int, counts: tuple[int, int, int],
+) -> None:
+    from PyQt6.QtWidgets import QApplication
+    from screensaver import Saver
+
+    app = QApplication.instance() or QApplication([])
+    config = tmp_path / f'{mode}.ini'
+    config.write_text(f'[Screensaver]\nperformance_mode={mode}\n')
+    saver = Saver(preview=True, config_path=config)
+    assert saver.performance_mode == mode
+    assert frame_interval_ms(saver.performance_mode, False, 0) == interval
+    assert (len(saver.particles), len(saver.rain_drops), len(saver.snowflakes)) == counts
+    saver.show()
+    app.processEvents()
+    assert saver.timer.isActive()
+    assert saver.timer.interval() == interval
+    saver.close()
+    app.processEvents()
 
 
 def test_motion_budget_never_mutates_particles_or_becomes_empty():

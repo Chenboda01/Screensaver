@@ -27,7 +27,7 @@ from screenbot.phone.apps import PhoneAppsRenderer
 from screenbot.phone.camera_pet import CameraState
 from screenbot.phone.frame import PhoneFrameRenderer
 from screenbot.photo_slideshow import PhotoSlideshowRenderer
-from screenbot.runtime import battery_powered, frame_interval_ms
+from screenbot.runtime import battery_powered, frame_interval_ms, scene_particle_sets
 from screenbot.scene import SceneRenderer
 from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, read_settings, selected_theme
 from screenbot.seasonal_renderer import SeasonalSession
@@ -138,7 +138,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             else settings.getboolean('Screensaver', 'show_wifi_animation', fallback=True)
         )
         self.performance_mode = settings.get('Screensaver', 'performance_mode', fallback='balanced').strip().lower()
-        if self.performance_mode not in ('smooth', 'balanced', 'battery-saver'):
+        if self.performance_mode not in ('smooth', 'balanced', 'battery-saver', 'extra-high', 'ultra'):
             self.performance_mode = 'balanced'
         self.reduce_motion = settings.getboolean('Screensaver', 'reduce_motion', fallback=False)
         self.on_battery = battery_powered()
@@ -172,9 +172,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             self.agent_status_worker.status_changed.connect(self.set_agent_status)
         self.old_mouse = None
         r = random.Random()
-        self.particles = [(r.random(), r.random(), r.uniform(.65, 2.6), r.random()*math.tau) for _ in range(110)]
-        self.rain_drops = [(r.random(), r.random(), r.uniform(.8, 1.8), r.random()) for _ in range(150)]
-        self.snowflakes = [(r.random(), r.random(), r.uniform(1.2, 4.0), r.uniform(.5, 1.6), r.random()*math.tau) for _ in range(110)]
+        self.particles, self.rain_drops, self.snowflakes = scene_particle_sets(r, self.performance_mode)
         self.lightning_events = [(r.uniform(0, 20), r.uniform(12, 24), r.uniform(.15, .85)) for _ in range(4)]
         self.shooting_star_events = [(r.uniform(0, 24), r.uniform(10, 22), r.uniform(.1, .8), r.uniform(.08, .35)) for _ in range(5)]
         self.timer = QTimer(self)

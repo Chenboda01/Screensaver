@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ScreenBot 22\n"
 "Report-Msgid-Bugs-To: https://github.com/Chenboda01/Screensaver/issues\n"
-"POT-Creation-Date: 2026-10-16 21:43-0400\n"
+"POT-Creation-Date: 2026-10-17 08:31-0400\n"
 "PO-Revision-Date: 2026-10-16 13:20-0400\n"
 "Last-Translator: ScreenBot contributors\n"
 "Language-Team: Spanish\n"
@@ -137,13 +137,49 @@ msgctxt "@info Preset"
 msgid "Fewer effects and lower power use"
 msgstr "Menos efectos y menor consumo"
 
-#: ui/PresetChooser.qml:19
+#: ui/PresetChooser.qml:15
+#, kde-format
+msgctxt "@item Preset"
+msgid "Plus"
+msgstr "Plus"
+
+#: ui/PresetChooser.qml:15
+#, kde-format
+msgctxt "@info Preset"
+msgid "High quality · 30 fps · higher battery use"
+msgstr "Alta calidad · 30 fps · mayor consumo de batería"
+
+#: ui/PresetChooser.qml:16
+#, kde-format
+msgctxt "@item Preset"
+msgid "Premium"
+msgstr "Premium"
+
+#: ui/PresetChooser.qml:16
+#, kde-format
+msgctxt "@info Preset"
+msgid "Extra high quality · 45 fps · more battery use"
+msgstr "Calidad extra alta · 45 fps · más consumo de batería"
+
+#: ui/PresetChooser.qml:17
+#, kde-format
+msgctxt "@item Preset"
+msgid "Pro"
+msgstr "Pro"
+
+#: ui/PresetChooser.qml:17
+#, kde-format
+msgctxt "@info Preset"
+msgid "Ultra high quality · 60 fps · highest battery use"
+msgstr "Calidad ultra alta · 60 fps · máximo consumo de batería"
+
+#: ui/PresetChooser.qml:22
 #, kde-format
 msgctxt "@item Preset"
 msgid "Custom"
 msgstr "Personalizado"
 
-#: ui/PresetChooser.qml:19
+#: ui/PresetChooser.qml:22
 #, kde-format
 msgctxt "@label Current preset"
 msgid "Preset: %1"
@@ -1763,8 +1799,20 @@ msgstr "Rendimiento"
 #: ui/main.qml:961
 #, kde-format
 msgctxt "@label Performance mode"
-msgid "Smooth"
-msgstr "Fluido"
+msgid "High quality"
+msgstr "Alta calidad"
+
+#: ui/main.qml:961
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Extra high quality"
+msgstr "Calidad extra alta"
+
+#: ui/main.qml:961
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Ultra high quality"
+msgstr "Calidad ultra alta"
 
 #: ui/main.qml:961 ui/main.qml:976
 #, kde-format
@@ -1788,11 +1836,10 @@ msgstr "Frecuencia de fotogramas:"
 #, kde-format
 msgctxt "@info"
 msgid ""
-"Balanced runs at 30 fps on AC power, then 15 fps on battery or after 15 "
-"minutes. Battery saver uses 10 fps."
-msgstr ""
-"El modo equilibrado funciona a 30 fps con corriente y a 15 fps con batería o "
-"tras 15 minutos. El ahorro de batería usa 10 fps."
+"High quality runs at 30 fps, Extra high at 45 fps, and Ultra high at 60 fps "
+"with denser scene effects. Higher quality uses more battery. Balanced adapts "
+"to power; Battery saver uses 10 fps."
+msgstr "Alta calidad funciona a 30 fps, Calidad extra alta a 45 fps y Calidad ultra alta a 60 fps con efectos de escena más densos. Una calidad mayor consume más batería. Equilibrado se adapta a la alimentación; Ahorro de batería usa 10 fps."
 
 #: ui/main.qml:975
 #, kde-format
@@ -1803,8 +1850,20 @@ msgstr "Modo de rendimiento:"
 #: ui/main.qml:976
 #, kde-format
 msgctxt "@label Performance mode"
-msgid "Smooth (30 fps)"
-msgstr "Fluido (30 fps)"
+msgid "High quality (30 fps)"
+msgstr "Alta calidad (30 fps)"
+
+#: ui/main.qml:976
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Extra high quality (45 fps)"
+msgstr "Calidad extra alta (45 fps)"
+
+#: ui/main.qml:976
+#, kde-format
+msgctxt "@label Performance mode"
+msgid "Ultra high quality (60 fps)"
+msgstr "Calidad ultra alta (60 fps)"
 
 #: ui/main.qml:976
 #, kde-format
@@ -1996,7 +2055,7 @@ msgstr ""
 "Sin coincidencias. Revise la ortografía o pruebe con una ciudad cercana más "
 "grande."
 
-#: screenbotkcm.cpp:1067
+#: screenbotkcm.cpp:1071
 #, kde-format
 msgid ""
 "Preview unavailable. Install ScreenBot in ~/ScreenBot/screensaver and ensure "
@@ -2005,17 +2064,17 @@ msgstr ""
 "Vista previa no disponible. Instale ScreenBot en ~/ScreenBot/screensaver y "
 "compruebe que Bash esté disponible en PATH."
 
-#: screenbotkcm.cpp:1074
+#: screenbotkcm.cpp:1078
 #, kde-format
 msgid "Could not create temporary preview settings."
 msgstr "No se pudo crear la configuración temporal de la vista previa."
 
-#: screenbotkcm.cpp:1085
+#: screenbotkcm.cpp:1089
 #, kde-format
 msgid "Could not write temporary preview settings."
 msgstr "No se pudo escribir la configuración temporal de la vista previa."
 
-#: screenbotkcm.cpp:1102
+#: screenbotkcm.cpp:1106
 #, kde-format
 msgid ""
 "Could not start the preview. Check the ScreenBot installation and Python 3 "
@@ -2024,7 +2083,7 @@ msgstr ""
 "No se pudo iniciar la vista previa. Revise la instalación de ScreenBot y las "
 "dependencias de Python 3."
 
-#: screenbotkcm.cpp:1108
+#: screenbotkcm.cpp:1112
 #, kde-format
 msgid ""
 "The preview stopped unexpectedly. Check the ScreenBot installation and "
@@ -2032,6 +2091,25 @@ msgid ""
 msgstr ""
 "La vista previa se detuvo inesperadamente. Revise la instalación de "
 "ScreenBot y las dependencias de Python 3."
+
+#, kde-format
+#~ msgctxt "@label Performance mode"
+#~ msgid "Smooth"
+#~ msgstr "Fluido"
+
+#, kde-format
+#~ msgctxt "@info"
+#~ msgid ""
+#~ "Balanced runs at 30 fps on AC power, then 15 fps on battery or after 15 "
+#~ "minutes. Battery saver uses 10 fps."
+#~ msgstr ""
+#~ "El modo equilibrado funciona a 30 fps con corriente y a 15 fps con "
+#~ "batería o tras 15 minutos. El ahorro de batería usa 10 fps."
+
+#, kde-format
+#~ msgctxt "@label Performance mode"
+#~ msgid "Smooth (30 fps)"
+#~ msgstr "Fluido (30 fps)"
 
 #, kde-format
 #~ msgctxt "@label"

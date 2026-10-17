@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QPointF, QRect, QRectF, Qt
 from PyQt6.QtGui import QColor, QLinearGradient, QPen
 import math
-from screenbot.runtime import particle_count
+from screenbot.runtime import particle_count, quality_particle_count
 
 
 class CityTheme:
@@ -16,7 +16,8 @@ class CityTheme:
             sky.setColorAt(1,QColor('#090c25'))
             p.fillRect(QRect(0, 0, w, h),sky)
             p.setPen(Qt.PenStyle.NoPen)
-            city_star_count = particle_count(55, .3 if self.reduce_motion else (.5 if self.performance_mode == 'battery-saver' else 1.0))
+            city_stars = quality_particle_count(55, self.performance_mode)
+            city_star_count = particle_count(city_stars, .3 if self.reduce_motion else (.5 if self.performance_mode == 'battery-saver' else 1.0))
             for x,y,size,phase in self.particles[:city_star_count]:
                 p.setBrush(QColor(177,192,255,170))
                 p.drawEllipse(QPointF(x*w,y*h*.6),size*.7,size*.7)

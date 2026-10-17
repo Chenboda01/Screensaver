@@ -13,7 +13,7 @@ Use the desktop's default font; section titles use bold body text. Summaries use
 Use Kirigami.Units.smallSpacing and largeSpacing. SimpleKCM owns vertical scrolling. Section forms share twinFormLayouts for aligned labels, and collapse to narrow form layout using Kirigami's native behavior.
 
 ## 5. Components
-CollapsibleSection: full-width native ToolButton header, arrow, title, pending-change dot, one-line collapsed summary, and a clipped FormLayout body. States: expanded, collapsed, pending, hovered, pressed, keyboard focused. Tab reaches headers; Space/Enter toggles; Left/Right collapses/expands. Hidden fields leave the focus chain. Accessible expandable/expanded state and full summary are announced. CitySearch and other controls retain their existing behavior.
+CollapsibleSection: full-width native ToolButton header, arrow, title, pending-change dot, one-line collapsed summary, and a clipped FormLayout body. States: expanded, collapsed, pending, hovered, pressed, keyboard focused. Tab reaches headers; Space/Enter toggles; Left/Right collapses/expands. Hidden fields leave the focus chain. Accessible expandable/expanded state and full summary are announced. PresetChooser retains its illustrated preset cards and uses the platform performance icon for the three quality tiers; each card exposes its selected state and a description with frame-rate and battery tradeoffs. CitySearch and other controls retain their existing behavior.
 
 ## Location search
 

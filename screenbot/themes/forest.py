@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QPointF, QRect, QRectF, Qt
 from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPolygonF
 import math
+from screenbot.runtime import quality_particle_count
 
 
 class ForestTheme:
@@ -59,7 +60,7 @@ class ForestTheme:
                 sway = math.sin(t*1.4+i)*min(12., self.live_weather.weather.wind*.2) if self.live_sky_enabled else 0
                 p.drawPolygon(QPolygonF([QPointF(cx-tree_h*.28,trunk_y),QPointF(cx+sway,trunk_y-tree_h),QPointF(cx+tree_h*.28,trunk_y)]))
                 p.drawRect(QRectF(cx-3,trunk_y-2,6,h-trunk_y))
-        for x,y,size,phase in self.particles[:75]:
+        for x,y,size,phase in self.particles[:quality_particle_count(75, self.performance_mode)]:
             cx=x*w+math.sin(t*.6+phase)*12
             cy=(.18+y*.73)*h+math.cos(t*.55+phase)*8
             alpha=int(80+150*(.5+.5*math.sin(t*2+phase)))

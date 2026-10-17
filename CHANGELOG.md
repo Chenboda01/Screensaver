@@ -1,5 +1,13 @@
 # Changelog
 
+## V25
+
+V25 adds three higher-quality appearance presets with explicit frame-rate, scene-detail, and battery tradeoffs.
+
+### Added
+- Added Plus (High quality, 30 fps), Premium (Extra high quality, 45 fps, 25% denser scene particles), and Pro (Ultra high quality, 60 fps, 50% denser scene particles). All three offer progressively smoother motion and richer weather and theme effects, with increased battery use at higher tiers.
+- Added corresponding selectable KDE preset cards and performance modes. Presets retain KDE Apply/Discard behavior and leave lock, agent-protection, location, photo, and personal settings untouched.
+
 ## V24
 
 V24 introduces illustrated appearance presets and a simpler first-run settings page while preserving all existing V23 preferences. It also restores reliable cross-machine visual CI and adds guarded tag-based release automation.

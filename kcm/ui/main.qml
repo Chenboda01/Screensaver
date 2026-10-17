@@ -73,7 +73,7 @@ KCMUtils.SimpleKCM {
             Layout.fillWidth: true
             settings: kcm
         }
-        Controls.Switch {
+        ThemedSwitch {
             objectName: "advancedViewSwitch"
             text: checked ? i18nc("@option:check", "Advanced view") : i18nc("@option:check", "Simple view")
             checked: kcm.advancedView
@@ -958,14 +958,14 @@ KCMUtils.SimpleKCM {
             settings: kcm
             sectionKey: "performance"
             title: i18nc("@label", "Performance")
-            summary: [i18nc("@label Performance mode", "Smooth"), i18nc("@label Performance mode", "Balanced"), i18nc("@label Performance mode", "Battery saver")][["smooth", "balanced", "battery-saver"].indexOf(kcm.performanceMode)]
+            summary: ({"smooth": i18nc("@label Performance mode", "High quality"), "extra-high": i18nc("@label Performance mode", "Extra high quality"), "ultra": i18nc("@label Performance mode", "Ultra high quality"), "balanced": i18nc("@label Performance mode", "Balanced"), "battery-saver": i18nc("@label Performance mode", "Battery saver")})[kcm.performanceMode]
             form.twinFormLayouts: [themeSection.form, appearanceSection.form, clockSection.form, weatherSection.form, liveSkySection.form, seasonalSection.form, agentsSection.form, bobosSection.form, performanceSection.form, lockSection.form, factsSection.form]
             Controls.Label {
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 25
                 Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: i18nc("@label", "Frame pacing:")
-                text: i18nc("@info", "Balanced runs at 30 fps on AC power, then 15 fps on battery or after 15 minutes. Battery saver uses 10 fps.")
+                text: i18nc("@info", "High quality runs at 30 fps, Extra high at 45 fps, and Ultra high at 60 fps with denser scene effects. Higher quality uses more battery. Balanced adapts to power; Battery saver uses 10 fps.")
                 wrapMode: Text.WordWrap
             }
             Controls.ComboBox {
@@ -973,9 +973,9 @@ KCMUtils.SimpleKCM {
                 implicitContentWidthPolicy: Controls.ComboBox.WidestText
                 Layout.maximumWidth: parent.width
                 Kirigami.FormData.label: i18nc("@label", "Performance mode:")
-                model: [i18nc("@label Performance mode", "Smooth (30 fps)"), i18nc("@label Performance mode", "Balanced"), i18nc("@label Performance mode", "Battery saver (10 fps)")]
-                currentIndex: ["smooth", "balanced", "battery-saver"].indexOf(kcm.performanceMode)
-                onActivated: function(index) { kcm.performanceMode = ["smooth", "balanced", "battery-saver"][index] }
+                model: [i18nc("@label Performance mode", "High quality (30 fps)"), i18nc("@label Performance mode", "Extra high quality (45 fps)"), i18nc("@label Performance mode", "Ultra high quality (60 fps)"), i18nc("@label Performance mode", "Balanced"), i18nc("@label Performance mode", "Battery saver (10 fps)")]
+                currentIndex: ["smooth", "extra-high", "ultra", "balanced", "battery-saver"].indexOf(kcm.performanceMode)
+                onActivated: function(index) { kcm.performanceMode = ["smooth", "extra-high", "ultra", "balanced", "battery-saver"][index] }
             }
             Controls.CheckBox {
                 objectName: "reduceMotion"

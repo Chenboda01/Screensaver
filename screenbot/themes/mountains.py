@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QPointF, QRect, Qt
 from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPolygonF
 import math
+from screenbot.runtime import quality_particle_count
 
 
 class MountainsTheme:
@@ -54,6 +55,6 @@ class MountainsTheme:
             polygon = QPolygonF([QPointF(x*w, y*h) for x, y in coords] + [QPointF(w, h), QPointF(0, h)])
             p.setBrush(QColor(color))
             p.drawPolygon(polygon)
-        for x, y, r, phase in self.particles[:40]:
+        for x, y, r, phase in self.particles[:quality_particle_count(40, self.performance_mode)]:
             p.setBrush(QColor(255, 231, 168, int(70 + 100*(.5 + .5*math.sin(t + phase)))))
             p.drawEllipse(QPointF(x*w, h*(.67 + y*.31)), r, r)

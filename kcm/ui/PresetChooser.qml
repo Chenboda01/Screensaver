@@ -11,13 +11,17 @@ ColumnLayout {
         {key: "fun", name: i18nc("@item Preset", "Fun"), description: i18nc("@info Preset", "Playful adventures and discoveries")},
         {key: "live-sky", name: i18nc("@item Preset", "Live Sky"), description: i18nc("@info Preset", "A window to your local weather")},
         {key: "photos", name: i18nc("@item Preset", "Photo frame"), description: i18nc("@info Preset", "Your pictures, quietly on display")},
-        {key: "battery-saver", name: i18nc("@item Preset", "Battery saver"), description: i18nc("@info Preset", "Fewer effects and lower power use")}
+        {key: "battery-saver", name: i18nc("@item Preset", "Battery saver"), description: i18nc("@info Preset", "Fewer effects and lower power use")},
+        {key: "plus", name: i18nc("@item Preset", "Plus"), description: i18nc("@info Preset", "High quality · 30 fps · higher battery use"), icon: "preferences-system-performance"},
+        {key: "premium", name: i18nc("@item Preset", "Premium"), description: i18nc("@info Preset", "Extra high quality · 45 fps · more battery use"), icon: "preferences-system-performance"},
+        {key: "pro", name: i18nc("@item Preset", "Pro"), description: i18nc("@info Preset", "Ultra high quality · 60 fps · highest battery use"), icon: "preferences-system-performance"}
     ]
     Controls.Label {
         objectName: "activePresetLabel"
         Layout.fillWidth: true
         text: i18nc("@label Current preset", "Preset: %1", chooser.presets.find(p => p.key === chooser.settings.preset)?.name ?? i18nc("@item Preset", "Custom"))
         font.bold: true
+        color: Kirigami.Theme.textColor
         Accessible.role: Accessible.StaticText
     }
     GridLayout {
@@ -50,11 +54,21 @@ ColumnLayout {
                 contentItem: ColumnLayout {
                     spacing: Kirigami.Units.smallSpacing
                     Image {
+                        visible: !card.modelData.icon
                         Layout.fillWidth: true
                         Layout.preferredHeight: Kirigami.Units.gridUnit * 4
-                        source: "presets/" + card.modelData.key + ".webp"
+                        source: card.modelData.icon ? "" : "presets/" + card.modelData.key + ".webp"
                         fillMode: Image.PreserveAspectCrop
                         clip: true
+                        Accessible.ignored: true
+                    }
+                    Kirigami.Icon {
+                        visible: !!card.modelData.icon
+                        objectName: "preset-icon-" + card.modelData.key
+                        source: card.modelData.icon || ""
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 4
+                        Layout.preferredHeight: Kirigami.Units.gridUnit * 4
                         Accessible.ignored: true
                     }
                     Controls.Label {
