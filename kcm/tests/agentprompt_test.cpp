@@ -122,6 +122,7 @@ private Q_SLOTS:
         const auto before = savedBytes();
         kcm.setSectionExpanded(QStringLiteral("theme"), false);
         kcm.setSectionExpanded(QStringLiteral("agents"), true);
+        kcm.setAdvancedView(true);
         QQuickView view;
         auto *translations = new KLocalizedContext(&view);
         translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));

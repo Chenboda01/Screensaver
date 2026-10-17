@@ -4,6 +4,7 @@ import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 
 ColumnLayout {
+    property string objectPrefix: ""
     property var settings
     Kirigami.FormData.label: i18nc("@label", "City:")
             Layout.fillWidth: true
@@ -12,7 +13,7 @@ ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
             Controls.TextField {
                 id: citySearch
-                objectName: "citySearch"
+                objectName: objectPrefix + "citySearch"
                 Layout.fillWidth: true
                 placeholderText: i18nc("@info:placeholder", "Type your city…")
                 Accessible.name: i18nc("@label", "Search city")
@@ -30,7 +31,7 @@ ColumnLayout {
             }
             ListView {
                 id: suggestions
-                objectName: "citySuggestions"
+                objectName: objectPrefix + "citySuggestions"
                 Layout.fillWidth: true
                 implicitHeight: Math.min(contentHeight, Kirigami.Units.gridUnit * 12)
                 clip: true

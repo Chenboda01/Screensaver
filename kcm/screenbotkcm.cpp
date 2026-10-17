@@ -13,6 +13,7 @@
 #include <QQuickWindow>
 #include <QScreen>
 #include <QTemporaryFile>
+#include <QTemporaryDir>
 #include <QColor>
 #include <QDate>
 #include <QTextBoundaryFinder>
@@ -111,9 +112,9 @@ static bool validBobAccessory(const QString &value) {
         || value == QLatin1String("antenna-ball");
 }
 
-ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data)
+ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data, const QVariantList &args)
     : KQuickConfigModule(parent, data) {
-    setButtons(Apply);
+    setButtons(Apply | Default);
     setSupportsInstantApply(false);
     const QString locationsPath = QStandardPaths::locate(
         QStandardPaths::GenericDataLocation,
@@ -132,6 +133,16 @@ ScreenBotKcm::ScreenBotKcm(QObject *parent, const KPluginMetaData &data)
     }
     m_locationSearch.setCatalog(m_liveSkyLocations);
     load();
+    QSettings state(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+                    + QStringLiteral("/screenbot-kcm-state.ini"), QSettings::IniFormat);
+    QSettings cfg(configFile(), QSettings::IniFormat);
+    m_advancedView = state.value(QStringLiteral("View/advanced"), QFile::exists(configFile()) && !cfg.contains(QStringLiteral("Screensaver/preset"))).toBool();
+    if (!state.contains(QStringLiteral("View/advanced"))) state.setValue(QStringLiteral("View/advanced"), m_advancedView);
+    if (!args.isEmpty()) openSection(args.first().toString());
+    connect(this, &KAbstractConfigModule::activationRequested, this, [this](const QVariantList &args) {
+        setAdvancedView(true);
+        if (!args.isEmpty()) openSection(args.first().toString());
+    });
 }
 
 QStringList ScreenBotKcm::modifiedSections() const {
@@ -196,8 +207,12 @@ QStringList ScreenBotKcm::modifiedSections() const {
     return sections;
 }
 
-void ScreenBotKcm::checkModified() {
-    setNeedsSave(!modifiedSections().isEmpty());
+void ScreenBotKcm::checkModified(bool manual) {
+    if (manual && !m_applyingPreset && m_preset != QLatin1String("custom")) {
+        m_preset = QStringLiteral("custom");
+        Q_EMIT presetChanged();
+    }
+    setNeedsSave(m_preset != m_savedPreset || !modifiedSections().isEmpty());
     Q_EMIT modifiedSectionsChanged();
 }
 
@@ -220,6 +235,19 @@ void ScreenBotKcm::setSectionExpanded(const QString &section, bool expanded) {
 
 void ScreenBotKcm::load() {
     QSettings cfg(configFile(), QSettings::IniFormat);
+    readSettings(cfg);
+    rememberSaved();
+}
+
+void ScreenBotKcm::defaults() {
+    QTemporaryDir directory;
+    if (!directory.isValid()) return;
+    QSettings cfg(directory.filePath(QStringLiteral("defaults.ini")), QSettings::IniFormat);
+    readSettings(cfg);
+    checkModified(false);
+}
+
+void ScreenBotKcm::readSettings(QSettings &cfg) {
     const QString theme = cfg.value(QStringLiteral("Screensaver/theme"), QStringLiteral("random")).toString();
     const QString validTheme = (theme == QLatin1String("space") || theme == QLatin1String("mountains") || theme == QLatin1String("random") || theme == QLatin1String("snow") || theme == QLatin1String("forest") || theme == QLatin1String("city") || theme == QLatin1String("aurora") || theme == QLatin1String("ocean") || theme == QLatin1String("desert") || theme == QLatin1String("underwater") || theme == QLatin1String("photos")) ? theme : QStringLiteral("random");
     const QString defaultPhotoFolder = QDir::homePath() + QStringLiteral("/Pictures");
@@ -399,6 +427,12 @@ void ScreenBotKcm::load() {
     if (m_performanceMode != performanceMode) { m_performanceMode = performanceMode; Q_EMIT performanceModeChanged(); }
     if (m_reduceMotion != reduceMotion) { m_reduceMotion = reduceMotion; Q_EMIT reduceMotionChanged(); }
     if (m_burnInProtection != burnInProtection) { m_burnInProtection = burnInProtection; Q_EMIT burnInProtectionChanged(); }
+    m_preset = cfg.value(QStringLiteral("Screensaver/preset"), QStringLiteral("custom")).toString();
+    if (!QStringList{QStringLiteral("calm"), QStringLiteral("fun"), QStringLiteral("live-sky"), QStringLiteral("photos"), QStringLiteral("battery-saver")}.contains(m_preset)) m_preset = QStringLiteral("custom");
+    Q_EMIT presetChanged();
+}
+
+void ScreenBotKcm::rememberSaved() {
     m_savedTheme = m_theme;
     m_savedPhotoFolder = m_photoFolder;
     m_savedPhotoIncludeSubfolders = m_photoIncludeSubfolders;
@@ -459,10 +493,12 @@ void ScreenBotKcm::load() {
     m_savedPerformanceMode = m_performanceMode;
     m_savedReduceMotion = m_reduceMotion;
     m_savedBurnInProtection = m_burnInProtection;
-    checkModified();
+    m_savedPreset = m_preset;
+    checkModified(false);
 }
 
 void ScreenBotKcm::writeSettings(QSettings &cfg) const {
+    cfg.setValue(QStringLiteral("Screensaver/preset"), m_preset);
     cfg.setValue(QStringLiteral("Screensaver/theme"), m_theme);
     cfg.setValue(QStringLiteral("Screensaver/photo_folder"), m_photoFolder);
     cfg.setValue(QStringLiteral("Screensaver/photo_include_subfolders"), m_photoIncludeSubfolders);
@@ -537,67 +573,7 @@ void ScreenBotKcm::save() {
         qWarning("Could not write ScreenBot settings.");
         return;
     }
-    m_savedTheme = m_theme;
-    m_savedPhotoFolder = m_photoFolder;
-    m_savedPhotoIncludeSubfolders = m_photoIncludeSubfolders;
-    m_savedPhotoInterval = m_photoInterval;
-    m_savedPhotoOrder = m_photoOrder;
-    m_savedPhotoFit = m_photoFit;
-    m_savedPasswordLock = m_passwordLock;
-    m_savedLockMinutes = m_lockMinutes;
-    m_savedShowTimer = m_showTimer;
-    m_savedClockVisible = m_clockVisible;
-    m_savedNowPlayingEnabled = m_nowPlayingEnabled;
-    m_savedFactsEnabled = m_factsEnabled;
-    m_savedFactsIntervalMinutes = m_factsIntervalMinutes;
-    m_savedFactsContentMode = m_factsContentMode;
-
-    m_savedAmbientSoundEnabled = m_ambientSoundEnabled;
-    m_savedAmbientSoundVolume = m_ambientSoundVolume;
-    m_savedAmbientSoundMode = m_ambientSoundMode;
-    m_savedAmbientQuietHours = m_ambientQuietHours;
-    m_savedClockFormat = m_clockFormat;
-    m_savedShowDate = m_showDate;
-    m_savedClockPosition = m_clockPosition;
-    m_savedClockFontSize = m_clockFontSize;
-    m_savedRainEnabled = m_rainEnabled;
-    m_savedSnowEnabled = m_snowEnabled;
-    m_savedThunderstormsEnabled = m_thunderstormsEnabled;
-    m_savedFogEnabled = m_fogEnabled;
-    m_savedShootingStarsEnabled = m_shootingStarsEnabled;
-    m_savedBobWeatherEnabled = m_bobWeatherEnabled;
-    m_savedBobName = m_bobName;
-    m_savedBobColorPreset = m_bobColorPreset;
-    m_savedBobCustomColor = m_bobCustomColor;
-    m_savedBobAccessory = m_bobAccessory;
-    m_savedLiveSkyEnabled = m_liveSkyEnabled;
-    m_savedLiveSkyLocation = m_liveSkyLocation;
-    m_savedLiveSkyPlace = m_liveSkyPlace;
-    m_savedLiveSkyUnits = m_liveSkyUnits;
-    m_savedLiveSkyInterval = m_liveSkyInterval;
-    m_savedLiveSkyConditions = m_liveSkyConditions;
-    m_savedSeasonalEnabled = m_seasonalEnabled;
-    m_savedSeasonalNewYearEnabled = m_seasonalNewYearEnabled;
-    m_savedSeasonalLunarNewYearEnabled = m_seasonalLunarNewYearEnabled;
-    m_savedSeasonalValentinesEnabled = m_seasonalValentinesEnabled;
-    m_savedSeasonalSpringEnabled = m_seasonalSpringEnabled;
-    m_savedSeasonalHalloweenEnabled = m_seasonalHalloweenEnabled;
-    m_savedSeasonalWinterHolidaysEnabled = m_seasonalWinterHolidaysEnabled;
-    m_savedSeasonalBirthdayEnabled = m_seasonalBirthdayEnabled;
-    m_savedSeasonalBirthdayDate = m_seasonalBirthdayDate;
-    m_savedSeasonalBirthdayName = m_seasonalBirthdayName;
-    m_savedAgentDetectionMode = m_agentDetectionMode;
-    m_savedAgentStatusEnabled = m_agentStatusEnabled;
-    m_savedAgentPromptTimeout = m_agentPromptTimeout;
-    m_savedAgentPromptTimeoutAction = m_agentPromptTimeoutAction;
-    m_savedPhoneEnabled = m_phoneEnabled;
-    m_savedBobosEnabled = m_bobosEnabled;
-    m_savedBobosActivationDelay = m_bobosActivationDelay;
-    m_savedShowWifiAnimation = m_showWifiAnimation;
-    m_savedPerformanceMode = m_performanceMode;
-    m_savedReduceMotion = m_reduceMotion;
-    m_savedBurnInProtection = m_burnInProtection;
-    checkModified();
+    rememberSaved();
 }
 
 void ScreenBotKcm::setTheme(const QString &value) {
@@ -1143,3 +1119,53 @@ void ScreenBotKcm::startPreview(bool bobos, bool wifiAnimation, QQuickItem *sour
 }
 
 #include "screenbotkcm.moc"
+
+void ScreenBotKcm::setAdvancedView(bool advanced) {
+    if (m_advancedView == advanced) return;
+    m_advancedView = advanced;
+    QSettings state(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+                    + QStringLiteral("/screenbot-kcm-state.ini"), QSettings::IniFormat);
+    state.setValue(QStringLiteral("View/advanced"), advanced);
+    Q_EMIT advancedViewChanged();
+}
+
+void ScreenBotKcm::openSection(const QString &section) {
+    const QStringList sections{QStringLiteral("theme"), QStringLiteral("appearance"), QStringLiteral("clock"),
+        QStringLiteral("weather"), QStringLiteral("liveSky"), QStringLiteral("seasonal"), QStringLiteral("agents"),
+        QStringLiteral("bobos"), QStringLiteral("performance"), QStringLiteral("lock"), QStringLiteral("facts")};
+    if (!sections.contains(section)) return;
+    setAdvancedView(true);
+    setSectionExpanded(section, true);
+    m_requestedSection = section;
+    Q_EMIT requestedSectionChanged();
+}
+
+void ScreenBotKcm::applyPreset(const QString &preset) {
+    if (!QStringList{QStringLiteral("calm"), QStringLiteral("fun"), QStringLiteral("live-sky"),
+                    QStringLiteral("photos"), QStringLiteral("battery-saver")}.contains(preset)) return;
+    m_applyingPreset = true;
+    const bool playful = preset == QLatin1String("fun");
+    const bool sky = preset == QLatin1String("live-sky") || preset == QLatin1String("calm");
+    const bool battery = preset == QLatin1String("battery-saver");
+    setTheme(preset == QLatin1String("photos") ? QStringLiteral("photos") : QStringLiteral("random"));
+    setLiveSkyEnabled(sky);
+    setLiveSkyConditions(sky);
+    setBobWeatherEnabled(playful || sky);
+    setFactsEnabled(playful);
+    setSeasonalEnabled(playful);
+    setPhoneEnabled(playful);
+    setBobosEnabled(playful);
+    setAmbientSoundEnabled(false);
+    setReduceMotion(!playful && preset != QLatin1String("live-sky"));
+    setPerformanceMode(battery ? QStringLiteral("battery-saver") : QStringLiteral("balanced"));
+    setRainEnabled(playful || sky);
+    setSnowEnabled(playful || sky);
+    setThunderstormsEnabled(playful);
+    setFogEnabled(playful || sky);
+    setShootingStarsEnabled(playful);
+    setClockVisible(true);
+    m_applyingPreset = false;
+    m_preset = preset;
+    Q_EMIT presetChanged();
+    checkModified(false);
+}

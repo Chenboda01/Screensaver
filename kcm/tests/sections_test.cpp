@@ -157,6 +157,7 @@ private Q_SLOTS:
         kcm.setBobColorPreset(QStringLiteral("custom"));
         kcm.setBobCustomColor(QStringLiteral("#a06cff"));
         kcm.setBobAccessory(QStringLiteral("flower"));
+        kcm.setAdvancedView(true);
         QQuickView view;
         auto *translations = new KLocalizedContext(&view);
         translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
@@ -175,7 +176,7 @@ private Q_SLOTS:
         QVERIFY(button);
         QVERIFY(theme);
         theme->setProperty("expanded", false);
-        section->setProperty("expanded", true);
+        kcm.openSection(QStringLiteral("bobos"));
         QTest::qWait(300);
         QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier,
             button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint());
@@ -197,6 +198,7 @@ private Q_SLOTS:
     }
     void nativeUiKeyboardAccessibilityAndCaptures() {
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        kcm.setAdvancedView(true);
         QQuickView view;
         auto *translations = new KLocalizedContext(&view);
         translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
@@ -354,7 +356,9 @@ private Q_SLOTS:
         QTRY_VERIFY(ambientVolume->isEnabled());
         QTRY_VERIFY(ambientMode->isEnabled());
         QTRY_VERIFY(quietHours->isEnabled());
-        ambientVolume->setProperty("value", 64.0);
+        ambientVolume->setProperty("value", 63.0);
+        ambientVolume->forceActiveFocus();
+        QTest::keyClick(&view, Qt::Key_Right);
         QCOMPARE(kcm.ambientSoundVolume(), 64);
         kcm.setAmbientSoundEnabled(false);
         QTRY_VERIFY(!ambientVolume->isEnabled());

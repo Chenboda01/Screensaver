@@ -172,6 +172,7 @@ private Q_SLOTS:
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
         kcm.setLiveSkyEnabled(true);
         kcm.locationSearch()->setCatalog({QStringLiteral("Paris, France"), QStringLiteral("Paris, United States")});
+        kcm.setAdvancedView(true);
         QQuickView view;
         auto *translations = new KLocalizedContext(&view);
         translations->setTranslationDomain(QStringLiteral("kcm_screenbot_screensaver"));
