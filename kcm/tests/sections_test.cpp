@@ -475,7 +475,7 @@ private Q_SLOTS:
         kcm.setPerformanceMode(QStringLiteral("smooth"));
         kcm.setBurnInProtection(QStringLiteral("strong"));
         QVERIFY(item(QStringLiteral("performanceSection"))->property("modified").toBool());
-        QCOMPARE(item(QStringLiteral("performanceSection"))->property("summary").toString(), QStringLiteral("Smooth"));
+        QCOMPARE(item(QStringLiteral("performanceSection"))->property("summary").toString(), QStringLiteral("High quality"));
         kcm.load();
         QCOMPARE(kcm.performanceMode(), QStringLiteral("balanced"));
         QVERIFY(!kcm.reduceMotion());

@@ -20,7 +20,7 @@ from bobos import BobOSPhase, BobOSStatus, BobOSTimeline, bobos_may_run
 from screen_session import ScreenSession
 from screenbot.app import Saver
 from screenbot.burnin import BURN_IN_MODES, BURN_IN_SHIFT_LIMIT, burn_in_clock_drift, burn_in_dim_alpha, burn_in_scene_scale, burn_in_scene_shift, normalize_burn_in_mode
-from screenbot.runtime import battery_powered, frame_interval_ms, particle_count
+from screenbot.runtime import battery_powered, frame_interval_ms, particle_count, quality_particle_count, scene_particle_sets
 from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, read_settings, selected_theme
 from screenbot.weather_accessories import WeatherPreview, parse_weather_preview
 
@@ -35,7 +35,7 @@ __all__ = [
     'battery_powered', 'bobos_may_run', 'burn_in_clock_drift',
     'burn_in_dim_alpha', 'burn_in_scene_scale', 'burn_in_scene_shift',
     'configparser', 'draw_sky', 'frame_interval_ms', 'main', 'normalize_burn_in_mode',
-    'particle_count', 'random', 'read_location_setting', 'read_settings',
+    'particle_count', 'quality_particle_count', 'scene_particle_sets', 'random', 'read_location_setting', 'read_settings',
     'selected_theme', 'sky_position', 'subprocess', 'sys', 'time',
 ]
 

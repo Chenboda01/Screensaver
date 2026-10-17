@@ -43,7 +43,7 @@ private Q_SLOTS:
             QStringLiteral("reduceMotion"), QStringLiteral("performanceMode"), QStringLiteral("rainEnabled"),
             QStringLiteral("snowEnabled"), QStringLiteral("thunderstormsEnabled"), QStringLiteral("fogEnabled"),
             QStringLiteral("shootingStarsEnabled"), QStringLiteral("clockVisible")};
-        for (const auto &preset : {"calm", "fun", "live-sky", "photos", "battery-saver"}) {
+        for (const auto &preset : {"calm", "fun", "live-sky", "photos", "battery-saver", "plus", "premium", "pro"}) {
             ScreenBotKcm kcm(nullptr, KPluginMetaData());
             kcm.setPasswordLock(true); kcm.setLockMinutes(17); kcm.setShowTimer(true);
             kcm.setAgentDetectionMode(QStringLiteral("block")); kcm.setAgentPromptTimeout(35);
@@ -67,6 +67,21 @@ private Q_SLOTS:
             QCOMPARE(reopened.preset(), QString::fromLatin1(preset));
             QCOMPARE(values(reopened), after);
         }
+    }
+    void qualityPresetsIncreaseCadenceAndDetail() {
+        ScreenBotKcm kcm(nullptr, KPluginMetaData());
+        const auto modeFor = [&](const QString &preset) {
+            kcm.applyPreset(preset);
+            return kcm.performanceMode();
+        };
+        QCOMPARE(modeFor(QStringLiteral("plus")), QStringLiteral("smooth"));
+        QCOMPARE(modeFor(QStringLiteral("premium")), QStringLiteral("extra-high"));
+        QCOMPARE(modeFor(QStringLiteral("pro")), QStringLiteral("ultra"));
+        kcm.setPerformanceMode(QStringLiteral("ultra"));
+        kcm.save();
+        ScreenBotKcm reopened(nullptr, KPluginMetaData());
+        QCOMPARE(reopened.performanceMode(), QStringLiteral("ultra"));
+        QCOMPARE(reopened.preset(), QStringLiteral("pro"));
     }
     void everyBooleanManualSettingMarksCustom() {
         ScreenBotKcm kcm(nullptr, KPluginMetaData());
@@ -168,14 +183,17 @@ private Q_SLOTS:
         };
         auto find = [&](const char *name) { return search(view.rootObject(), QString::fromLatin1(name)); };
         QVERIFY(find("simpleSettings")->isVisible()); QVERIFY(!find("weatherSection")->isVisible());
-        for (const auto *name : {"calm", "fun", "live-sky", "photos", "battery-saver"}) {
+        for (const auto *name : {"calm", "fun", "live-sky", "photos", "battery-saver", "plus", "premium", "pro"}) {
             auto *card = find(qPrintable(QStringLiteral("preset-") + QString::fromLatin1(name)));
             QVERIFY(card); QVERIFY(card->isVisible());
             auto *accessible = QAccessible::queryAccessibleInterface(card);
             QVERIFY(accessible); QVERIFY(!accessible->text(QAccessible::Name).isEmpty());
         }
+        QVERIFY(find("preset-icon-plus")); QVERIFY(find("preset-icon-premium")); QVERIFY(find("preset-icon-pro"));
         auto *card = find("preset-fun"); card->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space);
         QCOMPARE(kcm.preset(), QStringLiteral("fun")); QVERIFY(kcm.bobosEnabled());
+        card = find("preset-pro"); card->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space);
+        QCOMPARE(kcm.preset(), QStringLiteral("pro")); QCOMPARE(kcm.performanceMode(), QStringLiteral("ultra"));
         QVERIFY(find("simpleSettings")->isVisible());
         const auto evidence = qEnvironmentVariable("SCREENBOT_EVIDENCE_DIR"); QVERIFY(!evidence.isEmpty()); QDir().mkpath(evidence);
         QTest::qWait(300); QVERIFY(view.grabWindow().save(evidence + QStringLiteral("/simple.png")));

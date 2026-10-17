@@ -361,6 +361,8 @@ void ScreenBotKcm::readSettings(QSettings &cfg) {
     const QString requestedPerformanceMode = cfg.value(QStringLiteral("Screensaver/performance_mode"), QStringLiteral("balanced")).toString();
     const QString performanceMode = requestedPerformanceMode == QLatin1String("smooth")
         || requestedPerformanceMode == QLatin1String("battery-saver")
+        || requestedPerformanceMode == QLatin1String("extra-high")
+        || requestedPerformanceMode == QLatin1String("ultra")
         ? requestedPerformanceMode : QStringLiteral("balanced");
     const bool reduceMotion = cfg.value(QStringLiteral("Screensaver/reduce_motion"), false).toBool();
     const QString requestedBurnInProtection = cfg.value(QStringLiteral("Screensaver/burn_in_protection"), QStringLiteral("standard")).toString();
@@ -428,7 +430,8 @@ void ScreenBotKcm::readSettings(QSettings &cfg) {
     if (m_reduceMotion != reduceMotion) { m_reduceMotion = reduceMotion; Q_EMIT reduceMotionChanged(); }
     if (m_burnInProtection != burnInProtection) { m_burnInProtection = burnInProtection; Q_EMIT burnInProtectionChanged(); }
     m_preset = cfg.value(QStringLiteral("Screensaver/preset"), QStringLiteral("custom")).toString();
-    if (!QStringList{QStringLiteral("calm"), QStringLiteral("fun"), QStringLiteral("live-sky"), QStringLiteral("photos"), QStringLiteral("battery-saver")}.contains(m_preset)) m_preset = QStringLiteral("custom");
+    if (!QStringList{QStringLiteral("calm"), QStringLiteral("fun"), QStringLiteral("live-sky"), QStringLiteral("photos"), QStringLiteral("battery-saver"),
+                     QStringLiteral("plus"), QStringLiteral("premium"), QStringLiteral("pro")}.contains(m_preset)) m_preset = QStringLiteral("custom");
     Q_EMIT presetChanged();
 }
 
@@ -1026,7 +1029,8 @@ void ScreenBotKcm::setShowWifiAnimation(bool value) {
 
 void ScreenBotKcm::setPerformanceMode(const QString &value) {
     if (value != QLatin1String("smooth") && value != QLatin1String("balanced")
-        && value != QLatin1String("battery-saver")) return;
+        && value != QLatin1String("battery-saver") && value != QLatin1String("extra-high")
+        && value != QLatin1String("ultra")) return;
     if (value == m_performanceMode) return;
     m_performanceMode = value;
     Q_EMIT performanceModeChanged();
@@ -1142,9 +1146,11 @@ void ScreenBotKcm::openSection(const QString &section) {
 
 void ScreenBotKcm::applyPreset(const QString &preset) {
     if (!QStringList{QStringLiteral("calm"), QStringLiteral("fun"), QStringLiteral("live-sky"),
-                    QStringLiteral("photos"), QStringLiteral("battery-saver")}.contains(preset)) return;
+                    QStringLiteral("photos"), QStringLiteral("battery-saver"), QStringLiteral("plus"),
+                    QStringLiteral("premium"), QStringLiteral("pro")}.contains(preset)) return;
     m_applyingPreset = true;
-    const bool playful = preset == QLatin1String("fun");
+    const bool quality = preset == QLatin1String("plus") || preset == QLatin1String("premium") || preset == QLatin1String("pro");
+    const bool playful = preset == QLatin1String("fun") || quality;
     const bool sky = preset == QLatin1String("live-sky") || preset == QLatin1String("calm");
     const bool battery = preset == QLatin1String("battery-saver");
     setTheme(preset == QLatin1String("photos") ? QStringLiteral("photos") : QStringLiteral("random"));
@@ -1157,7 +1163,11 @@ void ScreenBotKcm::applyPreset(const QString &preset) {
     setBobosEnabled(playful);
     setAmbientSoundEnabled(false);
     setReduceMotion(!playful && preset != QLatin1String("live-sky"));
-    setPerformanceMode(battery ? QStringLiteral("battery-saver") : QStringLiteral("balanced"));
+    const QString qualityMode = preset == QLatin1String("pro") ? QStringLiteral("ultra")
+        : preset == QLatin1String("premium") ? QStringLiteral("extra-high")
+        : preset == QLatin1String("plus") ? QStringLiteral("smooth")
+        : battery ? QStringLiteral("battery-saver") : QStringLiteral("balanced");
+    setPerformanceMode(qualityMode);
     setRainEnabled(playful || sky);
     setSnowEnabled(playful || sky);
     setThunderstormsEnabled(playful);
