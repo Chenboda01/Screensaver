@@ -182,16 +182,15 @@ private Q_SLOTS:
         view.resize(640, 900); QTest::qWait(300);
         QVERIFY(view.grabWindow().save(evidence + QStringLiteral("/simple-narrow.png")));
         view.resize(1000, 900);
-        kcm.activationRequested({QStringLiteral("weather")}); QTest::qWait(300);
+        auto *searchField = find("settingsSearch"); QVERIFY(searchField); QVERIFY(searchField->isVisible());
+        searchField->setProperty("text", QStringLiteral("Ambient")); QTest::qWait(100);
+        auto *result = find("search-result-weather"); QVERIFY(result); QVERIFY(result->isVisible());
+        result->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space); QTest::qWait(300);
         QVERIFY(kcm.advancedView()); QVERIFY(find("weatherSection")->isVisible());
         auto *flickable = view.rootObject()->property("flickable").value<QObject *>();
         QVERIFY(flickable); QVERIFY(flickable->property("contentY").toReal() > 0);
         QVERIFY(find("weatherSection")->property("expanded").toBool()); QVERIFY(!find("simpleSettings")->isVisible());
         QVERIFY(view.grabWindow().save(evidence + QStringLiteral("/advanced-weather.png")));
-        auto *searchField = find("settingsSearch"); QVERIFY(searchField);
-        searchField->setProperty("text", QStringLiteral("Ambient")); QTest::qWait(100);
-        auto *result = find("search-result-weather"); QVERIFY(result); QVERIFY(result->isVisible());
-        result->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space);
         QCOMPARE(kcm.requestedSection(), QStringLiteral("weather"));
         searchField->setProperty("text", QString());
         kcm.setAdvancedView(false); card = find("preset-photos"); card->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space);
@@ -199,6 +198,13 @@ private Q_SLOTS:
         QCOMPARE(kcm.requestedSection(), QStringLiteral("theme"));
         QVERIFY(find("presetInputGuidance")->isVisible());
         QTest::qWait(300); QVERIFY(view.grabWindow().save(evidence + QStringLiteral("/photo-guidance.png")));
+        card = find("preset-live-sky"); card->forceActiveFocus(); QTest::keyClick(&view, Qt::Key_Space);
+        QTest::qWait(300);
+        QCOMPARE(kcm.requestedSection(), QStringLiteral("liveSky"));
+        QVERIFY(kcm.liveSkyLocation().isEmpty());
+        QVERIFY(find("liveSkySetupGuidance")->isVisible());
+        QVERIFY(find("citySearch")->isVisible());
+        QVERIFY(view.grabWindow().save(evidence + QStringLiteral("/city-guidance.png")));
     }
 };
 

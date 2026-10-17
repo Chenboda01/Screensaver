@@ -83,7 +83,6 @@ KCMUtils.SimpleKCM {
             id: settingsSearch
             objectName: "settingsSearch"
             Layout.fillWidth: true
-            visible: kcm.advancedView
             placeholderText: i18nc("@info:placeholder", "Find a screensaver setting…")
             Accessible.name: i18nc("@label", "Find a screensaver setting")
             onAccepted: {
@@ -93,7 +92,7 @@ KCMUtils.SimpleKCM {
         }
         ColumnLayout {
             Layout.fillWidth: true
-            visible: kcm.advancedView && settingsSearch.text.length > 0
+            visible: settingsSearch.text.length > 0
             Repeater {
                 model: page.matchingSections(settingsSearch.text)
                 Controls.Button {
