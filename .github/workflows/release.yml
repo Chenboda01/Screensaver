@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags: ['V*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    # Reuse exactly the Python and KCM jobs that protect main.
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: [checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require green main CI for the tagged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/workflows/require-main-ci.sh
+      - name: Build and verify source ZIP
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^V[0-9]+([.][0-9]+)*$ ]]
+          git archive --format=zip --prefix="ScreenBot-Screensaver-$RELEASE_TAG/" \
+            --output="ScreenBot-Screensaver-$RELEASE_TAG.zip" HEAD \
+            . ':!releases' ':!AGENTS.md' ':!.omo'
+          unzip -t "ScreenBot-Screensaver-$RELEASE_TAG.zip"
+      - name: Publish verified release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" "ScreenBot-Screensaver-$RELEASE_TAG.zip" \
+            --verify-tag --title "ScreenBot Screensaver $RELEASE_TAG" --generate-notes

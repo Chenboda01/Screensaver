@@ -3,6 +3,7 @@
   <h1>ScreenBot Screensaver</h1>
   <p>A little robot, a lot of worlds. A playful screensaver for KDE Plasma 6 on Wayland.</p>
   <p>
+    <a href="https://github.com/Chenboda01/Screensaver/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/Chenboda01/Screensaver/actions/workflows/ci.yml/badge.svg?branch=main"></a>
     <a href="https://github.com/Chenboda01/Screensaver/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Chenboda01/Screensaver"></a>
     <a href="#platform-support-and-installation"><img alt="Platform" src="https://img.shields.io/badge/platform-KDE%20Plasma%206%20%7C%20Wayland-512bd4"></a>
     <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-4c9a70"></a>
