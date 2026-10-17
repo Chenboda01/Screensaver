@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## V23
+
+V23 adds source-backed, theme-aware facts and optional scene-matched ambient audio, alongside the recent photo, seasonal, media-card, and BobOS improvements.
 
 ### Added
 - Added an opt-in My photos theme with staged folder, recursion, interval, ordering, and fit settings; asynchronous local photo discovery/decoding, EXIF orientation, bounded cache, slow pan/zoom, cross-fades, and a friendly fallback.
@@ -10,7 +12,6 @@
 - Added vector decorations across themes, including New Year countdown/fireworks, Lunar New Year lanterns, spring petals, Halloween bats/pumpkins and Bob's witch hat, winter lights/snow and Bob's Santa hat, and birthday balloons/confetti. Reduced motion keeps decorative animation static and softer; Space gets no seasonal snow or shooting-star effects.
 - Added a lock-free `--preview --force-date YYYY-MM-DD[THH:MM[:SS]]` calendar preview. Forced dates are rejected in normal screensaver launches; KDE's real password lock remains authoritative.
 - Added an offline, source-noted "Did you know?" card with 30 kid-friendly facts per scene category, theme/weather/full-Moon matching, original Bob quotes, no-repeat cycles, smooth fades, complete adaptive text layout, localized headings, and Spanish translations. Corrected Edison patent dates and linked claims to the patent records. KDE settings control visibility, a 2–5 minute interval, and Facts/Quotes/Both; the card avoids Bob, the clock, BobOS, captions, and other overlays while following burn-in shifts.
-
 - Added optional scene-matched ambient audio, off by default, with a staged 0–100% volume control, Live Sky matching mode, quiet hours, a gentle fade-in, immediate shutdown, and automatic muting while MPRIS reports active playback (including titleless media while Now Playing is enabled). Live Sky rain intensity scales within the configured volume; a rain-and-rumble cue follows the shared visible-lightning event on the existing single stream, and Forest nights add occasional synthesized owl calls over crickets. Missing or broken assets are cached until their file fingerprints change, QtMultimedia remains optional, and the installed audio bundle includes provenance and license files.
 - Added an opt-in primary-screen Now playing card with background MPRIS metadata updates, pause fade-out, safe title shortening, and a translated KDE Clock setting that respects Apply/Discard. Media stays hidden in previews and when the session bus is unavailable.
 - Added Bob Camera with a bounded, in-memory selfie of the current theme and Live Sky, plus Bob Pet with animated snack and play scenes. Both apps respect Reduce motion and flashes. Camera photos appear in fictional Bob Files; neither app accesses devices, personal files, or external services.
