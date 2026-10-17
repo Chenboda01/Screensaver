@@ -8,9 +8,11 @@ from unittest.mock import patch
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 
 import pytest
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtGui import QImage, QPainter
 from PyQt6.QtWidgets import QApplication
+
+from raster_assertions import assert_raster_equal
 
 from bobos import BobOSPhase
 from screensaver import (
@@ -139,32 +141,38 @@ def test_off_rendering_matches_the_unshifted_reference(app: QApplication, tmp_pa
     app.processEvents()
     saver.start_time = 97.0
 
-    # Render through the production paintEvent with a fixed elapsed time.
-    actual = QImage(640, 360, QImage.Format.Format_ARGB32_Premultiplied)
-    actual.fill(Qt.GlobalColor.transparent)
-    with patch('screensaver.time.monotonic', return_value=100.0):
-        saver.render(actual)
+    fixed_clock = QDateTime.fromString('2026-10-16T12:34:00', Qt.DateFormat.ISODate)
+    with patch.object(QDateTime, 'currentDateTime', return_value=fixed_clock):
+        # Render through the production paintEvent with a fixed elapsed time.
+        actual = QImage(640, 360, QImage.Format.Format_ARGB32_Premultiplied)
+        actual.setDotsPerMeterX(round(saver.logicalDpiX() / .0254))
+        actual.setDotsPerMeterY(round(saver.logicalDpiY() / .0254))
+        actual.fill(Qt.GlobalColor.transparent)
+        with patch('screensaver.time.monotonic', return_value=100.0):
+            saver.render(actual)
 
-    # Render the pre-protection V22 sequence: no transforms, unshifted clock,
-    # and the same scene/Bob layers at the same timestamp.
-    expected = QImage(640, 360, QImage.Format.Format_ARGB32_Premultiplied)
-    expected.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(expected)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-    elapsed = 3.0
-    saver.draw_scenery(painter, 640, 360, elapsed)
-    saver.clock(painter, 640, 360)
-    status = saver.bobos_status(elapsed)
-    phase = status.phase
-    if phase not in {BobOSPhase.HOME, BobOSPhase.BROWSER, BobOSPhase.NOTIFICATION,
-                     BobOSPhase.FILES, BobOSPhase.TERMINAL, BobOSPhase.GAMES,
-                     BobOSPhase.SETTINGS, BobOSPhase.CHAT, BobOSPhase.MAPS,
-                     BobOSPhase.WEATHER, BobOSPhase.CALENDAR, BobOSPhase.APP_STORE,
-                     BobOSPhase.SHUTDOWN}:
-        saver.bob(painter, 640, 360, elapsed, status)
-        saver.caption(painter, 640, 360, elapsed, phase)
-    painter.end()
-    assert actual == expected
+        # Render the pre-protection V22 sequence: no transforms, unshifted clock,
+        # and the same scene/Bob layers at the same timestamp.
+        expected = QImage(640, 360, QImage.Format.Format_ARGB32_Premultiplied)
+        expected.setDotsPerMeterX(actual.dotsPerMeterX())
+        expected.setDotsPerMeterY(actual.dotsPerMeterY())
+        expected.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(expected)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        elapsed = 3.0
+        saver.draw_scenery(painter, 640, 360, elapsed)
+        saver.clock(painter, 640, 360)
+        status = saver.bobos_status(elapsed)
+        phase = status.phase
+        if phase not in {BobOSPhase.HOME, BobOSPhase.BROWSER, BobOSPhase.NOTIFICATION,
+                         BobOSPhase.FILES, BobOSPhase.TERMINAL, BobOSPhase.GAMES,
+                         BobOSPhase.SETTINGS, BobOSPhase.CHAT, BobOSPhase.MAPS,
+                         BobOSPhase.WEATHER, BobOSPhase.CALENDAR, BobOSPhase.APP_STORE,
+                         BobOSPhase.SHUTDOWN}:
+            saver.bob(painter, 640, 360, elapsed, status)
+            saver.caption(painter, 640, 360, elapsed, phase)
+        painter.end()
+        assert_raster_equal(actual, expected, 'burn-in-off', exact=True)
     saver.close()
 
 

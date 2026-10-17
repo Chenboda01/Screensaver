@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_call:
   push:
     branches: [main]
   pull_request:
@@ -25,18 +26,20 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes libegl1 libgl1 libxkbcommon0
-          python -m pip install PyQt6 pytest Pillow
+          python -m pip install PyQt6==6.11.0 PyQt6-Qt6==6.11.0 pytest Pillow
       - name: Compile Python sources
         run: python -m py_compile *.py
       - name: Run all tests without a display or network
         # A network namespace blocks both Python sockets and Qt's native networking.
-        run: sudo unshare --net env QT_QPA_PLATFORM=offscreen "$(command -v python)" -m pytest tests -v --junitxml=test-results.xml
+        run: sudo unshare --net env QT_QPA_PLATFORM=offscreen SCREENBOT_RASTER_ARTIFACTS=raster-failures "$(command -v python)" -m pytest tests -v --junitxml=test-results.xml
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: python-test-results
-          path: test-results.xml
+          path: |
+            test-results.xml
+            raster-failures/
 
   kcm:
     name: Qt 6 / KDE Frameworks 6 build

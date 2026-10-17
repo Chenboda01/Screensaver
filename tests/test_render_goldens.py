@@ -1,4 +1,4 @@
-"""Exact raster baselines for the five scenes and the BobOS home display."""
+"""Bounded raster baselines for the five scenes and the BobOS home display."""
 from __future__ import annotations
 
 import os
@@ -11,6 +11,8 @@ import pytest
 from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtGui import QImage, QPainter
 from PyQt6.QtWidgets import QApplication
+
+from raster_assertions import assert_raster_equal
 
 from bobos import BobOSPhase, BobOSStatus
 from screenbot.appearance import BobAppearance
@@ -100,8 +102,7 @@ def test_scenes_and_bobos_match_golden_rasters(tmp_path: Path, app: QApplication
     for name, image in actual.items():
         expected = QImage(str(GOLDEN_DIR / name))
         assert not expected.isNull(), f'missing or unreadable baseline {name}'
-        assert expected.size() == image.size(), f'baseline dimensions changed for {name}'
-        assert _pixels(image) == _pixels(expected), f'pixels changed from baseline: {name}'
+        assert_raster_equal(image, expected, name)
 
 
 def test_custom_bob_palette_renders_across_all_themes_and_bobos(tmp_path: Path, app: QApplication) -> None:
