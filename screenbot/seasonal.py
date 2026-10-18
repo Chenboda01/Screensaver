@@ -11,6 +11,8 @@ import unicodedata
 from types import MappingProxyType
 from typing import Final, Mapping
 
+from screenbot.settings import get_bool
+
 
 class SeasonalEvent(StrEnum):
     """Stable event identifiers persisted by the settings module."""
@@ -122,10 +124,10 @@ class SeasonalPreferences:
 def seasonal_preferences(settings: configparser.ConfigParser) -> SeasonalPreferences:
     """Read only known local event options; New Year is the sole default event."""
     section = "Screensaver"
-    enabled = settings.getboolean(section, "seasonal_enabled", fallback=True)
+    enabled = get_bool(settings, "seasonal_enabled", True)
     events = frozenset(
         event for event, key in EVENT_SETTINGS.items()
-        if settings.getboolean(section, key, fallback=event is SeasonalEvent.NEW_YEAR)
+        if get_bool(settings, key, event is SeasonalEvent.NEW_YEAR)
     )
     birthday = Birthday.parse(
         settings.get(section, "seasonal_birthday_date", fallback=""),

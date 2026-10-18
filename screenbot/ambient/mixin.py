@@ -7,6 +7,7 @@ from pathlib import Path
 import time
 
 from live_sky_network import LiveWeather
+from screenbot.settings import get_bool
 from screenbot.ambient.engine import AmbientSoundEngine
 from screenbot.ambient.policy import SceneSound, parse_theme, parse_weather
 
@@ -29,7 +30,7 @@ class AmbientSoundMixin:
 
     def init_ambient_sound(self, settings: ConfigParser) -> None:
         """Create the single player after reading validated persisted settings."""
-        self.ambient_sound_enabled = settings.getboolean('Screensaver', 'ambient_sound_enabled', fallback=False)
+        self.ambient_sound_enabled = get_bool(settings, 'ambient_sound_enabled', False)
         try:
             volume = settings.getint('Screensaver', 'ambient_sound_volume', fallback=25)
         except ValueError:
@@ -37,7 +38,7 @@ class AmbientSoundMixin:
         self.ambient_live_sky_only = (
             settings.get('Screensaver', 'ambient_sound_mode', fallback='always').strip() == 'live-sky'
         )
-        self.ambient_quiet_hours = settings.getboolean('Screensaver', 'ambient_quiet_hours', fallback=False)
+        self.ambient_quiet_hours = get_bool(settings, 'ambient_quiet_hours', False)
         root = Path(__file__).resolve().parents[2]
         self.ambient_sound = AmbientSoundEngine(
             self, enabled=self.ambient_sound_enabled and not self.is_preview,

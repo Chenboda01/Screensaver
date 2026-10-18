@@ -10,6 +10,7 @@ from PyQt6.QtCore import Qt, QSize, QRectF
 from PyQt6.QtGui import QColor, QFont, QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import QGraphicsBlurEffect, QGraphicsPixmapItem, QGraphicsScene
 
+from screenbot.settings import get_bool
 from screenbot.photos import (
     CATALOG_LIMIT_MESSAGE,
     EMPTY_LIBRARY_MESSAGE,
@@ -88,7 +89,7 @@ class PhotoSlideshowRenderer:
         return cls(
             owner,
             folder=folder or default_photo_folder(),
-            include_subfolders=settings.getboolean('Screensaver', 'photo_include_subfolders', fallback=False),
+            include_subfolders=get_bool(settings, 'photo_include_subfolders', False),
             interval_seconds=interval,
             order=order,
             fit=fit,

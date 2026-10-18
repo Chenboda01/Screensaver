@@ -1,5 +1,6 @@
 import configparser
 import random
+import sys
 from pathlib import Path
 from typing import Final
 
@@ -10,12 +11,29 @@ from live_sky_network import read_location_setting
 
 
 def read_settings(config_path: Path | None = None) -> configparser.ConfigParser:
-    settings = configparser.ConfigParser()
+    settings = configparser.ConfigParser(interpolation=None, strict=False)
     path = config_path if config_path is not None else Path.home() / '.config' / 'screenbot-screensaver.ini'
-    settings.read(path)
+    try:
+        with path.open(encoding='utf-8') as config_file:
+            settings.read_file(config_file)
+    except FileNotFoundError:
+        return settings
+    except (OSError, UnicodeError, configparser.Error) as error:
+        print(f'ScreenBot: could not read settings from {path}; using defaults: {error}', file=sys.stderr)
+        settings.clear()
+        settings.defaults().clear()
+        return settings
     if settings.has_section('Screensaver'):
         settings.set('Screensaver', 'live_sky_location', read_location_setting(QSettings(str(path), QSettings.Format.IniFormat)))
     return settings
+
+def get_bool(settings: configparser.ConfigParser, key: str, default: bool) -> bool:
+    try:
+        return settings.getboolean('Screensaver', key, fallback=default)
+    except ValueError:
+        print(f'ScreenBot: invalid boolean setting {key}; using default {default}.', file=sys.stderr)
+        return default
+
 
 def selected_theme(settings):
     selection = settings.get('Screensaver', 'theme', fallback='random').strip().lower()
