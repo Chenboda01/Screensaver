@@ -11,7 +11,25 @@ stop_powerdevil() {
   POWER_PID=
  fi
 }
-trap stop_powerdevil EXIT
+MOCK_PIDS=()
+cleanup() {
+ stop_powerdevil
+ for pid in "${MOCK_PIDS[@]}"; do kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; done
+}
+trap cleanup EXIT
+# Only hardware services are mocked; KWin and PowerDevil dispatch the real idle event.
+for template in upower logind; do
+ "$SCREENBOT_PYTHON" -m dbusmock --system -t "$template" > "$SCREENBOT_IDLE_EVIDENCE/mock-$template.log" 2>&1 &
+ MOCK_PIDS+=("$!")
+done
+for service in org.freedesktop.UPower org.freedesktop.login1; do
+ ready=false
+ for attempt in {1..100}; do
+  if [[ "$(qdbus6 org.freedesktop.DBus / org.freedesktop.DBus.NameHasOwner "$service")" == true ]]; then ready=true; break; fi
+  sleep .1
+ done
+ "$ready" || { echo "FAIL private power service unavailable: $service" >&2; exit 1; }
+done
 start_powerdevil() {
  "$SCREENBOT_POWERDEVIL" > "$SCREENBOT_IDLE_EVIDENCE/powerdevil-$1.log" 2>&1 &
  POWER_PID=$!
@@ -26,7 +44,7 @@ start_powerdevil before
 DEST="$HOME/ScreenBot/screensaver"
 cut -d' ' -f1 /proc/uptime > "$SCREENBOT_IDLE_EVIDENCE/setup-monotonic.txt"
 bash "$DEST/idle-trigger.sh" --setup 1 > "$SCREENBOT_IDLE_EVIDENCE/setup.log"
-for attempt in {1..75}; do
+for ((attempt=0; attempt<SCREENBOT_IDLE_MAX_SECONDS; attempt++)); do
  if [[ -s "$SCREENBOT_IDLE_EVIDENCE/frames.jsonl" ]]; then break; fi
  sleep 1
 done
@@ -40,7 +58,7 @@ assert (root/'frames.jsonl').exists(), 'ScreenBot did not render after its idle 
 started = float((root/'setup-monotonic.txt').read_text())
 fired = float((root/'action-monotonic.txt').read_text())
 frames = [json.loads(line) for line in (root/'frames.jsonl').read_text().splitlines()]
-assert 55 <= fired-started <= 75, (started, fired)
+assert 55 <= fired-started <= int(os.environ["SCREENBOT_IDLE_MAX_SECONDS"]), (started, fired)
 assert len(frames) == 1 and frames[0]['fullscreen'] and not frames[0]['preview'], frames
 assert not frames[0]['password_lock'], frames
 (root/'timing.json').write_text(json.dumps({'setup_monotonic': started, 'action_monotonic': fired, 'elapsed_seconds': fired-started, 'frame': frames[0]}, indent=2)+'\n')

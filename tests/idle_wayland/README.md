@@ -1,7 +1,8 @@
 # Native Plasma idle integration test
 
 Run on Linux with Plasma 6's `kwin_wayland`, PowerDevil, `dbus-run-session`,
-Qt/KDE build dependencies, and Python 3 with PyQt6/QtTest:
+Qt/KDE build dependencies, and Python 3 with PyQt6/QtTest, PyGObject, and
+python-dbusmock 0.38.1. Run as a normal user:
 
 ```sh
 bash tests/test_idle_trigger_wayland.sh .omo/evidence/idle-native-run
@@ -33,7 +34,48 @@ configuration nor signals their KWin, PowerDevil, applications, or agents.
 `password_lock=false` is scoped to the test HOME. The active desktop and its
 password-lock settings remain independent.
 
-This is an optional compositor integration test, not an offscreen unit test.
+The `plasma-e2e` job in `.github/workflows/ci.yml` runs the installer lifecycle,
+Python runtime selection, and this real compositor test on every PR and main
+push. Releases reuse the same CI workflow and cannot publish if this job fails;
+`require-main-ci.sh` additionally requires green main CI for the tagged commit.
+Repository administrators should require the check named
+`Install → idle trigger → uninstall (KDE Plasma 6)` in branch protection.
+
+Run the same Arch environment locally from a repository checkout (Docker required):
+
+```sh
+docker run --rm -it -v "$PWD":/source:ro archlinux:latest bash
+pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules \
+  qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
+  kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux
+python -m venv --system-site-packages /opt/plasma-test
+/opt/plasma-test/bin/pip install python-dbusmock==0.38.1
+useradd --create-home ci
+cp -a /source /home/ci/src
+chown -R ci:ci /home/ci/src
+su ci
+cd /home/ci/src
+bash tests/test_installer.sh evidence/installer
+bash tests/test_python_runtime.sh evidence/python-runtime
+SCREENBOT_PYTHON=/opt/plasma-test/bin/python SCREENBOT_IDLE_MAX_SECONDS=90 \
+  bash tests/test_idle_trigger_wayland.sh evidence/idle-wayland
+```
+
+Copy `evidence/` out of the container before exiting if needed. Do not copy a
+checkout with existing build directories; CMake caches contain absolute paths.
+CI uploads `plasma-e2e-evidence` even after failure, including stage output,
+package versions, install/uninstall logs, mock service logs, PowerDevil logs,
+`timing.json`, and `idle-started-screenbot.png` when rendering succeeds. Failed
+runs may lack later artifacts; the stage logs identify where execution stopped.
+
+UPower (on AC) and logind are mocked on the private bus only. PowerDevil, KWin,
+the idle event, installer, launcher, and renderer remain real. Missing mocks or
+an unavailable AC profile fail explicitly. `SCREENBOT_IDLE_MAX_SECONDS` raises
+only the upper timing bound (75 by default, 90 in CI, maximum 120); the 55-second
+lower bound remains fixed. This allows shared-runner scheduling delays without
+accepting early launches. The entire private session also has a hard timeout.
+
+This is a required compositor integration test in CI.
 Failure to initialize the private desktop, missing actual idle dispatch, missing
-rendered frame, timing outside 55–75 seconds, or a post-uninstall launch all return
+rendered frame, timing outside the configured window, or a post-uninstall launch all return
 nonzero. Do not count unsupported compositor environments as passing.

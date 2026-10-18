@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# Optional real-compositor integration test; requires KWin, PowerDevil, and build deps.
+# Real-compositor integration test; requires KWin, PowerDevil, and build deps.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVIDENCE="${1:-$ROOT/.omo/evidence/idle-wayland-$(date +%Y%m%d-%H%M%S)}"
+[[ "$EUID" != 0 ]] || { echo "FAIL run this test as a normal user." >&2; exit 2; }
+export SCREENBOT_IDLE_MAX_SECONDS="${SCREENBOT_IDLE_MAX_SECONDS:-75}"
+[[ "$SCREENBOT_IDLE_MAX_SECONDS" =~ ^[0-9]+$ ]] && ((SCREENBOT_IDLE_MAX_SECONDS >= 75 && SCREENBOT_IDLE_MAX_SECONDS <= 120)) || { echo "FAIL idle upper bound must be 75–120 seconds." >&2; exit 2; }
 mkdir -p "$EVIDENCE"
 EVIDENCE="$(cd "$EVIDENCE" && pwd)"
 [[ ! -e "$EVIDENCE/home" ]] || { echo 'Use a fresh evidence directory.' >&2; exit 2; }
-for tool in kwin_wayland dbus-run-session qdbus6 kreadconfig6 kwriteconfig6 timeout; do command -v "$tool" >/dev/null; done
+for tool in kwin_wayland dbus-run-session qdbus6 kreadconfig6 kwriteconfig6 timeout; do command -v "$tool" >/dev/null || { echo "FAIL missing required tool: $tool" >&2; exit 2; }; done
 POWERDEVIL="${SCREENBOT_POWERDEVIL:-/usr/lib/org_kde_powerdevil}"
 [[ -x "$POWERDEVIL" ]] || { echo 'Set SCREENBOT_POWERDEVIL to the PowerDevil executable.' >&2; exit 2; }
 source "$ROOT/python-runtime.sh"
 screenbot_select_python
+"$SCREENBOT_PYTHON" -c "import dbusmock, gi" || { echo "FAIL install python-dbusmock and PyGObject for the selected Python." >&2; exit 2; }
 TEST_HOME="$EVIDENCE/home"
 mkdir -p "$TEST_HOME/.config"
 RUNTIME="$(mktemp -d /tmp/screenbot-idle-XXXXXX)"
@@ -47,7 +51,7 @@ show_agent_status=false
 EOF
 # No services may auto-activate; both bus endpoints are private, including system bus.
 env "${COMMON[@]}" WAYLAND_DISPLAY=sb-idle QT_QPA_PLATFORM=wayland LIBGL_ALWAYS_SOFTWARE=1 KDE_DEBUG=1 \
- timeout --foreground 180 dbus-run-session --config-file="$ROOT/tests/idle_wayland/private-bus.conf" -- \
+ timeout --foreground "$((SCREENBOT_IDLE_MAX_SECONDS + 120))" dbus-run-session --config-file="$ROOT/tests/idle_wayland/private-bus.conf" -- \
  bash -c 'export DBUS_SYSTEM_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS"; exec kwin_wayland --virtual --no-lockscreen --no-global-shortcuts --no-kactivities --socket sb-idle --exit-with-session "$1"' \
- _ "$ROOT/tests/idle_wayland/session.sh" > "$EVIDENCE/session.log" 2>&1
+ _ "$ROOT/tests/idle_wayland/session.sh" > "$EVIDENCE/session.log" 2>&1 || { status=$?; cat "$EVIDENCE/session.log"; exit "$status"; }
 cat "$EVIDENCE/session.log"

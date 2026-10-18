@@ -56,3 +56,50 @@ jobs:
         run: cmake -S kcm -B build
       - name: Build KDE settings module
         run: cmake --build build --parallel 2
+
+  plasma-e2e:
+    name: Install → idle trigger → uninstall (KDE Plasma 6)
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install Plasma 6 runtime and build dependencies
+        run: |
+          exec > >(tee /tmp/plasma-bootstrap.log) 2>&1
+          pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules \
+            qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
+            kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux
+          python -m venv --system-site-packages /opt/plasma-test
+          /opt/plasma-test/bin/pip install python-dbusmock==0.38.1
+          useradd --create-home ci
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare user workspace and evidence
+        run: |
+          mkdir -p evidence
+          chown -R ci:ci "$GITHUB_WORKSPACE"
+          pacman -Q kwin powerdevil qt6-tools python python-pyqt6 mesa > evidence/packages.txt
+      - name: Installer lifecycle
+        run: runuser -u ci -- bash -o pipefail -c 'bash tests/test_installer.sh evidence/installer 2>&1 | tee evidence/installer.log'
+      - name: Python interpreter selection
+        if: ${{ !cancelled() }}
+        run: runuser -u ci -- bash -o pipefail -c 'bash tests/test_python_runtime.sh evidence/python-runtime 2>&1 | tee evidence/python-runtime.log'
+      - name: Real Wayland idle trigger and uninstall
+        if: ${{ !cancelled() }}
+        run: |
+          runuser -u ci -- env SCREENBOT_PYTHON=/opt/plasma-test/bin/python \
+            SCREENBOT_IDLE_MAX_SECONDS=90 bash -o pipefail -c \
+            'bash tests/test_idle_trigger_wayland.sh evidence/idle-wayland 2>&1 | tee evidence/idle-wayland.log'
+      - name: Upload Plasma lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: plasma-e2e-evidence
+          path: |
+            evidence/
+            /tmp/plasma-bootstrap.log
+          if-no-files-found: error
