@@ -2,14 +2,16 @@
 set -euo pipefail
 IDLE=ask
 MINUTES=5
+STANDALONE=false
 while (($#)); do
  case "$1" in
   --help|-h)
    cat <<'EOF'
-Usage: bash install.sh [--idle-minutes N | --no-idle]
+Usage: bash install.sh [--standalone] [--idle-minutes N | --no-idle]
 Install ScreenBot and its KDE settings module into your account, without sudo.
   --idle-minutes N  Enable Plasma's idle trigger after 1-120 minutes (explicit consent).
   --no-idle         Leave idle configuration unchanged and print manual setup steps.
+  --standalone      Install the runtime without KDE; configure your own idle hook.
   --help           Show this help without building or modifying files.
 Without an option, ask whether to enable idle start (default 5 minutes).
 Non-interactive input defaults to leaving idle configuration unchanged.
@@ -22,9 +24,14 @@ EOF
    [[ $# -ge 2 && "$2" =~ ^[0-9]{1,3}$ ]] && ((10#$2 >= 1 && 10#$2 <= 120)) || { echo 'Expected --idle-minutes 1-120.' >&2; exit 2; }
    IDLE=yes; MINUTES="$2"; shift 2 ;;
   --no-idle) IDLE=no; shift ;;
+  --standalone) STANDALONE=true; shift ;;
   *) echo "Unknown option: $1. See install.sh --help." >&2; exit 2 ;;
  esac
 done
+if $STANDALONE && [[ "$IDLE" == yes ]]; then
+ echo '--idle-minutes requires Plasma installation; configure an external idle hook for standalone mode.' >&2
+ exit 2
+fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST="$HOME/ScreenBot/screensaver"
 PREFIX="$HOME/.local"
@@ -35,14 +42,18 @@ if [[ "$ROOT" == "$DEST" ]]; then
 fi
 source "$ROOT/python-runtime.sh"
 screenbot_select_python
-for tool in cmake c++ make bash flock; do
- command -v "$tool" >/dev/null || { echo "Missing $tool; install CMake and build tools first." >&2; exit 1; }
+TOOLS=(bash flock)
+if ! $STANDALONE; then TOOLS+=(cmake c++ make); fi
+for tool in "${TOOLS[@]}"; do
+ command -v "$tool" >/dev/null || { echo "Missing required tool: $tool. Install it and retry." >&2; exit 1; }
 done
 mapfile -d '' RUNTIME_MODULES < <(find "$ROOT/screenbot" -type f -name '*.py' -print0)
 "$SCREENBOT_PYTHON" -m py_compile "$ROOT/screensaver.py" "$ROOT/screen_session.py" "$ROOT/agent_prompt.py" "$ROOT/bobos.py" "$ROOT/live_sky.py" "$ROOT/live_sky_network.py" "$ROOT/live_sky_render.py" "${RUNTIME_MODULES[@]}"
+if ! $STANDALONE; then
 echo 'Building ScreenBot KDE Settings module...'
 cmake -S "$ROOT/kcm" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PREFIX" -DBUILD_TESTING=OFF
 cmake --build "$BUILD" --parallel 2
+fi
 # Only change working screensaver after the full build succeeds.
 mkdir -p "$HOME/ScreenBot"
 if [[ -d "$DEST" ]]; then
@@ -76,6 +87,10 @@ install -m 755 "$ROOT/uninstall.sh" "$DEST/uninstall.sh"
 install -m 644 "$ROOT/python-runtime.sh" "$DEST/python-runtime.sh"
 printf '%s\n' "$SCREENBOT_PYTHON" > "$DEST/python-path"
 echo "Using Python 3: $SCREENBOT_PYTHON"
+if $STANDALONE; then
+ printf 'standalone\n' > "$DEST/install-mode"
+else
+ printf 'plasma\n' > "$DEST/install-mode"
 LOCATION_DATA="$PREFIX/share/screenbot-screensaver"
 mkdir -p "$LOCATION_DATA"
 install -m 644 "$ROOT/countries_and_cities.txt" "$LOCATION_DATA/countries_and_cities.txt"
@@ -88,11 +103,17 @@ ENV_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/plasma-workspace/env"
 ENV_FILE="$ENV_DIR/screenbot-kcm.sh"
 mkdir -p "$ENV_DIR"
 install -m 755 "$ROOT/plasma-session-env.sh" "$ENV_FILE"
+fi
 mapfile -t BACKUPS < <(find "$HOME/ScreenBot" -mindepth 1 -maxdepth 1 -type d -name 'screensaver-backup-*' -printf '%f\n' | sort -r)
 for BACKUP in "${BACKUPS[@]:3}"; do
  rm -rf -- "$HOME/ScreenBot/$BACKUP"
  echo "Removed old installation backup: $BACKUP"
 done
+if $STANDALONE; then
+ echo 'Standalone runtime installed. Configure xidlehook as described in README.md; ScreenBot does not lock your session.'
+ echo 'Manual launch: bash ~/ScreenBot/screensaver/start.sh --manual'
+ exit 0
+fi
 if [[ "$IDLE" == ask ]]; then
  read -r -p 'Start ScreenBot automatically when idle? [Y/n] ' ANSWER || ANSWER=n
  case "$ANSWER" in

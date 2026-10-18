@@ -3,6 +3,13 @@
 set -euo pipefail
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/screenbot"
 LOG="$LOG_DIR/screenbot.log"
+if [[ -z "${QT_QPA_PLATFORM:-}" ]]; then
+    if [[ "${XDG_SESSION_TYPE:-}" == x11 || ( -z "${WAYLAND_DISPLAY:-}" && -n "${DISPLAY:-}" ) ]]; then
+        export QT_QPA_PLATFORM=xcb
+    else
+        export QT_QPA_PLATFORM=wayland
+    fi
+fi
 
 # Never persist arbitrary stderr: settings values, exception messages and Qt
 # diagnostics can contain locations, photo paths, media titles or agent text.
@@ -80,7 +87,6 @@ case "${1:-}" in
         cd "$HOME/ScreenBot/screensaver"
         source ./python-runtime.sh
         screenbot_select_python ./python-path
-        export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
         [[ "$1" != --manual ]] || shift
         exec "$SCREENBOT_PYTHON" screensaver.py "$@"
         ;;
@@ -99,7 +105,6 @@ if ((STATUS != 0)); then
     record_result "failed: ${DIAGNOSTICS%%$'\n'*}" "$STATUS"
     exit "$STATUS"
 fi
-export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
 if ! command -v flock >/dev/null; then
     record_result 'failed: install flock (util-linux) to enable automatic launches' 1
     exit 1
