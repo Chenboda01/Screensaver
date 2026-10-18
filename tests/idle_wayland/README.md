@@ -44,23 +44,15 @@ Repository administrators should require the check named
 Run the same Arch environment locally from a repository checkout (Docker required):
 
 ```sh
-docker run --rm -it -v "$PWD":/source:ro archlinux:latest bash
-pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules \
-  qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
-  kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap
-python -m venv --system-site-packages /opt/plasma-test
-/opt/plasma-test/bin/pip install python-dbusmock==0.38.1
-# Inside this disposable container only: allow unprivileged virtual KWin execution.
-setcap -r "$(command -v kwin_wayland)"
-useradd --create-home ci
-cp -a /source /home/ci/src
-chown -R ci:ci /home/ci/src
-su ci
-cd /home/ci/src
-bash tests/test_installer.sh evidence/installer
-bash tests/test_python_runtime.sh evidence/python-runtime
-SCREENBOT_PYTHON=/opt/plasma-test/bin/python SCREENBOT_IDLE_MAX_SECONDS=90 \
-  bash tests/test_idle_trigger_wayland.sh evidence/idle-wayland
+sudo modprobe udmabuf
+# On a disposable VM only, grant the container test user device access.
+sudo chmod a+rw /dev/udmabuf
+mkdir -p /tmp/screenbot-ci-source
+git archive HEAD | tar -x -C /tmp/screenbot-ci-source
+docker run --rm --device /dev/udmabuf \
+  -v /tmp/screenbot-ci-source:/src -w /src archlinux:latest \
+  bash tests/idle_wayland/ci.sh
+# Evidence remains in /tmp/screenbot-ci-source/evidence.
 ```
 
 Arch packages KWin with `cap_sys_nice=ep`. Docker's default capability bounding
@@ -69,8 +61,13 @@ CI removes that file capability inside the disposable container and verifies
 KWin executes as the normal test user. Software-rendered virtual KWin needs no
 realtime scheduling privilege. Do not apply this container setup to your host.
 
-Copy `evidence/` out of the container before exiting if needed. Do not copy a
-checkout with existing build directories; CMake caches contain absolute paths.
+Plasma 6.8 requires `/dev/udmabuf` for its software render device even when
+using a virtual framebuffer. The Ubuntu runner loads that kernel module before
+starting Docker and passes only that device; the container is not privileged.
+A missing module/device fails the job. Run this setup only on a disposable VM
+or runner: it changes device permissions for the test account. The bootstrap
+script runs setup as root, then all three lifecycle tests as user `ci`.
+Do not copy a checkout with build directories; CMake caches contain absolute paths.
 CI uploads `plasma-e2e-evidence` even after failure, including stage output,
 package versions, install/uninstall logs, mock service logs, PowerDevil logs,
 `timing.json`, and `idle-started-screenbot.png` when rendering succeeds. Failed
