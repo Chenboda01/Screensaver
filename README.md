@@ -93,6 +93,44 @@ See the [changelog](CHANGELOG.md) for version history.
 
 The full screensaver and KDE System Settings module are supported on **Linux with KDE Plasma 6 and a Wayland session**. The installer builds a KDE settings component and uses Linux-specific Plasma, Wayland, and user-install paths.
 
+### Linux X11 and standalone window managers
+
+ScreenBot also supports a standalone animation runtime on X11 (including AwesomeWM, i3 and Xfce). KDE Frameworks and the KDE Settings module are optional in this mode. Install Python 3, PyQt6, Bash, util-linux (`flock`), procps (`pgrep`), and Qt's XCB platform dependencies using your distribution packages. For example, Debian/Ubuntu provides `python3-pyqt6`; Arch provides `python-pyqt6`. Extract a release ZIP, open a terminal in its folder, then run:
+
+```bash
+bash install.sh --standalone
+bash ~/ScreenBot/screensaver/start.sh --manual
+```
+
+The installer validates PyQt6 and installs the runtime without building a KDE module or adding a Plasma session hook. `--standalone` cannot be combined with `--idle-minutes`, which configures PowerDevil. Existing Plasma configuration from a previous installation is retained; uninstall the previous installation first when migrating desktops if you want its integrations removed.
+
+The launcher selects Qt's `xcb` backend when `XDG_SESSION_TYPE=x11`, or when `DISPLAY` is set without `WAYLAND_DISPLAY`. Otherwise it selects `wayland`. An explicit `QT_QPA_PLATFORM` overrides detection. ScreenBot uses Qt's screen enumeration for fullscreen output on each monitor; X11 window-manager placement and compositor behavior can vary. It does not grab input or provide secure locking. Escape, keyboard input and deliberate pointer movement dismiss the animation; previews retain their movement grace period. Reduce motion and burn-in shifting use the same settings as Plasma.
+
+For automatic idle activation, install **xidlehook** and add this command to your window manager's startup configuration (300 seconds = 5 minutes):
+
+```bash
+xidlehook --timer 300 "\"$HOME/ScreenBot/screensaver/start.sh\"" ''
+bash ~/ScreenBot/screensaver/start.sh --check
+```
+
+Run one instance of this hook per session. `--check` reports standalone mode, the last launch result, and whether a same-user `xidlehook` or `xss-lock` process references the installed launcher. It returns nonzero when no recognized hook is running; it cannot validate a window manager's custom timer. Remove the startup command when uninstalling. The automatic launcher retains AI-agent policy; `--manual` bypasses its prompt.
+
+**ScreenBot is an animation, not a password locker.** Configure your desktop's real locker (for example i3lock or xsecurelock) independently. Do not replace its `xss-lock` command with ScreenBot. KDE's password-lock countdown depends on KDE services and is unavailable as a security guarantee in standalone mode; keep `password_lock=false` here. ScreenBot never authenticates or unlocks a session.
+
+Without KDE Settings, edit `~/.config/screenbot-screensaver.ini` while ScreenBot is closed. Missing values keep their defaults; changes apply on the next launch. For example:
+
+```ini
+[Screensaver]
+theme=forest
+performance_mode=balanced
+show_clock=true
+clock_format=24h
+reduce_motion=false
+password_lock=false
+```
+
+Themes include `random`, `space`, `mountains`, `snow`, `forest`, `city`, `aurora`, `ocean`, `desert`, `underwater`, and `photos` (requires a photo folder). Performance values are `battery-saver`, `balanced`, `smooth`, `extra-high`, and `ultra`. KDE preset cards and Apply/Discard are available only in the KDE module; standalone configuration is edited directly. Uninstall with `bash ~/ScreenBot/screensaver/uninstall.sh --yes`.
+
 ### CachyOS and other Linux distributions with KDE Plasma 6 on Wayland
 
 1. Confirm that KDE Plasma 6 is installed and you are using its Wayland session.
@@ -168,11 +206,11 @@ Keep that environment available after installation. If you move or remove it, re
 
 ### Windows and macOS
 
-The full ScreenBot screensaver is not currently supported on Windows or macOS. There is no native installation guide for those systems: `install.sh` requires Linux, KDE Plasma 6, and Wayland, and the settings module integrates with KDE System Settings. Running the Python animation by itself would not install the screensaver or its KDE settings.
+The full ScreenBot screensaver is not currently supported on Windows or macOS. There is no native installation guide for those systems: `install.sh` requires Linux, and its default Plasma mode also requires KDE Plasma 6. The settings module integrates with KDE System Settings.
 
 ### Other operating systems
 
-There are no tested or supported installers for BSD or other non-Linux systems. On another Linux distribution, use the steps above only if it provides KDE Plasma 6 on Wayland and the listed Qt/KDE development dependencies.
+There are no tested or supported installers for BSD or other non-Linux systems. Other Linux distributions can use the Plasma installation with Qt/KDE development dependencies, or the standalone X11 installation above.
 
 ## Features
 

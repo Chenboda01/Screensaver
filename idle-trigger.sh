@@ -44,6 +44,28 @@ case "${1:-}" in
    last="$(awk '/^[0-9][0-9][0-9][0-9]-.* mode=idle outcome=/ { result=$0 } END { print result }' "$log")"
   fi
   printf 'Last automatic start: %s\nLog: %s\n' "${last:-No automatic start recorded.}" "$log"
+  if [[ -f "$HOME/ScreenBot/screensaver/install-mode" ]] &&
+     [[ "$(cat "$HOME/ScreenBot/screensaver/install-mode")" == standalone ]]; then
+   echo 'Installation: standalone; idle activation is managed by your window manager.'
+   if ! command -v pgrep >/dev/null; then
+    echo 'Cannot inspect idle hooks: install procps (pgrep).'; exit 2
+   fi
+   found=0
+   for mechanism in xidlehook xss-lock; do
+    while IFS= read -r pid; do
+     [[ -r "/proc/$pid/cmdline" ]] || continue
+     command_line="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)" || continue
+     if [[ "$command_line" == *"$LAUNCHER"* ]]; then
+      echo "Idle mechanism: $mechanism running with the ScreenBot launcher (timer is configured externally)."
+      found=1
+     fi
+    done < <(pgrep -u "$UID" -x "$mechanism" || true)
+   done
+   if ((found == 0)); then
+    echo 'No running xidlehook/xss-lock process referencing ScreenBot was detected. See README.md for idle setup.'
+   fi
+   ((found == 1)); exit
+  fi
   if ! config_tools; then echo 'Cannot check idle setup: install KDE kreadconfig6 and kwriteconfig6.'; exit 2; fi
   configured=0
   for profile in "${PROFILES[@]}"; do

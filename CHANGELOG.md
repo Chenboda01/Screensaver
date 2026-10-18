@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added standalone Linux/X11 installation without KDE build dependencies, automatic XCB selection, external idle-hook diagnostics, and manual configuration instructions. Plasma installation remains the default.
+
 ## V25
 
 V25 adds three higher-quality appearance presets with explicit frame-rate, scene-detail, and battery tradeoffs.
