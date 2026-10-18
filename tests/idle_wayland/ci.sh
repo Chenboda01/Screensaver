@@ -7,9 +7,15 @@ exec > >(tee evidence/bootstrap.log) 2>&1
 # Keep the whole distribution coherent, before Plasma 6.8 requires udmabuf,
 # which hosted Azure kernels do not provide. Update this snapshot deliberately.
 printf '%s\n' 'Server = https://archive.archlinux.org/repos/2026/10/01/$repo/os/$arch' > /etc/pacman.d/mirrorlist
-pacman -Syyuu --noconfirm --needed base-devel git cmake extra-cmake-modules \
+# Archive responses can exceed pacman's ten-second low-speed limit. Keep an
+# overall bound and retry downloads from cache without weakening signatures.
+for attempt in 1 2 3; do
+ if timeout 300 pacman --disable-download-timeout -Syyuu --noconfirm --needed base-devel git cmake extra-cmake-modules \
  qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
- kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap gdb
+ kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap gdb; then break; fi
+ ((attempt < 3)) || { echo 'FAIL Arch snapshot installation exhausted retries.' >&2; exit 1; }
+ sleep 5
+done
 python -m venv --system-site-packages /opt/plasma-test
 /opt/plasma-test/bin/pip install python-dbusmock==0.38.1
 # Arch's scheduling capability is outside Docker's default bounding set.
