@@ -123,13 +123,27 @@ If you decline setup, PowerDevil is unavailable, or another script already owns 
 
 To undo just ScreenBot's idle setup, run `bash ~/ScreenBot/screensaver/idle-trigger.sh --remove`, or clear its command in those profiles and Apply. The helper preserves another script if you replaced ScreenBot's command later. KDE Screen Locking remains independent.
 
+### Automatic-start diagnostics
+
+Run `bash ~/ScreenBot/screensaver/start.sh --check` to see the idle configuration, last automatic result, and log path, even when the saved Python interpreter is unavailable. The same information is available from `idle-trigger.sh --check`.
+
+Automatic launches record a UTC timestamp, `mode=idle`, outcome, and child exit code in `${XDG_STATE_HOME:-$HOME/.local/state}/screenbot/screenbot.log`. The result is recorded when the attempt finishes; `started` means the screensaver process exited successfully. Refusals (including saved or timeout policy), uncertain agent status, and an already-held launch lock are reported as skips. Runtime, prompt, and screensaver errors are failures. Skips still return success to PowerDevil, so their recorded child exit code can differ from the launcher exit code.
+
+The file is private (mode `600`) and keeps at most 200 lines / 64,000 bytes. Stderr is reduced to fixed diagnostic summaries **before** it is stored: known error categories and common exception types are retained, while arbitrary messages, traceback paths, settings values, city/coordinates, photo paths, media titles, and agent text are omitted. For full local diagnostics, use `bash ~/ScreenBot/screensaver/start.sh --manual`; manual launches and previews retain terminal output and do not modify this log. To report an idle failure, include `--check` output and the last 40 log lines, reviewing them before sharing:
+
+```bash
+tail -n 40 "${XDG_STATE_HOME:-$HOME/.local/state}/screenbot/screenbot.log"
+```
+
+The uninstaller removes the log by default while preserving unrelated files in the state directory.
+
 ### Uninstall and reinstall
 
 ```bash
 bash ~/ScreenBot/screensaver/uninstall.sh
 ```
 
-The uninstaller removes ScreenBot's application, installed KDE module and translations, city list, Plasma environment hook, and its idle action. It asks separately before deleting saved preferences (including section expansion state), Live Sky cache, and installation backups; the default is to keep each. It does not stop AI agents or other running applications. Log out and back in afterward so Plasma drops the Settings page and old environment hook.
+The uninstaller removes ScreenBot's application, installed KDE module and translations, city list, Plasma environment hook, its idle action, and its automatic-start log. It asks separately before deleting saved preferences (including section expansion state), Live Sky cache, and installation backups; the default is to keep each. It does not stop AI agents or other running applications. Log out and back in afterward so Plasma drops the Settings page and old environment hook.
 
 For scripted removal while keeping personal data:
 
