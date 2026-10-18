@@ -16,8 +16,51 @@ jobs:
     # Reuse exactly the Python and KCM jobs that protect main.
     uses: ./.github/workflows/ci.yml
 
-  publish:
+  package:
     needs: [checks]
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install packaging and KDE build dependencies
+        run: pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules qt6-declarative kcmutils kcoreaddons ki18n python-pyqt6 unzip
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and verify install ZIP
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^V[0-9]+([.][0-9]+)*$ ]]
+          git archive --format=zip --prefix="ScreenBot-Screensaver-$RELEASE_TAG/" \
+            --output="ScreenBot-Screensaver-$RELEASE_TAG.zip" HEAD
+          python .github/workflows/verify-release-zip.py \
+            "ScreenBot-Screensaver-$RELEASE_TAG.zip" "ScreenBot-Screensaver-$RELEASE_TAG/"
+      - name: Build and install from the extracted ZIP
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          staging="$(mktemp -d)"
+          unzip -q "ScreenBot-Screensaver-$RELEASE_TAG.zip" -d "$staging"
+          mkdir -p "$staging/home"
+          env HOME="$staging/home" XDG_CONFIG_HOME="$staging/home/.config" \
+            XDG_CACHE_HOME="$staging/home/.cache" \
+            bash "$staging/ScreenBot-Screensaver-$RELEASE_TAG/install.sh" --no-idle
+          test -s "$staging/home/ScreenBot/install_manifest.txt"
+          env HOME="$staging/home" XDG_CONFIG_HOME="$staging/home/.config" \
+            XDG_CACHE_HOME="$staging/home/.cache" QT_QPA_PLATFORM=offscreen \
+            python tests/release_zip_preview.py "$staging/home/ScreenBot/screensaver" "$staging/preview.png"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verified-release-zip
+          path: ScreenBot-Screensaver-*.zip
+          if-no-files-found: error
+
+  publish:
+    needs: [checks, package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -31,15 +74,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: bash .github/workflows/require-main-ci.sh
-      - name: Build and verify source ZIP
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          [[ "$RELEASE_TAG" =~ ^V[0-9]+([.][0-9]+)*$ ]]
-          git archive --format=zip --prefix="ScreenBot-Screensaver-$RELEASE_TAG/" \
-            --output="ScreenBot-Screensaver-$RELEASE_TAG.zip" HEAD \
-            . ':!releases' ':!AGENTS.md' ':!.omo'
-          unzip -t "ScreenBot-Screensaver-$RELEASE_TAG.zip"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: verified-release-zip
       - name: Publish verified release
         env:
           GH_TOKEN: ${{ github.token }}
