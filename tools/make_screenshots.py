@@ -48,7 +48,7 @@ def make_saver(theme: str, *, bobos: bool = False, photo_folder: Path | None = N
                photo_fit: str = "fill", preview: bool = False,
                show_clock: bool = False) -> Saver:
     """Use isolated settings with networking, locking, and the clock disabled."""
-    settings = configparser.ConfigParser()
+    settings = configparser.ConfigParser(interpolation=None, strict=False)
     settings["Screensaver"] = {
         "theme": theme, "show_clock": str(show_clock).lower(), "password_lock": "false",
         "live_sky_enabled": "false", "bobos_enabled": "false",
