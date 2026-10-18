@@ -27,7 +27,7 @@ cleanup() {
 trap cleanup EXIT
 export SCREENBOT_IDLE_EVIDENCE="$EVIDENCE" SCREENBOT_POWERDEVIL="$POWERDEVIL"
 export SCREENBOT_PYTHON
-COMMON=("HOME=$TEST_HOME" "XDG_CONFIG_HOME=$TEST_HOME/.config" "XDG_CACHE_HOME=$TEST_HOME/.cache" "XDG_RUNTIME_DIR=$RUNTIME")
+COMMON=("HOME=$TEST_HOME" "XDG_CONFIG_HOME=$TEST_HOME/.config" "XDG_CACHE_HOME=$TEST_HOME/.cache" "XDG_STATE_HOME=$TEST_HOME/.local/state" "XDG_DATA_HOME=$TEST_HOME/.local/share" "XDG_RUNTIME_DIR=$RUNTIME")
 env "${COMMON[@]}" bash "$ROOT/install.sh" --no-idle > "$EVIDENCE/install.log" 2>&1
 DEST="$TEST_HOME/ScreenBot/screensaver"
 # The two observers only record entry/frame timing and inject a close key.
