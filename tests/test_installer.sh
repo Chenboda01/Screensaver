@@ -36,6 +36,11 @@ run_home bash "$ROOT/install.sh" --no-idle > "$EVIDENCE/install-declined.log" 2>
 [[ -f "$SANDBOX/ScreenBot/screensaver/facts/translations/es.json" ]]
 [[ ! -e "$SANDBOX/.config/powerdevilrc" ]]
 while IFS= read -r entry; do [[ -z "$entry" || -f "$entry" ]]; done < "$SANDBOX/ScreenBot/install_manifest.txt"
+# Check installed content, including modules that are imported only on later paths.
+while IFS= read -r -d '' module; do
+ relative="${module#"$ROOT"/}"
+ cmp "$module" "$SANDBOX/ScreenBot/screensaver/$relative"
+done < <(find "$ROOT" -maxdepth 1 -name '*.py' -print0; find "$ROOT/screenbot" -name '*.py' -print0)
 echo 'PASS actual user-prefix install, persisted manifest, no-idle leaves PowerDevil untouched'
 if run_home bash "$SANDBOX/ScreenBot/screensaver/start.sh" --check > "$EVIDENCE/check-unconfigured.log"; then exit 1; fi
 write_key AC IdleTimeoutCommand /existing/user-script
@@ -207,8 +212,11 @@ printf '%s\n' "$SANDBOX/.local/keep-me" >> "$SANDBOX/ScreenBot/install_manifest.
 if run_home bash "$ROOT/uninstall.sh" --yes > "$EVIDENCE/unsafe-manifest.log" 2>&1; then exit 1; fi
 [[ -f "$SANDBOX/.local/keep-me" && -f "$SANDBOX/ScreenBot/install_manifest.txt" ]]
 cp "$EVIDENCE/clean-manifest.txt" "$SANDBOX/ScreenBot/install_manifest.txt"
+write_key Battery IdleTimeoutCommand ''
+run_home bash "$ROOT/idle-trigger.sh" --setup 1 > "$EVIDENCE/setup-before-purge.log"
 run_home bash "$ROOT/uninstall.sh" --yes --keep-settings --purge-settings --purge-cache --purge-backups > "$EVIDENCE/uninstall-scripted.log"
 [[ -f "$SANDBOX/.config/screenbot-screensaver.ini" && ! -e "$SANDBOX/.cache/screenbot" ]]
+for profile in AC Battery LowBattery; do [[ -z "$(read_key "$profile" IdleTimeoutCommand)" ]]; done
 [[ "$(find "$SANDBOX/ScreenBot" -maxdepth 1 -type d -name 'screensaver-backup-*' | wc -l)" == 0 ]]
 run_home env XDG_STATE_HOME="$CUSTOM_STATE" bash "$ROOT/uninstall.sh" --yes --purge-settings > "$EVIDENCE/uninstall-idempotent.log"
 [[ ! -e "$SANDBOX/.config/screenbot-screensaver.ini" && ! -e "$SANDBOX/.config/screenbot-kcm-state.ini" ]]
