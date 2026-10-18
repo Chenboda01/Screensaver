@@ -9,9 +9,9 @@ def test_standalone_install_and_platform_selection(tmp_path: Path) -> None:
     root = Path(__file__).resolve().parents[1]
     home = tmp_path / 'home with spaces'
     home.mkdir()
-    env = dict(os.environ, HOME=str(home), XDG_CONFIG_HOME=str(home / '.config'),
+    env = dict(os.environ, HOME=str(home), SCREENBOT_PYTHON=sys.executable, XDG_CONFIG_HOME=str(home / '.config'),
                XDG_STATE_HOME=str(home / '.state'))
-    for key in ('SCREENBOT_PYTHON', 'QT_QPA_PLATFORM', 'DISPLAY', 'WAYLAND_DISPLAY', 'XDG_SESSION_TYPE'):
+    for key in ('QT_QPA_PLATFORM', 'DISPLAY', 'WAYLAND_DISPLAY', 'XDG_SESSION_TYPE'):
         env.pop(key, None)
     # A failing build tool proves standalone installation never invokes CMake.
     bin_dir = tmp_path / 'bin'
@@ -21,7 +21,8 @@ def test_standalone_install_and_platform_selection(tmp_path: Path) -> None:
     cmake.chmod(0o755)
     env['PATH'] = str(bin_dir) + os.pathsep + env['PATH']
     result = subprocess.run(['bash', str(root / 'install.sh'), '--standalone'],
-                            env=env, capture_output=True, text=True, check=True)
+                            env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
     assert 'Standalone runtime installed' in result.stdout
     installed = home / 'ScreenBot/screensaver'
     assert (installed / 'install-mode').read_text().strip() == 'standalone'
