@@ -16,7 +16,7 @@ python -m venv --system-site-packages /opt/plasma-test
 getcap "$(command -v kwin_wayland)"
 setcap -r "$(command -v kwin_wayland)"
 test -z "$(getcap "$(command -v kwin_wayland)")"
-useradd --create-home ci
+useradd --create-home --uid "${SCREENBOT_CI_UID:-1000}" ci
 chown -R ci:ci /src
 runuser -u ci -- env QT_QPA_PLATFORM=offscreen kwin_wayland --version
 pacman -Q kwin powerdevil qt6-tools python python-pyqt6 mesa > evidence/packages.txt

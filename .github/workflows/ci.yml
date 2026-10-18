@@ -67,9 +67,17 @@ jobs:
           persist-credentials: false
       - name: Install, real Wayland idle trigger, and uninstall
         run: |
-          docker run --rm \
+          mkdir -p evidence
+          exec > >(tee evidence/container.log) 2>&1
+          docker run --rm --env SCREENBOT_CI_UID="$(id -u)" \
             --volume "$GITHUB_WORKSPACE:/src" --workdir /src \
             archlinux:latest bash tests/idle_wayland/ci.sh
+      - name: Make evidence readable by the host uploader
+        if: always()
+        run: |
+          mkdir -p evidence
+          sudo chown -R "$(id -u):$(id -g)" evidence
+          sudo chmod -R u+rwX evidence
       - name: Upload Plasma lifecycle evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

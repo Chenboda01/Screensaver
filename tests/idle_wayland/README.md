@@ -44,12 +44,12 @@ Repository administrators should require the check named
 Run the same Arch environment locally from a repository checkout (Docker required):
 
 ```sh
-mkdir -p /tmp/screenbot-ci-source
-git archive HEAD | tar -x -C /tmp/screenbot-ci-source
-docker run --rm \
-  -v /tmp/screenbot-ci-source:/src -w /src archlinux:latest \
+SCREENBOT_CI_SOURCE=$(mktemp -d /tmp/screenbot-ci-XXXXXX)
+git clone --no-hardlinks . "$SCREENBOT_CI_SOURCE"
+docker run --rm --env SCREENBOT_CI_UID="$(id -u)" \
+  -v "$SCREENBOT_CI_SOURCE:/src" -w /src archlinux:latest \
   bash tests/idle_wayland/ci.sh
-# Evidence remains in /tmp/screenbot-ci-source/evidence.
+# Evidence remains in "$SCREENBOT_CI_SOURCE/evidence".
 ```
 
 Arch packages KWin with `cap_sys_nice=ep`. Docker's default capability bounding
