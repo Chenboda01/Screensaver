@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 import pytest
-from PyQt6.QtCore import QEvent, QPointF, Qt
-from PyQt6.QtGui import QKeyEvent, QMouseEvent
+from PyQt6.QtCore import QEvent, QPoint, QPointF, Qt
+from PyQt6.QtGui import QCursor, QKeyEvent, QMouseEvent
 from PyQt6.QtWidgets import QApplication
 
 from bobos import BobOSPhase
@@ -78,24 +78,102 @@ def test_quick_preview_never_starts_bobos(app: QApplication, preview_config: Pat
     saver.close()
 
 
-@pytest.mark.parametrize('input_kind', ['key', 'mouse'])
+def send_motion(saver: Saver, position: QPointF) -> None:
+    event = QMouseEvent(QEvent.Type.MouseMove, QPointF(5, 5), position,
+                        Qt.MouseButton.NoButton, Qt.MouseButton.NoButton,
+                        Qt.KeyboardModifier.NoModifier)
+    QApplication.sendEvent(saver, event)
+
+
+@pytest.mark.parametrize('bobos', [False, True])
+@pytest.mark.parametrize(('motions', 'closes'), [
+    ([(0.1, 100), (1.49, 500)], False),
+    ([(1.5, 100), (1.51, 101)], False),
+    ([(2, 100), (2.1, 112)], False),
+    ([(2, 100), (2.1, 112.1)], True),
+    ([(2, 100), (2.1, 150)], True),
+    ([(2, 100), (2.1, 105), (2.2, 110), (2.3, 113)], True),
+    ([(1, 100), (2, 500)], False),
+    ([(2, 1000)], False),
+], ids=['grace', 'one-pixel', 'threshold', 'fractional-over-threshold',
+        'deliberate', 'slow-drag', 'post-grace-anchor', 'stale-cursor'])
+def test_preview_motion_uses_grace_and_fixed_anchor(
+        app: QApplication, preview_config: Path, bobos: bool,
+        motions: list[tuple[float, float]], closes: bool) -> None:
+    # Given a preview opened with a stale global cursor position.
+    with patch.object(QCursor, 'pos', return_value=QPoint(0, 0)):
+        saver = Saver(preview=not bobos, preview_bobos=bobos, config_path=preview_config)
+        saver.showFullScreen()
+    # When Qt delivers the motion sequence at controlled elapsed times.
+    with patch.object(QApplication, 'quit') as quit_app:
+        for elapsed, x in motions:
+            with patch('screenbot.app.time.monotonic', return_value=saver.start_time + elapsed):
+                send_motion(saver, QPointF(x, 100))
+    # Then only deliberate displacement from the post-grace anchor quits.
+    assert quit_app.call_count == int(closes)
+    saver.close()
+
+
+@pytest.mark.parametrize('input_kind', ['key', 'click'])
+@pytest.mark.parametrize('bobos', [False, True])
 def test_preview_closes_on_input_immediately(
-        app: QApplication, preview_config: Path, input_kind: str) -> None:
-    # Given a just-opened preview (no grace period).
-    saver = Saver(preview=True, config_path=preview_config)
+        app: QApplication, preview_config: Path, input_kind: str, bobos: bool) -> None:
+    # Given a just-opened preview during its motion grace period.
+    saver = Saver(preview=not bobos, preview_bobos=bobos, config_path=preview_config)
     saver.showFullScreen()
-    if input_kind == 'key':
-        event = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier)
-    else:
-        event = QMouseEvent(QEvent.Type.MouseMove, QPointF(5, 5),
-                            QPointF(saver.preview_mouse_origin) + QPointF(1, 0),
-                            Qt.MouseButton.NoButton, Qt.MouseButton.NoButton,
-                            Qt.KeyboardModifier.NoModifier)
+    event = (QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier)
+             if input_kind == 'key' else QMouseEvent(
+                 QEvent.Type.MouseButtonPress, QPointF(5, 5), QPointF(5, 5),
+                 Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton,
+                 Qt.KeyboardModifier.NoModifier))
     # When the real Qt input dispatcher delivers the input.
     with patch.object(QApplication, 'quit') as quit_app:
         QApplication.sendEvent(saver, event)
-    # Then application shutdown is requested.
+    # Then application shutdown is requested immediately.
     quit_app.assert_called_once()
+    saver.close()
+
+
+@pytest.mark.parametrize(('distance', 'closes'), [(1, False), (12, False), (13, True)])
+def test_preview_motion_continues_across_windows(
+        app: QApplication, preview_config: Path, distance: int, closes: bool) -> None:
+    # Given two preview windows, with the first event at a display boundary.
+    first = Saver(preview=True, config_path=preview_config)
+    second = Saver(preview=True, config_path=preview_config)
+    first.showFullScreen()
+    second.showFullScreen()
+    with patch('screenbot.app.time.monotonic', return_value=first.start_time + 2):
+        with patch.object(QApplication, 'quit'):
+            send_motion(first, QPointF(799, 100))
+        # When movement continues into the second window in logical coordinates.
+        with patch.object(QApplication, 'quit') as quit_app:
+            send_motion(second, QPointF(799 + distance, 100))
+    # Then the shared anchor is retained across the window boundary.
+    assert quit_app.call_count == int(closes)
+    first.close()
+    second.close()
+
+
+@pytest.mark.parametrize(('elapsed', 'positions', 'closes'), [
+    (1, [100, 150], False), (2, [100], False), (2, [100, 105], False),
+    (2, [100, 106], True), (2, [100, 104, 108, 112, 116], False),
+], ids=['grace', 'first-event', 'threshold', 'deliberate', 'per-event-delta'])
+def test_normal_mouse_motion_behavior_is_unchanged(
+        app: QApplication, preview_config: Path, elapsed: float,
+        positions: list[int], closes: bool) -> None:
+    # Given a normal screensaver whose agent workers have not been started.
+    saver = Saver(config_path=preview_config)
+    saver.showFullScreen()
+    # When local mouse events arrive during or after normal grace.
+    with patch('screenbot.app.time.monotonic', return_value=saver.start_time + elapsed):
+        with patch.object(QApplication, 'quit') as quit_app:
+            for x in positions:
+                event = QMouseEvent(QEvent.Type.MouseMove, QPointF(x, 100), QPointF(x, 100),
+                                    Qt.MouseButton.NoButton, Qt.MouseButton.NoButton,
+                                    Qt.KeyboardModifier.NoModifier)
+                QApplication.sendEvent(saver, event)
+    # Then the original five-pixel per-event threshold remains in force.
+    assert quit_app.call_count == int(closes)
     saver.close()
 
 
