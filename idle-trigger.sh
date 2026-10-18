@@ -54,7 +54,7 @@ case "${1:-}" in
    for mechanism in xidlehook xss-lock; do
     while IFS= read -r pid; do
      [[ -r "/proc/$pid/cmdline" ]] || continue
-     command_line="$(tr '\0' ' ' < "/proc/$pid/cmdline")"
+     command_line="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)" || continue
      if [[ "$command_line" == *"$LAUNCHER"* ]]; then
       echo "Idle mechanism: $mechanism running with the ScreenBot launcher (timer is configured externally)."
       found=1
