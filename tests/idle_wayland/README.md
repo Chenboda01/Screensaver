@@ -47,9 +47,11 @@ Run the same Arch environment locally from a repository checkout (Docker require
 docker run --rm -it -v "$PWD":/source:ro archlinux:latest bash
 pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules \
   qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
-  kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux
+  kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap
 python -m venv --system-site-packages /opt/plasma-test
 /opt/plasma-test/bin/pip install python-dbusmock==0.38.1
+# Inside this disposable container only: allow unprivileged virtual KWin execution.
+setcap -r "$(command -v kwin_wayland)"
 useradd --create-home ci
 cp -a /source /home/ci/src
 chown -R ci:ci /home/ci/src
@@ -60,6 +62,12 @@ bash tests/test_python_runtime.sh evidence/python-runtime
 SCREENBOT_PYTHON=/opt/plasma-test/bin/python SCREENBOT_IDLE_MAX_SECONDS=90 \
   bash tests/test_idle_trigger_wayland.sh evidence/idle-wayland
 ```
+
+Arch packages KWin with `cap_sys_nice=ep`. Docker's default capability bounding
+set excludes it, which makes execution fail with `Operation not permitted`.
+CI removes that file capability inside the disposable container and verifies
+KWin executes as the normal test user. Software-rendered virtual KWin needs no
+realtime scheduling privilege. Do not apply this container setup to your host.
 
 Copy `evidence/` out of the container before exiting if needed. Do not copy a
 checkout with existing build directories; CMake caches contain absolute paths.

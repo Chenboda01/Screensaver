@@ -71,10 +71,16 @@ jobs:
           exec > >(tee /tmp/plasma-bootstrap.log) 2>&1
           pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules \
             qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
-            kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux
+            kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap
           python -m venv --system-site-packages /opt/plasma-test
           /opt/plasma-test/bin/pip install python-dbusmock==0.38.1
+          # Arch gives KWin cap_sys_nice=ep; Docker excludes it from the bounding
+          # set and rejects exec with EPERM. Virtual KWin needs no elevated priority.
+          getcap "$(command -v kwin_wayland)"
+          setcap -r "$(command -v kwin_wayland)"
+          test -z "$(getcap "$(command -v kwin_wayland)")"
           useradd --create-home ci
+          runuser -u ci -- env QT_QPA_PLATFORM=offscreen kwin_wayland --version
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -94,12 +100,15 @@ jobs:
           runuser -u ci -- env SCREENBOT_PYTHON=/opt/plasma-test/bin/python \
             SCREENBOT_IDLE_MAX_SECONDS=90 bash -o pipefail -c \
             'bash tests/test_idle_trigger_wayland.sh evidence/idle-wayland 2>&1 | tee evidence/idle-wayland.log'
+      - name: Collect bootstrap evidence
+        if: always()
+        run: |
+          mkdir -p evidence
+          cp /tmp/plasma-bootstrap.log evidence/bootstrap.log
       - name: Upload Plasma lifecycle evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: plasma-e2e-evidence
-          path: |
-            evidence/
-            /tmp/plasma-bootstrap.log
+          path: evidence/
           if-no-files-found: error
