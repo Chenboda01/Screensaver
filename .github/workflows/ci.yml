@@ -71,7 +71,7 @@ jobs:
           exec > >(tee /tmp/plasma-bootstrap.log) 2>&1
           pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules \
             qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
-            kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap
+            kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap gdb
           python -m venv --system-site-packages /opt/plasma-test
           /opt/plasma-test/bin/pip install python-dbusmock==0.38.1
           # Arch gives KWin cap_sys_nice=ep; Docker excludes it from the bounding
@@ -89,6 +89,11 @@ jobs:
           mkdir -p evidence
           chown -R ci:ci "$GITHUB_WORKSPACE"
           pacman -Q kwin powerdevil qt6-tools python python-pyqt6 mesa > evidence/packages.txt
+          cat > /usr/local/bin/kwin_wayland <<'EOF'
+          #!/usr/bin/env bash
+          exec gdb --batch --return-child-result -ex run -ex 'thread apply all bt' --args /usr/bin/kwin_wayland "$@"
+          EOF
+          chmod +x /usr/local/bin/kwin_wayland
       - name: Installer lifecycle
         run: runuser -u ci -- bash -o pipefail -c 'bash tests/test_installer.sh evidence/installer 2>&1 | tee evidence/installer.log'
       - name: Python interpreter selection
