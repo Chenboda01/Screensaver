@@ -104,7 +104,11 @@ body:
     id: errors
     attributes:
       label: Terminal output or errors
-      description: Run `~/ScreenBot/screensaver/start.sh` from a terminal to capture errors. Remove any private information before sharing.
+      description: |
+        For an idle-start problem, include `bash ~/ScreenBot/screensaver/start.sh --check`
+        and `tail -n 40 "${XDG_STATE_HOME:-$HOME/.local/state}/screenbot/screenbot.log"`.
+        For full terminal errors, run `bash ~/ScreenBot/screensaver/start.sh --manual`.
+        The automatic log uses privacy-safe summaries. Review all output and remove private information before sharing.
       render: shell
   - type: markdown
     attributes:
