@@ -45,9 +45,13 @@ class Probe(screensaver.Saver):
         with (evidence / 'launches.jsonl').open('a') as output:
             output.write(json.dumps(receipt) + '\n')
         if os.environ.get('SCREENBOT_PREVIEW_INPUT') == 'mouse':
-            QTest.mouseMove(self, self.mapFromGlobal(self.preview_mouse_origin) + QPoint(50, 50))
+            QTimer.singleShot(1600, self.move_to_anchor)
         else:
             QTest.keyClick(self, Qt.Key.Key_A)
+
+    def move_to_anchor(self) -> None:
+        QTest.mouseMove(self, QPoint(50, 50))
+        QTimer.singleShot(100, lambda: QTest.mouseMove(self, QPoint(100, 100)))
 
 
 screensaver.Saver = Probe

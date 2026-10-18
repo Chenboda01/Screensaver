@@ -6,8 +6,8 @@ import subprocess
 import time
 from pathlib import Path
 
-from PyQt6.QtCore import QRectF, Qt, QTimer
-from PyQt6.QtGui import QColor, QCursor, QFont, QPainter, QPen, QShowEvent
+from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer
+from PyQt6.QtGui import QColor, QFont, QPainter, QPen, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
 from live_sky_render import SpaceSky
@@ -171,6 +171,8 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             self.agent_status_worker = AgentStatusWorker(self)
             self.agent_status_worker.status_changed.connect(self.set_agent_status)
         self.old_mouse = None
+        self.preview_mouse_origin: QPointF | None = None
+        self._preview_motion_owner: Saver = self
         r = random.Random()
         self.particles, self.rain_drops, self.snowflakes = scene_particle_sets(r, self.performance_mode)
         self.lightning_events = [(r.uniform(0, 20), r.uniform(12, 24), r.uniform(.15, .85)) for _ in range(4)]
@@ -208,6 +210,12 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
     def showEvent(self, event: QShowEvent) -> None:
         """Start all screensaver-relative timers when Bob first becomes visible."""
         if not self.session_started:
+            if self.is_preview:
+                self._preview_motion_owner = next((
+                    window._preview_motion_owner for window in QApplication.topLevelWidgets()
+                    if isinstance(window, Saver) and window is not self
+                    and window.is_preview and window.isVisible()
+                ), self)
             self.start_time = time.monotonic()
             self.session_started = True
         if not self.timer.isActive():
@@ -215,7 +223,6 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
                                                 time.monotonic() - self.start_time))
         if self.password_lock and not self.lock_timer.isActive():
             self.lock_timer.start()
-        self.preview_mouse_origin = QCursor.pos()
         super().showEvent(event)
 
     def hideEvent(self, event) -> None:
@@ -383,7 +390,14 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
 
     def mouseMoveEvent(self, event):
         if self.is_preview:
-            if event.globalPosition().toPoint() != self.preview_mouse_origin:
+            owner = self._preview_motion_owner
+            if time.monotonic() - owner.start_time < 1.5:
+                return
+            pos = event.globalPosition()
+            if owner.preview_mouse_origin is None:
+                owner.preview_mouse_origin = pos
+                return
+            if (pos - owner.preview_mouse_origin).manhattanLength() > 12:
                 QApplication.quit()
             return
         pos = event.position()
