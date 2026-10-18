@@ -25,6 +25,10 @@ SCREENBOT_UPDATE_GOLDENS=1 uv run --python 3.13 --with pytest --with Pillow --wi
 
 ## Publishing a release
 
+GitHub Releases is the source for downloadable ZIPs. Do not commit generated
+release archives; `releases/*.zip` is ignored. The Release workflow creates the
+ZIP from the tagged source and uploads it as a release asset.
+
 1. Merge reviewed changes and the version description into `main`. Main requires
    `Python tests (offscreen, offline)` and `Qt 6 / KDE Frameworks 6 build`.
 2. Wait for the **CI** push run for that exact commit on `main` to finish green.
