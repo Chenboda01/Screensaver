@@ -9,7 +9,8 @@ venv/
 /build/
 /build-user-local/
 
-# Temporary release staging; releases/*.zip remain versioned
+# Generated release archives and temporary staging
+/releases/*.zip
 /dist/
 
 # Local agent worktrees and validation evidence
