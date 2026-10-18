@@ -70,6 +70,8 @@ jobs:
           mkdir -p evidence
           exec > >(tee evidence/runner.log) 2>&1
           # Plasma 6.8's software renderer needs DMA buffers even without a GPU.
+          sudo apt-get update
+          sudo apt-get install --yes "linux-modules-extra-$(uname -r)"
           sudo modprobe udmabuf
           test -c /dev/udmabuf
           sudo chmod a+rw /dev/udmabuf
