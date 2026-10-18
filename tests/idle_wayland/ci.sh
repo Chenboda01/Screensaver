@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Bootstrap only inside a disposable Arch container with /dev/udmabuf passed through.
+# Bootstrap only inside a disposable Arch container.
 set -euo pipefail
-[[ "$EUID" == 0 && -c /dev/udmabuf ]] || { echo 'FAIL requires disposable root container with /dev/udmabuf.' >&2; exit 2; }
+[[ "$EUID" == 0 ]] || { echo 'FAIL requires a disposable root container.' >&2; exit 2; }
 mkdir -p evidence
 exec > >(tee evidence/bootstrap.log) 2>&1
-pacman -Syu --noconfirm --needed base-devel git cmake extra-cmake-modules \
+# Keep the whole distribution coherent, before Plasma 6.8 requires udmabuf,
+# which hosted Azure kernels do not provide. Update this snapshot deliberately.
+printf '%s\n' 'Server = https://archive.archlinux.org/repos/2026/10/01/$repo/os/$arch' > /etc/pacman.d/mirrorlist
+pacman -Syyuu --noconfirm --needed base-devel git cmake extra-cmake-modules \
  qt6-declarative qt6-tools kcmutils kcoreaddons ki18n kconfig \
  kwin powerdevil dbus mesa python python-pyqt6 python-pip python-gobject util-linux libcap gdb
 python -m venv --system-site-packages /opt/plasma-test
@@ -16,8 +19,6 @@ test -z "$(getcap "$(command -v kwin_wayland)")"
 useradd --create-home ci
 chown -R ci:ci /src
 runuser -u ci -- env QT_QPA_PLATFORM=offscreen kwin_wayland --version
-runuser -u ci -- test -r /dev/udmabuf
-runuser -u ci -- test -w /dev/udmabuf
 pacman -Q kwin powerdevil qt6-tools python python-pyqt6 mesa > evidence/packages.txt
 # Keep native crash backtraces in session.log without masking the child exit status.
 cat > /usr/local/bin/kwin_wayland <<'WRAPPER'

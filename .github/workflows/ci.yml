@@ -65,20 +65,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Prepare software rendering device
-        run: |
-          mkdir -p evidence
-          exec > >(tee evidence/runner.log) 2>&1
-          # Plasma 6.8's software renderer needs DMA buffers even without a GPU.
-          sudo apt-get update
-          sudo apt-get install --yes "linux-modules-extra-$(uname -r)"
-          sudo modprobe udmabuf
-          test -c /dev/udmabuf
-          sudo chmod a+rw /dev/udmabuf
-          ls -l /dev/udmabuf
       - name: Install, real Wayland idle trigger, and uninstall
         run: |
-          docker run --rm --device /dev/udmabuf \
+          docker run --rm \
             --volume "$GITHUB_WORKSPACE:/src" --workdir /src \
             archlinux:latest bash tests/idle_wayland/ci.sh
       - name: Upload Plasma lifecycle evidence

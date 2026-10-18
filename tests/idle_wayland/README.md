@@ -44,12 +44,9 @@ Repository administrators should require the check named
 Run the same Arch environment locally from a repository checkout (Docker required):
 
 ```sh
-sudo modprobe udmabuf
-# On a disposable VM only, grant the container test user device access.
-sudo chmod a+rw /dev/udmabuf
 mkdir -p /tmp/screenbot-ci-source
 git archive HEAD | tar -x -C /tmp/screenbot-ci-source
-docker run --rm --device /dev/udmabuf \
+docker run --rm \
   -v /tmp/screenbot-ci-source:/src -w /src archlinux:latest \
   bash tests/idle_wayland/ci.sh
 # Evidence remains in /tmp/screenbot-ci-source/evidence.
@@ -61,12 +58,14 @@ CI removes that file capability inside the disposable container and verifies
 KWin executes as the normal test user. Software-rendered virtual KWin needs no
 realtime scheduling privilege. Do not apply this container setup to your host.
 
-Plasma 6.8 requires `/dev/udmabuf` for its software render device even when
-using a virtual framebuffer. The Ubuntu runner loads that kernel module before
-starting Docker and passes only that device; the container is not privileged.
-A missing module/device fails the job. Run this setup only on a disposable VM
-or runner: it changes device permissions for the test account. The bootstrap
-script runs setup as root, then all three lifecycle tests as user `ci`.
+The container uses the complete Arch Linux Archive snapshot dated 2026-10-01,
+including matching KWin, PowerDevil, Qt, and Mesa packages. Plasma 6.8's virtual
+renderer requires `/dev/udmabuf`, which GitHub's Azure kernel does not provide;
+the snapshot retains the earlier software-rendered virtual backend. This is a
+real Plasma 6 compositor test, not a substituted idle event. Update the snapshot
+only after the full lifecycle scenario passes on the hosted runner. Package
+versions are captured in every run. The bootstrap runs as root in the disposable
+container, then all three lifecycle tests run as user `ci`.
 Do not copy a checkout with build directories; CMake caches contain absolute paths.
 CI uploads `plasma-e2e-evidence` even after failure, including stage output,
 package versions, install/uninstall logs, mock service logs, PowerDevil logs,
