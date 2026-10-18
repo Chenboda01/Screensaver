@@ -45,13 +45,13 @@ class PromptResult:
 
 def _read_mode() -> AgentMode:
     """Read the committed KDE setting; malformed values safely ask each time."""
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None, strict=False)
     try:
         with CONFIG_FILE.open(encoding="utf-8") as config_file:
             config.read_file(config_file)
     except FileNotFoundError:
         return AgentMode.ALWAYS_ASK
-    except (OSError, configparser.Error):
+    except (OSError, UnicodeError, configparser.Error):
         return AgentMode.ALWAYS_ASK
     try:
         return AgentMode(config.get("Screensaver", "agent_detection_mode", fallback="ask"))
@@ -60,7 +60,7 @@ def _read_mode() -> AgentMode:
 
 def _save_mode(mode: AgentMode) -> bool:
     """Persist a remembered answer without replacing settings on write failure."""
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None, strict=False)
     try:
         if CONFIG_FILE.exists():
             with CONFIG_FILE.open(encoding="utf-8") as config_file:
@@ -75,18 +75,18 @@ def _save_mode(mode: AgentMode) -> bool:
             config_file.flush()
             os.fsync(config_file.fileno())
         os.replace(temporary, CONFIG_FILE)
-    except (OSError, configparser.Error):
+    except (OSError, UnicodeError, configparser.Error):
         print("ScreenBot: could not save the remembered agent choice.", file=sys.stderr)
         return False
     return True
 
 def _read_prompt_settings() -> PromptSettings:
     """Parse committed timeout settings; zero means wait for a human answer."""
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None, strict=False)
     try:
         with CONFIG_FILE.open(encoding="utf-8") as config_file:
             config.read_file(config_file)
-    except (OSError, configparser.Error):
+    except (OSError, UnicodeError, configparser.Error):
         return PromptSettings()
     try:
         seconds = config.getint("Screensaver", "agent_prompt_timeout_seconds", fallback=10)
