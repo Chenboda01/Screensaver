@@ -1,13 +1,12 @@
 import configparser
 from datetime import datetime
-import math
 import random
 import subprocess
 import time
 from pathlib import Path
 
 from PyQt6.QtCore import QRectF, Qt, QTimer
-from PyQt6.QtGui import QColor, QCursor, QFont, QPainter, QPen, QShowEvent
+from PyQt6.QtGui import QColor, QFont, QPainter, QPen, QShowEvent
 from PyQt6.QtWidgets import QApplication, QWidget
 from live_sky_network import LiveWeather
 from live_sky_render import SpaceSky
@@ -27,9 +26,10 @@ from screenbot.phone.apps import PhoneAppsRenderer
 from screenbot.phone.camera_pet import CameraState
 from screenbot.phone.frame import PhoneFrameRenderer
 from screenbot.photo_slideshow import PhotoSlideshowRenderer
+from screenbot.preview_motion import PreviewMotion, session_motion
 from screenbot.runtime import battery_powered, frame_interval_ms, scene_particle_sets
 from screenbot.scene import SceneRenderer
-from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, read_settings, selected_theme
+from screenbot.settings import CLOCK_POSITIONS, PHONE_UI_PHASES, get_bool, read_settings, selected_theme
 from screenbot.seasonal_renderer import SeasonalSession
 from screenbot.themes.city import CityTheme
 from screenbot.themes.forest import ForestTheme
@@ -55,14 +55,14 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.seasonal_session = SeasonalSession.from_settings(settings, is_preview=self.is_preview, forced_preview_datetime=forced_preview_datetime)
         self.init_fact_overlay(FactPreferences.from_settings(settings))
         self.bob_appearance = BobAppearance.from_settings(settings)
-        self.bob_weather_enabled = settings.getboolean('Screensaver', 'bob_weather_enabled', fallback=True)
+        self.bob_weather_enabled = get_bool(settings, 'bob_weather_enabled', True)
         self.preview_weather_override = preview_weather
         self.weather_accessory_animator = WeatherAccessoryAnimator()
         self.theme = selected_theme(settings)
         self.random_theme = settings.get('Screensaver', 'theme', fallback='random') == 'random'
         self.photo_slideshow = PhotoSlideshowRenderer.from_settings(self, settings, self.theme)
-        self.show_clock = settings.getboolean('Screensaver', 'show_clock', fallback=True)
-        self.now_playing_enabled = settings.getboolean('Screensaver', 'now_playing_enabled', fallback=False)
+        self.show_clock = get_bool(settings, 'show_clock', True)
+        self.now_playing_enabled = get_bool(settings, 'now_playing_enabled', False)
         self.init_ambient_sound(settings)
         self.now_playing = NO_MEDIA
         self.media_worker = None
@@ -72,7 +72,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.clock_format = settings.get('Screensaver', 'clock_format', fallback='12h').strip()
         if self.clock_format not in ('12h', '24h'):
             self.clock_format = '12h'
-        self.show_date = settings.getboolean('Screensaver', 'show_date', fallback=False)
+        self.show_date = get_bool(settings, 'show_date', False)
         clock_position = settings.get('Screensaver', 'clock_position', fallback='top-center').strip()
         self.clock_position = clock_position if clock_position in CLOCK_POSITIONS else 'top-center'
         self.burn_in_protection = normalize_burn_in_mode(
@@ -82,13 +82,13 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         except ValueError:
             clock_font_size = 48
         self.clock_font_size = max(16, min(72, clock_font_size))
-        self.rain_enabled = settings.getboolean('Screensaver', 'rain_enabled', fallback=False)
-        self.snow_enabled = settings.getboolean('Screensaver', 'snow_enabled', fallback=False)
-        self.thunderstorms_enabled = settings.getboolean('Screensaver', 'thunderstorms_enabled', fallback=False)
-        self.fog_enabled = settings.getboolean('Screensaver', 'fog_enabled', fallback=False)
-        self.shooting_stars_enabled = settings.getboolean('Screensaver', 'shooting_stars_enabled', fallback=False)
-        self.live_sky_enabled = settings.getboolean('Screensaver', 'live_sky_enabled', fallback=False)
-        self.live_sky_conditions = settings.getboolean('Screensaver', 'live_sky_conditions', fallback=True)
+        self.rain_enabled = get_bool(settings, 'rain_enabled', False)
+        self.snow_enabled = get_bool(settings, 'snow_enabled', False)
+        self.thunderstorms_enabled = get_bool(settings, 'thunderstorms_enabled', False)
+        self.fog_enabled = get_bool(settings, 'fog_enabled', False)
+        self.shooting_stars_enabled = get_bool(settings, 'shooting_stars_enabled', False)
+        self.live_sky_enabled = get_bool(settings, 'live_sky_enabled', False)
+        self.live_sky_conditions = get_bool(settings, 'live_sky_conditions', True)
         self.live_sky_units = settings.get('Screensaver', 'live_sky_units', fallback='c')
         try:
             interval = settings.getint('Screensaver', 'live_sky_interval', fallback=30)
@@ -109,20 +109,20 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
                                        timezone_name=settings.get('Screensaver', 'live_sky_timezone', fallback=''),
                                        config_path=None if self.is_preview else Path.home() / '.config' / 'screenbot-screensaver.ini')
 
-        self.password_lock = not self.is_preview and settings.getboolean('Screensaver', 'password_lock', fallback=False)
+        self.password_lock = not self.is_preview and get_bool(settings, 'password_lock', False)
         try:
             minutes = settings.getint('Screensaver', 'lock_minutes', fallback=2)
         except ValueError:
             minutes = 2
         self.lock_seconds = max(1, min(60, minutes)) * 60
-        self.show_timer = self.password_lock and settings.getboolean('Screensaver', 'show_timer', fallback=False)
+        self.show_timer = self.password_lock and get_bool(settings, 'show_timer', False)
         self.preview_bobos = preview_bobos
         if settings.has_option('Screensaver', 'bob_phone_enabled'):
-            configured_phone = settings.getboolean('Screensaver', 'bob_phone_enabled')
+            configured_phone = get_bool(settings, 'bob_phone_enabled', True)
         else:
-            configured_phone = settings.getboolean('Screensaver', 'ai_backpack_enabled', fallback=True)
+            configured_phone = get_bool(settings, 'ai_backpack_enabled', True)
         self.phone_enabled = preview_bobos or configured_phone
-        self.bobos_enabled = settings.getboolean('Screensaver', 'bobos_enabled', fallback=True)
+        self.bobos_enabled = get_bool(settings, 'bobos_enabled', True)
         if preview_bobos:
             self.bobos_enabled = True
         if preview:
@@ -135,12 +135,12 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.show_wifi_animation = (
             preview_wifi_animation
             if preview_wifi_animation is not None
-            else settings.getboolean('Screensaver', 'show_wifi_animation', fallback=True)
+            else get_bool(settings, 'show_wifi_animation', True)
         )
         self.performance_mode = settings.get('Screensaver', 'performance_mode', fallback='balanced').strip().lower()
         if self.performance_mode not in ('smooth', 'balanced', 'battery-saver', 'extra-high', 'ultra'):
             self.performance_mode = 'balanced'
-        self.reduce_motion = settings.getboolean('Screensaver', 'reduce_motion', fallback=False)
+        self.reduce_motion = get_bool(settings, 'reduce_motion', False)
         self.on_battery = battery_powered()
         self._last_power_check = time.monotonic()
         self._scenery_cache = None
@@ -162,7 +162,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         self.lock_error = False
         self.start_time = time.monotonic()
         self.session_started = False
-        self.agent_status_enabled = settings.getboolean('Screensaver', 'agent_status_enabled', fallback=True)
+        self.agent_status_enabled = get_bool(settings, 'agent_status_enabled', True)
         self.agent_status = HIDDEN_SNAPSHOT
         self.agent_status_worker = None
         self._agent_celebration_pending = False
@@ -171,6 +171,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
             self.agent_status_worker = AgentStatusWorker(self)
             self.agent_status_worker.status_changed.connect(self.set_agent_status)
         self.old_mouse = None
+        self.preview_motion = PreviewMotion(self.start_time)
         r = random.Random()
         self.particles, self.rain_drops, self.snowflakes = scene_particle_sets(r, self.performance_mode)
         self.lightning_events = [(r.uniform(0, 20), r.uniform(12, 24), r.uniform(.15, .85)) for _ in range(4)]
@@ -209,13 +210,14 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
         """Start all screensaver-relative timers when Bob first becomes visible."""
         if not self.session_started:
             self.start_time = time.monotonic()
+            if self.is_preview:
+                self.preview_motion = session_motion(self, self.start_time)
             self.session_started = True
         if not self.timer.isActive():
             self.timer.start(frame_interval_ms(self.performance_mode, self.on_battery,
                                                 time.monotonic() - self.start_time))
         if self.password_lock and not self.lock_timer.isActive():
             self.lock_timer.start()
-        self.preview_mouse_origin = QCursor.pos()
         super().showEvent(event)
 
     def hideEvent(self, event) -> None:
@@ -383,7 +385,7 @@ class Saver(QWidget, SceneRenderer, SpaceTheme, MountainsTheme, SnowTheme, Fores
 
     def mouseMoveEvent(self, event):
         if self.is_preview:
-            if event.globalPosition().toPoint() != self.preview_mouse_origin:
+            if self.preview_motion.should_close(event.globalPosition(), time.monotonic()):
                 QApplication.quit()
             return
         pos = event.position()

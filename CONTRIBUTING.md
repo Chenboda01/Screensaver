@@ -25,6 +25,10 @@ SCREENBOT_UPDATE_GOLDENS=1 uv run --python 3.13 --with pytest --with Pillow --wi
 
 ## Publishing a release
 
+GitHub Releases is the source for downloadable ZIPs. Do not commit generated
+release archives; `releases/*.zip` is ignored. The Release workflow creates the
+ZIP from the tagged source and uploads it as a release asset.
+
 1. Merge reviewed changes and the version description into `main`. Main requires
    `Python tests (offscreen, offline)` and `Qt 6 / KDE Frameworks 6 build`.
 2. Wait for the **CI** push run for that exact commit on `main` to finish green.
@@ -42,7 +46,24 @@ SCREENBOT_UPDATE_GOLDENS=1 uv run --python 3.13 --with pytest --with Pillow --wi
    test/build skips publication. Inspect Actions and fix the failure before
    rerunning; do not create a manual release to bypass these gates.
 
-The ZIP is built from tracked files at the tag and excludes historical release
-archives and agent instructions. Its top-level folder matches the version.
+The ZIP contains the Python runtime, KDE settings sources and translations,
+audio, facts, location data, installers, README, CHANGELOG, and license. Its
+top-level folder matches the version. `.gitattributes` applies the same
+`export-ignore` rules to local and CI archives: screenshots, tests, developer
+tools, CI configuration, agent instructions, and historical ZIPs stay out.
+Clone the repository when you need tests or developer tools; GitHub's automatic
+source archives also honor `export-ignore`.
+
+The package job refuses ZIPs at or above 1,000,000 bytes, checks integrity and
+runtime source completeness, compiles every packaged Python file, and builds
+and installs the extracted archive into an isolated account directory with
+`install.sh --no-idle`. It renders the installed preview before publishing the
+same verified artifact. Test a local archive from a clean commit with:
+
+```sh
+git archive --format=zip --prefix=ScreenBot-Screensaver-local/ --output=/tmp/screenbot-local.zip HEAD
+python .github/workflows/verify-release-zip.py /tmp/screenbot-local.zip ScreenBot-Screensaver-local/
+```
+
 Repository administrators can technically bypass GitHub policy; keep branch
 protection enabled and use the workflow for all releases.

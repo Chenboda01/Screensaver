@@ -38,6 +38,12 @@ reload_config() {
 case "${1:-}" in
  --instructions) manual_steps ;;
  --check)
+  log="${XDG_STATE_HOME:-$HOME/.local/state}/screenbot/screenbot.log"
+  last=""
+  if [[ -r "$log" ]]; then
+   last="$(awk '/^[0-9][0-9][0-9][0-9]-.* mode=idle outcome=/ { result=$0 } END { print result }' "$log")"
+  fi
+  printf 'Last automatic start: %s\nLog: %s\n' "${last:-No automatic start recorded.}" "$log"
   if ! config_tools; then echo 'Cannot check idle setup: install KDE kreadconfig6 and kwriteconfig6.'; exit 2; fi
   configured=0
   for profile in "${PROFILES[@]}"; do

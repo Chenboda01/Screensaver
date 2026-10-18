@@ -9,6 +9,7 @@ from PyQt6.QtCore import QLocale, QRectF, Qt
 from PyQt6.QtGui import QColor, QFont, QFontMetricsF, QPainter, QPen
 
 from bobos import BobOSPhase
+from screenbot.settings import get_bool
 from screenbot.facts import FactCycler, category_for_scene, localized_labels
 
 
@@ -28,10 +29,7 @@ class FactPreferences:
 
     @classmethod
     def from_settings(cls, settings) -> "FactPreferences":
-        try:
-            enabled = settings.getboolean("Screensaver", "facts_enabled", fallback=True)
-        except (ValueError, AttributeError):
-            enabled = True
+        enabled = get_bool(settings, "facts_enabled", True)
         try:
             interval = settings.getint("Screensaver", "facts_interval_minutes", fallback=3)
         except (ValueError, AttributeError):

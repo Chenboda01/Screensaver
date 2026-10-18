@@ -17,7 +17,7 @@ for option in "$@"; do
    cat <<'EOF'
 Usage: bash uninstall.sh [--yes] [--keep-settings] [--purge-settings] [--purge-cache] [--purge-backups]
 Remove the ScreenBot application, KDE module, city list, Plasma environment hook,
-and its idle trigger. No running agents or other applications are stopped.
+its idle trigger, and its automatic-start log. No running agents or other applications are stopped.
   --yes             Skip the removal confirmation and retain personal data by default.
   --keep-settings   Keep settings without asking (also overrides --purge-settings).
   --purge-settings  Explicitly delete saved ScreenBot preferences.
@@ -70,6 +70,10 @@ else
 fi
 rm -f -- "$PREFIX/share/screenbot-screensaver/countries_and_cities.txt" "$CONFIG_HOME/plasma-workspace/env/screenbot-kcm.sh"
 echo 'Removed the city list and Plasma environment hook.'
+LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/screenbot"
+rm -f -- "$LOG_DIR/screenbot.log" "$LOG_DIR/log.lock"
+rmdir -- "$LOG_DIR" 2>/dev/null || true
+echo 'Removed the automatic-start log.'
 if ! $YES; then
  if ! $KEEP_SETTINGS && ! $PURGE_SETTINGS && confirm 'Delete saved ScreenBot settings?'; then PURGE_SETTINGS=true; fi
  if ! $PURGE_CACHE && confirm 'Delete the Live Sky cache?'; then PURGE_CACHE=true; fi

@@ -34,25 +34,25 @@ The Performance settings also include **Burn-in protection** for OLED displays, 
 
 Bob exploring the Mountains under a full moon with Live Sky enabled (six-second loop):
 
-![Animated Bob floating above layered mountain peaks beneath a starry, moonlit Live Sky](assets/screenshots/bob-moonlight.gif)
+![Animated Bob floating above layered mountain peaks beneath a starry, moonlit Live Sky](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/bob-moonlight.gif)
 
 ### Themes
 
 | Space | Mountains |
 | --- | --- |
-| ![Bob floating among blue and pink planets and a golden ringed planet in Space](assets/screenshots/space.webp) | ![Bob above layered blue mountain peaks beneath a glowing moon and purple sky](assets/screenshots/mountains.webp) |
+| ![Bob floating among blue and pink planets and a golden ringed planet in Space](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/space.webp) | ![Bob above layered blue mountain peaks beneath a glowing moon and purple sky](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/mountains.webp) |
 | **Snow** | **Forest** |
-| ![Bob hovering over snow-covered alpine peaks with drifting snowflakes](assets/screenshots/snow.webp) | ![Bob among dark evergreen silhouettes and glowing fireflies under a green night sky](assets/screenshots/forest.webp) |
+| ![Bob hovering over snow-covered alpine peaks with drifting snowflakes](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/snow.webp) | ![Bob among dark evergreen silhouettes and glowing fireflies under a green night sky](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/forest.webp) |
 | **Futuristic City** | **Aurora** |
-| ![Bob floating above a futuristic skyline with cyan, violet, and pink illuminated windows](assets/screenshots/city.webp) | ![Bob beneath animated green and violet aurora curtains above snowy ridges](assets/screenshots/aurora.webp) |
+| ![Bob floating above a futuristic skyline with cyan, violet, and pink illuminated windows](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/city.webp) | ![Bob beneath animated green and violet aurora curtains above snowy ridges](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/aurora.webp) |
 | **Ocean / Beach** | **Desert** |
-| ![Bob exploring a tropical coast with palms, waves, and a lighthouse](assets/screenshots/ocean.webp) | ![Bob among warm desert dunes and cacti below a sunlit sky](assets/screenshots/desert.webp) |
+| ![Bob exploring a tropical coast with palms, waves, and a lighthouse](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/ocean.webp) | ![Bob among warm desert dunes and cacti below a sunlit sky](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/desert.webp) |
 | **Underwater** | |
-| ![Bob wearing a transparent diving helmet above coral, fish, and bubbles](assets/screenshots/underwater.webp) | |
+| ![Bob wearing a transparent diving helmet above coral, fish, and bubbles](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/underwater.webp) | |
 | **My photos** | |
-| ![Bob floating over a locally generated sample photo in the My photos slideshow](assets/screenshots/my-photos.webp) | |
+| ![Bob floating over a locally generated sample photo in the My photos slideshow](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/my-photos.webp) | |
 
-The photo theme also keeps complete portrait images visible over a smoothly blurred backdrop, and shows its missing-folder message above Bob: [fit whole photo](assets/screenshots/my-photos-fit.webp) · [empty-folder fallback](assets/screenshots/my-photos-fallback.webp).
+The photo theme also keeps complete portrait images visible over a smoothly blurred backdrop, and shows its missing-folder message above Bob: [fit whole photo](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/my-photos-fit.webp) · [empty-folder fallback](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/my-photos-fallback.webp).
 
 ### Live Sky
 
@@ -60,30 +60,33 @@ The same Mountains scene with locally calculated Boston skies and fixed example 
 
 | Sunrise | Noon |
 | --- | --- |
-| ![Peach sunrise behind the Mountains with Bob hovering over the peaks](assets/screenshots/live-sky-sunrise.webp) | ![Bright blue midday sky and sun above Bob and the Mountains](assets/screenshots/live-sky-noon.webp) |
+| ![Peach sunrise behind the Mountains with Bob hovering over the peaks](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/live-sky-sunrise.webp) | ![Bright blue midday sky and sun above Bob and the Mountains](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/live-sky-noon.webp) |
 | **Sunset** | **Full-moon night** |
-| ![Orange and violet sunset behind Bob and the mountain ridges](assets/screenshots/live-sky-sunset.webp) | ![Full moon and stars illuminating Bob and blue mountain ridges at night](assets/screenshots/live-sky-moonlight.webp) |
+| ![Orange and violet sunset behind Bob and the mountain ridges](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/live-sky-sunset.webp) | ![Full moon and stars illuminating Bob and blue mountain ridges at night](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/live-sky-moonlight.webp) |
 | **Rain** | |
-| ![Rain streaks and thick gray clouds over Bob and the mountain landscape](assets/screenshots/live-sky-rain.webp) | |
+| ![Rain streaks and thick gray clouds over Bob and the mountain landscape](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/live-sky-rain.webp) | |
 
 ### BobOS
 
 Bob's fictional phone zooms into its home screen before each adventure. It chooses 4–6 different apps, with a different selection from the previous adventure, then shuts down and returns to exploring. The full-sequence KDE preview still shows every app.
 
-![Animated BobOS phone zooming in, showing its app launcher, then opening the simulated browser](assets/screenshots/bobos-phone.gif)
+![Animated BobOS phone zooming in, showing its app launcher, then opening the simulated browser](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/bobos-phone.gif)
 
-![BobOS phone home screen with fictional Browser, Files, Terminal, Games, Chat, Maps, Weather, Calendar, and App Store buttons](assets/screenshots/bobos.webp)
+![BobOS phone home screen with fictional Browser, Files, Terminal, Games, Chat, Maps, Weather, Calendar, and App Store buttons](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/bobos.webp)
 
 **Bob Camera** takes a simulated selfie against the current theme and Live Sky, flashes, and shows the photo in Bob Files. Its viewfinder refreshes at most five times per second; only two 480×200 images are kept in memory and disappear when the screensaver closes. It never accesses a camera or saves photos to disk. **Bob Pet** feeds Pip a pretend snack and plays moonball; each visit starts fresh, with no persistent pet state or external service. The existing **Reduce motion and flashes** preference freezes Camera’s viewfinder, suppresses its flash, and stops Pip’s continuous motion while preserving feeding and play states.
 
 Each selected adventure must fit entirely before the configured KDE password-lock deadline. If it cannot, Bob keeps exploring until KDE locks. The activation delay, connection animation option, and minimum five-minute cooldown still apply.
 
-All previews are captured from the production renderer. Stills are 1280×720; animations are six-second, 768×432 loops. [Regenerate the gallery](assets/screenshots/README.md) after visual changes.
+All previews are captured from the production renderer. Stills are 1280×720; animations are six-second, 768×432 loops. [Regenerate the gallery](https://raw.githubusercontent.com/Chenboda01/Screensaver/main/assets/screenshots/README.md) after visual changes.
 
 ## Download
 
 Get the latest ZIP from the [latest release](https://github.com/Chenboda01/Screensaver/releases/latest).
 Browse [all releases](https://github.com/Chenboda01/Screensaver/releases) for older versions and release notes.
+New release ZIPs include the complete application, KDE settings sources, assets,
+and installation scripts in under 1 MB. Screenshots, tests, and developer tools
+remain in the repository; the gallery loads its images from GitHub.
 See the [changelog](CHANGELOG.md) for version history.
 
 ## Platform support and installation
@@ -123,13 +126,27 @@ If you decline setup, PowerDevil is unavailable, or another script already owns 
 
 To undo just ScreenBot's idle setup, run `bash ~/ScreenBot/screensaver/idle-trigger.sh --remove`, or clear its command in those profiles and Apply. The helper preserves another script if you replaced ScreenBot's command later. KDE Screen Locking remains independent.
 
+### Automatic-start diagnostics
+
+Run `bash ~/ScreenBot/screensaver/start.sh --check` to see the idle configuration, last automatic result, and log path, even when the saved Python interpreter is unavailable. The same information is available from `idle-trigger.sh --check`.
+
+Automatic launches record a UTC timestamp, `mode=idle`, outcome, and child exit code in `${XDG_STATE_HOME:-$HOME/.local/state}/screenbot/screenbot.log`. The result is recorded when the attempt finishes; `started` means the screensaver process exited successfully. Refusals (including saved or timeout policy), uncertain agent status, and an already-held launch lock are reported as skips. Runtime, prompt, and screensaver errors are failures. Skips still return success to PowerDevil, so their recorded child exit code can differ from the launcher exit code.
+
+The file is private (mode `600`) and keeps at most 200 lines / 64,000 bytes. Stderr is reduced to fixed diagnostic summaries **before** it is stored: known error categories and common exception types are retained, while arbitrary messages, traceback paths, settings values, city/coordinates, photo paths, media titles, and agent text are omitted. For full local diagnostics, use `bash ~/ScreenBot/screensaver/start.sh --manual`; manual launches and previews retain terminal output and do not modify this log. To report an idle failure, include `--check` output and the last 40 log lines, reviewing them before sharing:
+
+```bash
+tail -n 40 "${XDG_STATE_HOME:-$HOME/.local/state}/screenbot/screenbot.log"
+```
+
+The uninstaller removes the log by default while preserving unrelated files in the state directory.
+
 ### Uninstall and reinstall
 
 ```bash
 bash ~/ScreenBot/screensaver/uninstall.sh
 ```
 
-The uninstaller removes ScreenBot's application, installed KDE module and translations, city list, Plasma environment hook, and its idle action. It asks separately before deleting saved preferences (including section expansion state), Live Sky cache, and installation backups; the default is to keep each. It does not stop AI agents or other running applications. Log out and back in afterward so Plasma drops the Settings page and old environment hook.
+The uninstaller removes ScreenBot's application, installed KDE module and translations, city list, Plasma environment hook, its idle action, and its automatic-start log. It asks separately before deleting saved preferences (including section expansion state), Live Sky cache, and installation backups; the default is to keep each. It does not stop AI agents or other running applications. Log out and back in afterward so Plasma drops the Settings page and old environment hook.
 
 For scripted removal while keeping personal data:
 
